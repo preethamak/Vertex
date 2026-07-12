@@ -1,4 +1,15 @@
-export type Member = { name: string; role?: string };
+export type Member = {
+  name: string;
+  role?: string;
+  team?: string;
+  teamId?: string;
+  photo?: string;
+  bio?: string;
+  skills?: string[];
+  isHead?: boolean;
+  isLeadership?: boolean;
+};
+
 export type Team = {
   id: string;
   name: string;
@@ -8,9 +19,9 @@ export type Team = {
 };
 
 export const leadership: Member[] = [
-  { name: "Preetham AK", role: "Founder" },
-  { name: "Pavan Achar", role: "President" },
-  { name: "Madan Kumar", role: "Vice President" },
+  { name: "Preetham AK", role: "Founder", bio: "Founded Vertex in 2026 with the vision of a college technical club built by teams, not titles." },
+  { name: "Pavan Achar", role: "President", bio: "Leads Vertex operations, strategy, and the people who make everything move." },
+  { name: "Madan Kumar", role: "Vice President", bio: "Backs up leadership, coordinates teams, keeps the club running end-to-end." },
 ];
 
 export const teams: Team[] = [
@@ -82,4 +93,47 @@ export function initials(name: string): string {
   const parts = name.replace(/\./g, "").split(/\s+/).filter(Boolean);
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+export function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/\./g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export type EnrichedMember = Required<Pick<Member, "name">> & Member & {
+  slug: string;
+};
+
+export function getAllMembers(): EnrichedMember[] {
+  const all: EnrichedMember[] = [];
+  leadership.forEach((m) =>
+    all.push({ ...m, slug: slugify(m.name), isLeadership: true, team: "Leadership", teamId: "leadership" }),
+  );
+  teams.forEach((t) => {
+    all.push({
+      ...t.head,
+      slug: slugify(t.head.name),
+      role: t.head.role ?? "Team Head",
+      team: t.name,
+      teamId: t.id,
+      isHead: true,
+    });
+    t.members.forEach((m) =>
+      all.push({
+        ...m,
+        slug: slugify(m.name),
+        role: m.role ?? "Member",
+        team: t.name,
+        teamId: t.id,
+      }),
+    );
+  });
+  return all;
+}
+
+export function findMember(slug: string): EnrichedMember | undefined {
+  return getAllMembers().find((m) => m.slug === slug);
 }
