@@ -1,12 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { VertexLogo } from "@/components/VertexLogo";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { MemberCard, Avatar } from "@/components/MemberCard";
 import { MemberSearch } from "@/components/MemberSearch";
-import { leadership, teams, slugify } from "@/data/team";
-import { events } from "@/data/events";
-import { Link } from "@tanstack/react-router";
+import { SiteHeader, SiteFooter } from "@/components/SiteChrome";
+import { VertexLogo } from "@/components/VertexLogo";
+import { getDirectory, getEvents } from "@/lib/club.functions";
 
 export const Route = createFileRoute("/")({
+  loader: async () => {
+    const [directory, events] = await Promise.all([getDirectory(), getEvents()]);
+    return { directory, events };
+  },
   head: () => ({
     meta: [
       { title: "Vertex — Technical Club" },
@@ -26,31 +29,21 @@ export const Route = createFileRoute("/")({
     ],
   }),
   component: Home,
+  errorComponent: () => (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <p className="font-mono text-sm text-muted-foreground">The roster couldn't load.</p>
+    </div>
+  ),
 });
 
 function Home() {
-  const totalMembers =
-    leadership.length + teams.reduce((n, t) => n + 1 + t.members.length, 0);
+  const { directory, events } = Route.useLoaderData();
+  const { teams, leadership, all } = directory;
+  const totalMembers = all.length;
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
-      {/* Nav */}
-      <header className="sticky top-0 z-40 hairline-b bg-background/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <a href="#top" className="flex items-center gap-2 text-foreground">
-            <VertexLogo className="h-6 w-auto" />
-            <span className="font-display text-lg font-semibold tracking-tight">
-              Vertex
-            </span>
-          </a>
-          <nav className="hidden gap-8 font-mono text-[11px] uppercase tracking-widest text-muted-foreground md:flex">
-            <a href="#leadership" className="hover:text-foreground">Leadership</a>
-            <a href="#teams" className="hover:text-foreground">Teams</a>
-            <a href="#events" className="hover:text-foreground">Events</a>
-            <a href="#contact" className="hover:text-foreground">Contact</a>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader />
 
       {/* Hero */}
       <section id="top" className="relative overflow-hidden">
@@ -81,7 +74,22 @@ function Home() {
           </div>
 
           <div className="mt-12 max-w-2xl">
-            <MemberSearch />
+            <MemberSearch members={all} />
+          </div>
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              to="/join"
+              className="border border-silver bg-foreground px-5 py-3 font-mono text-[11px] uppercase tracking-widest text-background hover:opacity-90"
+            >
+              Apply to a team →
+            </Link>
+            <Link
+              to="/events"
+              className="border border-hairline px-5 py-3 font-mono text-[11px] uppercase tracking-widest hover:border-silver"
+            >
+              See events
+            </Link>
           </div>
 
           <div className="mt-16 grid grid-cols-2 gap-px overflow-hidden border border-hairline bg-hairline md:grid-cols-4">
@@ -100,9 +108,9 @@ function Home() {
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {leadership.map((m) => (
               <Link
-                key={m.name}
+                key={m.slug}
                 to="/member/$slug"
-                params={{ slug: slugify(m.name) }}
+                params={{ slug: m.slug }}
                 className="group relative flex flex-col items-start gap-6 border border-hairline bg-card/40 p-8 transition-colors hover:border-silver/50"
               >
                 <div className="flex w-full items-start justify-between">
@@ -142,16 +150,21 @@ function Home() {
                     <h3 className="mt-2 font-display text-3xl font-semibold tracking-tight md:text-4xl">
                       {team.name}
                     </h3>
+                    {team.blurb && (
+                      <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+                        {team.blurb}
+                      </p>
+                    )}
                   </div>
                   <div className="hidden font-mono text-xs text-muted-foreground md:block">
-                    {team.members.length + 1} members
+                    {team.members.length + (team.head ? 1 : 0)} members
                   </div>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  <MemberCard member={team.head} index={1} isHead />
+                  {team.head && <MemberCard member={team.head} index={1} isHead />}
                   {team.members.map((m, idx) => (
-                    <MemberCard key={m.name} member={m} index={idx + 2} />
+                    <MemberCard key={m.slug} member={m} index={idx + 2} />
                   ))}
                 </div>
               </div>
@@ -166,10 +179,9 @@ function Home() {
           <SectionHeader index="03" label="Events" title="What's on the schedule." />
           <div className="mt-12 grid gap-px border border-hairline bg-hairline md:grid-cols-2">
             {events.map((e) => {
-              const d = new Date(e.date);
+              const d = new Date(e.event_date);
               const day = d.toLocaleDateString("en-US", { day: "2-digit" });
               const mon = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
-              const yr = d.getFullYear();
               return (
                 <article
                   key={e.id}
@@ -180,7 +192,9 @@ function Home() {
                     <div className="mt-1 font-mono text-[10px] tracking-widest text-silver">
                       {mon}
                     </div>
-                    <div className="mt-2 font-mono text-[10px] text-muted-foreground">{yr}</div>
+                    <div className="mt-2 font-mono text-[10px] text-muted-foreground">
+                      {d.getFullYear()}
+                    </div>
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -198,6 +212,12 @@ function Home() {
               );
             })}
           </div>
+          <Link
+            to="/events"
+            className="mt-8 inline-block border border-hairline px-5 py-3 font-mono text-[11px] uppercase tracking-widest hover:border-silver"
+          >
+            Register for an event →
+          </Link>
         </div>
       </section>
 
@@ -206,21 +226,13 @@ function Home() {
         <div className="mx-auto max-w-6xl px-6 py-24">
           <SectionHeader index="04" label="Contact" title="Reach the club." />
           <div className="mt-12 grid gap-px border border-hairline bg-hairline md:grid-cols-3">
-            <ContactCard
-              label="Email"
-              value="hello@vertex.club"
-              href="mailto:hello@vertex.club"
-            />
+            <ContactCard label="Email" value="hello@vertex.club" href="mailto:hello@vertex.club" />
             <ContactCard
               label="Instagram"
               value="@vertex.club"
               href="https://instagram.com/vertex.club"
             />
-            <ContactCard
-              label="Location"
-              value="Vertex HQ · Tech Block"
-              href="#"
-            />
+            <ContactCard label="Location" value="Vertex HQ · Tech Block" href="#top" />
           </div>
 
           <form
@@ -279,23 +291,7 @@ function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="hairline-t">
-        <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-16 md:flex-row md:items-end md:justify-between">
-          <div className="flex items-center gap-3">
-            <VertexLogo className="h-8 w-auto" />
-            <div>
-              <div className="font-display text-xl font-semibold">Vertex</div>
-              <div className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                Technical Club · Est. 2026
-              </div>
-            </div>
-          </div>
-          <div className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-            © {new Date().getFullYear()} Vertex — All members listed above.
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

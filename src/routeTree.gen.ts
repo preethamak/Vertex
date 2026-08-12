@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as EventsRouteImport } from './routes/events'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MemberSlugRouteImport } from './routes/member.$slug'
 
@@ -22,6 +23,11 @@ const JoinRoute = JoinRouteImport.update({
 const EventsRoute = EventsRouteImport.update({
   id: '/events',
   path: '/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -37,12 +43,14 @@ const MemberSlugRoute = MemberSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/events': typeof EventsRoute
   '/join': typeof JoinRoute
   '/member/$slug': typeof MemberSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/events': typeof EventsRoute
   '/join': typeof JoinRoute
   '/member/$slug': typeof MemberSlugRoute
@@ -50,20 +58,22 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/events': typeof EventsRoute
   '/join': typeof JoinRoute
   '/member/$slug': typeof MemberSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/events' | '/join' | '/member/$slug'
+  fullPaths: '/' | '/auth' | '/events' | '/join' | '/member/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/events' | '/join' | '/member/$slug'
-  id: '__root__' | '/' | '/events' | '/join' | '/member/$slug'
+  to: '/' | '/auth' | '/events' | '/join' | '/member/$slug'
+  id: '__root__' | '/' | '/auth' | '/events' | '/join' | '/member/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   EventsRoute: typeof EventsRoute
   JoinRoute: typeof JoinRoute
   MemberSlugRoute: typeof MemberSlugRoute
@@ -85,6 +95,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -104,6 +121,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   EventsRoute: EventsRoute,
   JoinRoute: JoinRoute,
   MemberSlugRoute: MemberSlugRoute,
