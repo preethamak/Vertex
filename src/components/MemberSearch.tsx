@@ -1,23 +1,23 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { getAllMembers } from "@/data/team";
+import type { Member } from "@/data/team";
 import { Avatar } from "./MemberCard";
 
-export function MemberSearch() {
+export function MemberSearch({ members }: { members: Member[] }) {
   const [q, setQ] = useState("");
-  const all = useMemo(() => getAllMembers(), []);
   const results = useMemo(() => {
     const query = q.trim().toLowerCase();
     if (!query) return [];
-    return all
+    return members
       .filter(
         (m) =>
           m.name.toLowerCase().includes(query) ||
           m.team?.toLowerCase().includes(query) ||
-          m.role?.toLowerCase().includes(query),
+          m.role.toLowerCase().includes(query) ||
+          m.skills.some((s) => s.toLowerCase().includes(query)),
       )
       .slice(0, 8);
-  }, [q, all]);
+  }, [q, members]);
 
   return (
     <div className="relative w-full">
@@ -29,7 +29,7 @@ export function MemberSearch() {
           type="text"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Find a member, team, or role…"
+          placeholder="Find a member, team, or skill…"
           className="w-full bg-transparent font-mono text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
         />
         {q && (
@@ -55,7 +55,7 @@ export function MemberSearch() {
               <div className="min-w-0 flex-1">
                 <div className="font-display text-sm">{m.name}</div>
                 <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                  {m.team} · {m.role ?? "Member"}
+                  {m.team ?? "Vertex"} · {m.role}
                 </div>
               </div>
               <span className="font-mono text-[10px] text-muted-foreground">→</span>
