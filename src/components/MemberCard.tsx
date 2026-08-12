@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { initials, slugify, type Member } from "@/data/team";
+import { initials, type Member } from "@/data/team";
 
 export function Avatar({
   name,
@@ -8,7 +8,7 @@ export function Avatar({
 }: {
   name: string;
   size?: number;
-  photo?: string;
+  photo?: string | null;
 }) {
   return (
     <div
@@ -49,11 +49,10 @@ export function MemberCard({
   index: number;
   isHead?: boolean;
 }) {
-  const slug = slugify(member.name);
   return (
     <Link
       to="/member/$slug"
-      params={{ slug }}
+      params={{ slug: member.slug }}
       className="group relative flex items-center gap-4 border border-hairline bg-card/40 p-4 transition-colors hover:border-silver/50 hover:bg-card"
     >
       <Avatar name={member.name} size={56} photo={member.photo} />
