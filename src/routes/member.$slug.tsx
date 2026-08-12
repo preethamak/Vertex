@@ -3,13 +3,17 @@ import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
 import { VertexLogo } from "@/components/VertexLogo";
 import { Avatar } from "@/components/MemberCard";
-import { findMember, getAllMembers } from "@/data/team";
+import { getDirectory } from "@/lib/club.functions";
 
 export const Route = createFileRoute("/member/$slug")({
-  loader: ({ params }) => {
-    const member = findMember(params.slug);
+  loader: async ({ params }) => {
+    const directory = await getDirectory();
+    const member = directory.all.find((m) => m.slug === params.slug);
     if (!member) throw notFound();
-    return { member };
+    const teammates = directory.all
+      .filter((m) => m.teamId === member.teamId && m.slug !== member.slug)
+      .slice(0, 6);
+    return { member, teammates };
   },
   head: ({ loaderData }) => ({
     meta: loaderData
@@ -17,13 +21,21 @@ export const Route = createFileRoute("/member/$slug")({
           { title: `${loaderData.member.name} — Vertex` },
           {
             name: "description",
-            content: `${loaderData.member.name} · ${loaderData.member.team ?? "Vertex"} · ${loaderData.member.role ?? "Member"}`,
+            content: `${loaderData.member.name} · ${loaderData.member.team ?? "Vertex"} · ${loaderData.member.role}`,
           },
+          { property: "og:title", content: `${loaderData.member.name} — Vertex` },
+          {
+            property: "og:description",
+            content: `${loaderData.member.name} · ${loaderData.member.team ?? "Vertex"} · ${loaderData.member.role}`,
+          },
+          { property: "og:type", content: "profile" },
+          { name: "twitter:card", content: "summary" },
         ]
       : [{ title: "Member — Vertex" }, { name: "robots", content: "noindex" }],
   }),
   component: MemberProfile,
   notFoundComponent: MemberNotFound,
+  errorComponent: MemberNotFound,
 });
 
 function MemberNotFound() {
@@ -46,24 +58,19 @@ function MemberNotFound() {
 }
 
 function MemberProfile() {
-  const { member } = Route.useLoaderData();
+  const { member, teammates } = Route.useLoaderData();
   const [url, setUrl] = useState("");
 
   useEffect(() => {
     setUrl(window.location.href);
   }, []);
 
-  const all = getAllMembers();
-  const teammates = all
-    .filter((m) => m.teamId === member.teamId && m.slug !== member.slug)
-    .slice(0, 6);
-
   const share = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
           title: `${member.name} — Vertex`,
-          text: `${member.name} · ${member.team}`,
+          text: `${member.name} · ${member.team ?? "Vertex"}`,
           url,
         });
       } catch {
@@ -80,9 +87,7 @@ function MemberProfile() {
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2">
             <VertexLogo className="h-6 w-auto" />
-            <span className="font-display text-lg font-semibold tracking-tight">
-              Vertex
-            </span>
+            <span className="font-display text-lg font-semibold tracking-tight">Vertex</span>
           </Link>
           <Link
             to="/"
@@ -105,7 +110,7 @@ function MemberProfile() {
         <div className="relative mx-auto max-w-5xl px-6 py-16 md:py-24">
           <div className="mb-8 flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
             <span className="inline-block h-px w-8 bg-silver" />
-            {member.team} · {member.isHead ? "Team Head" : member.role}
+            {member.team ?? "Vertex"} · {member.isHead ? "Team Head" : member.role}
           </div>
 
           <div className="grid gap-12 md:grid-cols-[1fr_auto] md:items-start">
@@ -117,7 +122,7 @@ function MemberProfile() {
                     {member.name}
                   </h1>
                   <div className="mt-3 font-mono text-xs uppercase tracking-widest text-silver">
-                    Vertex · {member.role ?? "Member"}
+                    Vertex · {member.role}
                   </div>
                 </div>
               </div>
@@ -128,9 +133,22 @@ function MemberProfile() {
                 </p>
               )}
 
+              {member.skills.length > 0 && (
+                <div className="mt-8 flex flex-wrap gap-2">
+                  {member.skills.map((s) => (
+                    <span
+                      key={s}
+                      className="border border-hairline px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground"
+                    >
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              )}
+
               <div className="mt-10 grid grid-cols-2 gap-px border border-hairline bg-hairline sm:grid-cols-3">
                 <Stat label="Team" value={member.team ?? "—"} />
-                <Stat label="Role" value={member.isHead ? "Head" : member.role ?? "Member"} />
+                <Stat label="Role" value={member.isHead ? "Head" : member.role} />
                 <Stat label="ID" value={member.slug.slice(0, 8).toUpperCase()} />
               </div>
 
@@ -156,7 +174,9 @@ function MemberProfile() {
                 <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                   QR · Scan to open
                 </span>
-                <span className="font-mono text-[10px] text-silver">V.{member.slug.slice(0, 4).toUpperCase()}</span>
+                <span className="font-mono text-[10px] text-silver">
+                  V.{member.slug.slice(0, 4).toUpperCase()}
+                </span>
               </div>
               <div className="bg-white p-4">
                 {url && (
@@ -183,7 +203,7 @@ function MemberProfile() {
             <div className="mb-8 flex items-end justify-between gap-4 hairline-b pb-4">
               <div>
                 <div className="font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
-                  Also on {member.team}
+                  Also on {member.team ?? "Vertex"}
                 </div>
                 <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight">
                   Teammates
@@ -202,7 +222,7 @@ function MemberProfile() {
                   <div>
                     <div className="font-display text-base">{m.name}</div>
                     <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                      {m.role ?? "Member"}
+                      {m.role}
                     </div>
                   </div>
                 </Link>
