@@ -9,12 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as MentorsRouteImport } from './routes/mentors'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AnnouncementsRouteImport } from './routes/announcements'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MemberSlugRouteImport } from './routes/member.$slug'
+import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
+const ProjectsRoute = ProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MentorsRoute = MentorsRouteImport.update({
+  id: '/mentors',
+  path: '/mentors',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JoinRoute = JoinRouteImport.update({
   id: '/join',
   path: '/join',
@@ -30,6 +46,15 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AnnouncementsRoute = AnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -40,47 +65,123 @@ const MemberSlugRoute = MemberSlugRouteImport.update({
   path: '/member/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedMeRoute = AuthenticatedMeRouteImport.update({
+  id: '/me',
+  path: '/me',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/announcements': typeof AnnouncementsRoute
   '/auth': typeof AuthRoute
   '/events': typeof EventsRoute
   '/join': typeof JoinRoute
+  '/mentors': typeof MentorsRoute
+  '/projects': typeof ProjectsRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/me': typeof AuthenticatedMeRoute
   '/member/$slug': typeof MemberSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/announcements': typeof AnnouncementsRoute
   '/auth': typeof AuthRoute
   '/events': typeof EventsRoute
   '/join': typeof JoinRoute
+  '/mentors': typeof MentorsRoute
+  '/projects': typeof ProjectsRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/me': typeof AuthenticatedMeRoute
   '/member/$slug': typeof MemberSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/announcements': typeof AnnouncementsRoute
   '/auth': typeof AuthRoute
   '/events': typeof EventsRoute
   '/join': typeof JoinRoute
+  '/mentors': typeof MentorsRoute
+  '/projects': typeof ProjectsRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/me': typeof AuthenticatedMeRoute
   '/member/$slug': typeof MemberSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/events' | '/join' | '/member/$slug'
+  fullPaths:
+    | '/'
+    | '/announcements'
+    | '/auth'
+    | '/events'
+    | '/join'
+    | '/mentors'
+    | '/projects'
+    | '/admin'
+    | '/me'
+    | '/member/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/events' | '/join' | '/member/$slug'
-  id: '__root__' | '/' | '/auth' | '/events' | '/join' | '/member/$slug'
+  to:
+    | '/'
+    | '/announcements'
+    | '/auth'
+    | '/events'
+    | '/join'
+    | '/mentors'
+    | '/projects'
+    | '/admin'
+    | '/me'
+    | '/member/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/announcements'
+    | '/auth'
+    | '/events'
+    | '/join'
+    | '/mentors'
+    | '/projects'
+    | '/_authenticated/admin'
+    | '/_authenticated/me'
+    | '/member/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AnnouncementsRoute: typeof AnnouncementsRoute
   AuthRoute: typeof AuthRoute
   EventsRoute: typeof EventsRoute
   JoinRoute: typeof JoinRoute
+  MentorsRoute: typeof MentorsRoute
+  ProjectsRoute: typeof ProjectsRoute
   MemberSlugRoute: typeof MemberSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/projects': {
+      id: '/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mentors': {
+      id: '/mentors'
+      path: '/mentors'
+      fullPath: '/mentors'
+      preLoaderRoute: typeof MentorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/join': {
       id: '/join'
       path: '/join'
@@ -102,6 +203,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/announcements': {
+      id: '/announcements'
+      path: '/announcements'
+      fullPath: '/announcements'
+      preLoaderRoute: typeof AnnouncementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -116,14 +231,45 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MemberSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/me': {
+      id: '/_authenticated/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof AuthenticatedMeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedMeRoute: typeof AuthenticatedMeRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedMeRoute: AuthenticatedMeRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AnnouncementsRoute: AnnouncementsRoute,
   AuthRoute: AuthRoute,
   EventsRoute: EventsRoute,
   JoinRoute: JoinRoute,
+  MentorsRoute: MentorsRoute,
+  ProjectsRoute: ProjectsRoute,
   MemberSlugRoute: MemberSlugRoute,
 }
 export const routeTree = rootRouteImport

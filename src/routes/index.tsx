@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MemberCard, Avatar } from "@/components/MemberCard";
-import { MemberSearch } from "@/components/MemberSearch";
+import { DirectoryExplorer } from "@/components/DirectoryExplorer";
 import { SiteHeader, SiteFooter } from "@/components/SiteChrome";
 import { VertexLogo } from "@/components/VertexLogo";
 import { getDirectory, getEvents } from "@/lib/club.functions";
@@ -74,7 +74,7 @@ function Home() {
           </div>
 
           <div className="mt-12 max-w-2xl">
-            <MemberSearch members={all} />
+            <DirectoryExplorer directory={directory} />
           </div>
 
           <div className="mt-8 flex flex-wrap gap-3">
