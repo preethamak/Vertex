@@ -16,6 +16,18 @@ export function SiteHeader() {
           <Link to="/events" className="hover:text-foreground">
             Events
           </Link>
+          <Link to="/projects" className="hidden hover:text-foreground sm:block">
+            Projects
+          </Link>
+          <Link to="/announcements" className="hidden hover:text-foreground md:block">
+            Feed
+          </Link>
+          <Link to="/mentors" className="hidden hover:text-foreground md:block">
+            Mentors
+          </Link>
+          <Link to="/me" className="hidden hover:text-foreground sm:block">
+            Dashboard
+          </Link>
           <Link to="/join" className="hover:text-foreground">
             Join
           </Link>

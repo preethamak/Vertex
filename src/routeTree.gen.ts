@@ -19,6 +19,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MemberSlugRouteImport } from './routes/member.$slug'
 import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
 const ProjectsRoute = ProjectsRouteImport.update({
   id: '/projects',
@@ -69,6 +70,11 @@ const AuthenticatedMeRoute = AuthenticatedMeRouteImport.update({
   path: '/me',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/join': typeof JoinRoute
   '/mentors': typeof MentorsRoute
   '/projects': typeof ProjectsRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/me': typeof AuthenticatedMeRoute
   '/member/$slug': typeof MemberSlugRoute
 }
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/join': typeof JoinRoute
   '/mentors': typeof MentorsRoute
   '/projects': typeof ProjectsRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/me': typeof AuthenticatedMeRoute
   '/member/$slug': typeof MemberSlugRoute
 }
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/join': typeof JoinRoute
   '/mentors': typeof MentorsRoute
   '/projects': typeof ProjectsRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/me': typeof AuthenticatedMeRoute
   '/member/$slug': typeof MemberSlugRoute
 }
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/join'
     | '/mentors'
     | '/projects'
+    | '/admin'
     | '/me'
     | '/member/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/join'
     | '/mentors'
     | '/projects'
+    | '/admin'
     | '/me'
     | '/member/$slug'
   id:
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/join'
     | '/mentors'
     | '/projects'
+    | '/_authenticated/admin'
     | '/_authenticated/me'
     | '/member/$slug'
   fileRoutesById: FileRoutesById
@@ -226,14 +238,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedMeRoute: typeof AuthenticatedMeRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedMeRoute: AuthenticatedMeRoute,
 }
 
