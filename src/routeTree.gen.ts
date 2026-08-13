@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as MentorsRouteImport } from './routes/mentors'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -20,6 +21,11 @@ import { Route as MemberSlugRouteImport } from './routes/member.$slug'
 const ProjectsRoute = ProjectsRouteImport.update({
   id: '/projects',
   path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MentorsRoute = MentorsRouteImport.update({
+  id: '/mentors',
+  path: '/mentors',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JoinRoute = JoinRouteImport.update({
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/events': typeof EventsRoute
   '/join': typeof JoinRoute
+  '/mentors': typeof MentorsRoute
   '/projects': typeof ProjectsRoute
   '/member/$slug': typeof MemberSlugRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/events': typeof EventsRoute
   '/join': typeof JoinRoute
+  '/mentors': typeof MentorsRoute
   '/projects': typeof ProjectsRoute
   '/member/$slug': typeof MemberSlugRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/events': typeof EventsRoute
   '/join': typeof JoinRoute
+  '/mentors': typeof MentorsRoute
   '/projects': typeof ProjectsRoute
   '/member/$slug': typeof MemberSlugRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/events'
     | '/join'
+    | '/mentors'
     | '/projects'
     | '/member/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/events'
     | '/join'
+    | '/mentors'
     | '/projects'
     | '/member/$slug'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/events'
     | '/join'
+    | '/mentors'
     | '/projects'
     | '/member/$slug'
   fileRoutesById: FileRoutesById
@@ -117,6 +129,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   EventsRoute: typeof EventsRoute
   JoinRoute: typeof JoinRoute
+  MentorsRoute: typeof MentorsRoute
   ProjectsRoute: typeof ProjectsRoute
   MemberSlugRoute: typeof MemberSlugRoute
 }
@@ -128,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/projects'
       fullPath: '/projects'
       preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mentors': {
+      id: '/mentors'
+      path: '/mentors'
+      fullPath: '/mentors'
+      preLoaderRoute: typeof MentorsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/join': {
@@ -181,6 +201,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   EventsRoute: EventsRoute,
   JoinRoute: JoinRoute,
+  MentorsRoute: MentorsRoute,
   ProjectsRoute: ProjectsRoute,
   MemberSlugRoute: MemberSlugRoute,
 }
