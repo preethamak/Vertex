@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { initials, type Member } from "@/data/team";
 
 export function Avatar({
@@ -10,35 +11,49 @@ export function Avatar({
   size?: number;
   photo?: string | null;
 }) {
+  const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    setFailed(false);
+    setLoaded(false);
+  }, [photo]);
+
+  const showPhoto = Boolean(photo) && !failed;
+
   return (
     <div
       className="relative shrink-0 overflow-hidden rounded-full border border-hairline bg-secondary"
       style={{ width: size, height: size }}
     >
-      {photo ? (
+      <div
+        className="absolute inset-0 opacity-40"
+        style={{
+          background:
+            "radial-gradient(circle at 30% 25%, oklch(0.35 0 0) 0%, transparent 55%)",
+        }}
+      />
+      <div className="absolute inset-0 flex items-center justify-center font-mono text-sm tracking-widest text-silver">
+        {initials(name)}
+      </div>
+      {showPhoto && (
         <img
-          src={photo}
-          alt={name}
-          className="h-full w-full object-cover"
+          src={photo!}
+          alt=""
+          aria-hidden="true"
+          onError={() => setFailed(true)}
+          onLoad={() => setLoaded(true)}
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
+            loaded ? "opacity-100" : "opacity-0"
+          }`}
           loading="lazy"
+          decoding="async"
         />
-      ) : (
-        <>
-          <div
-            className="absolute inset-0 opacity-40"
-            style={{
-              background:
-                "radial-gradient(circle at 30% 25%, oklch(0.35 0 0) 0%, transparent 55%)",
-            }}
-          />
-          <div className="relative flex h-full w-full items-center justify-center font-mono text-sm tracking-widest text-silver">
-            {initials(name)}
-          </div>
-        </>
       )}
     </div>
   );
 }
+
 
 export function MemberCard({
   member,
