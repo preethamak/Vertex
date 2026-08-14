@@ -19,19 +19,42 @@ export function PhotoUpload({
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
 
+  const compress = async (file: File): Promise<Blob> => {
+    try {
+      const bitmap = await createImageBitmap(file);
+      const max = 900;
+      const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
+      const w = Math.round(bitmap.width * scale);
+      const h = Math.round(bitmap.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return file;
+      ctx.drawImage(bitmap, 0, 0, w, h);
+      const blob = await new Promise<Blob | null>((res) =>
+        canvas.toBlob(res, "image/jpeg", 0.86),
+      );
+      return blob && blob.size < file.size ? blob : file;
+    } catch {
+      return file;
+    }
+  };
+
   const pick = async (file: File) => {
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Keep images under 5 MB.");
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error("Keep images under 15 MB.");
       return;
     }
     setBusy(true);
     try {
-      const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+      const body = await compress(file);
+      const ext = body.type === "image/jpeg" ? "jpg" : (file.name.split(".").pop()?.toLowerCase() ?? "jpg");
       const path = `${folder}/${crypto.randomUUID()}.${ext}`;
-      const { error } = await supabase.storage.from("media").upload(path, file, {
+      const { error } = await supabase.storage.from("media").upload(path, body, {
         cacheControl: "31536000",
         upsert: false,
-        contentType: file.type || undefined,
+        contentType: body.type || file.type || undefined,
       });
       if (error) throw error;
       const { url } = await finalize({ data: { path } });
@@ -43,6 +66,7 @@ export function PhotoUpload({
       setBusy(false);
     }
   };
+
 
   return (
     <div className="flex items-center gap-4">
