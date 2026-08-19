@@ -179,9 +179,9 @@ function Home() {
           <SectionHeader index="03" label="Events" title="What's on the schedule." />
           <div className="mt-12 grid gap-px border border-hairline bg-hairline md:grid-cols-2">
             {events.map((e) => {
-              const d = new Date(e.event_date);
-              const day = d.toLocaleDateString("en-US", { day: "2-digit" });
-              const mon = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+              const d = e.event_date ? new Date(e.event_date) : null;
+              const day = d ? d.toLocaleDateString("en-US", { day: "2-digit" }) : "--";
+              const mon = d ? d.toLocaleDateString("en-US", { month: "short" }).toUpperCase() : "TBA";
               return (
                 <article
                   key={e.id}
@@ -193,7 +193,7 @@ function Home() {
                       {mon}
                     </div>
                     <div className="mt-2 font-mono text-[10px] text-muted-foreground">
-                      {d.getFullYear()}
+                      {d ? d.getFullYear() : ""}
                     </div>
                   </div>
                   <div className="min-w-0 flex-1">

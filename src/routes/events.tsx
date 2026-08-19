@@ -35,7 +35,7 @@ export const Route = createFileRoute("/events")({
 
 type Pass = {
   code: string;
-  event: { title: string; date: string; location: string };
+  event: { title: string; date: string | null; location: string };
 };
 
 function EventsPage() {
@@ -61,9 +61,9 @@ function EventsPage() {
 
           <div className="mt-14 flex flex-col gap-px border border-hairline bg-hairline">
             {events.map((e) => {
-              const d = new Date(e.event_date);
-              const day = d.toLocaleDateString("en-US", { day: "2-digit" });
-              const mon = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+              const d = e.event_date ? new Date(e.event_date) : null;
+              const day = d ? d.toLocaleDateString("en-US", { day: "2-digit" }) : "--";
+              const mon = d ? d.toLocaleDateString("en-US", { month: "short" }).toUpperCase() : "TBA";
               const open = openSlug === e.slug;
               return (
                 <article key={e.id} className="bg-background p-6">
@@ -74,7 +74,7 @@ function EventsPage() {
                         {mon}
                       </div>
                       <div className="mt-2 font-mono text-[10px] text-muted-foreground">
-                        {d.getFullYear()}
+                        {d ? d.getFullYear() : ""}
                       </div>
                     </div>
                     <div className="min-w-0 flex-1">
@@ -203,7 +203,7 @@ function PassCard({ pass, onClose }: { pass: Pass; onClose: () => void }) {
           {pass.event.title}
         </h2>
         <div className="mt-2 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-          {new Date(pass.event.date).toDateString()} · {pass.event.location}
+          {pass.event.date ? new Date(pass.event.date).toDateString() : "Date TBA"} · {pass.event.location}
         </div>
         <div className="mt-6 break-all border border-hairline bg-background px-4 py-3 font-mono text-sm text-foreground">
           {pass.code}
