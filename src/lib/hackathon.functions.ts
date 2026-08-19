@@ -1,0 +1,198 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  hackathonRegisterInput,
+  hackathonSubmissionInput,
+  hackathonTeamUpdateInput,
+  hackathonWorkspaceInput,
+  milestoneInput,
+  eventAnnouncementInput,
+} from "@/lib/schemas";
+
+export const EVENT_SLUG = "sih-internal-hackathon";
+
+export const getHackathon = createServerFn({ method: "GET" }).handler(async () => {
+  const { serverPublicClient } = await import("@/lib/supabase-public.server");
+  const sb = serverPublicClient();
+
+  const { data: event } = await sb
+    .from("events")
+    .select("id, slug, title, description, location, tag, event_date, start_time, schedule_tba, cover_url")
+    .eq("slug", EVENT_SLUG)
+    .eq("published", true)
+    .maybeSingle();
+  if (!event) return null;
+
+  const [workspace, milestones, announcements, submissions] = await Promise.all([
+    sb
+      .from("event_workspaces")
+      .select("registration_open, submissions_open, min_team_size, max_team_size, rules")
+      .eq("event_id", event.id)
+      .eq("published", true)
+      .maybeSingle(),
+    sb
+      .from("event_milestones")
+      .select("id, title, description, starts_at, ends_at, sort_order")
+      .eq("event_id", event.id)
+      .eq("published", true)
+      .order("sort_order"),
+    sb
+      .from("event_announcements")
+      .select("id, title, body, pinned, created_at")
+      .eq("event_id", event.id)
+      .eq("published", true)
+      .order("pinned", { ascending: false })
+      .order("created_at", { ascending: false }),
+    sb
+      .from("hackathon_submissions")
+      .select("id, solution_title, solution_summary, theme, problem_statement_title, repository_url, demo_url")
+      .eq("published", true),
+  ]);
+
+  // Public roster: team names + member names only (no contact details).
+  const { getPublicRoster } = await import("@/lib/hackathon.server");
+  const roster = await getPublicRoster(event.id);
+
+  return {
+    event,
+    workspace: workspace.data ?? null,
+    milestones: milestones.data ?? [],
+    announcements: announcements.data ?? [],
+    showcase: submissions.data ?? [],
+    roster,
+  };
+});
+
+export const registerHackathonTeam = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => hackathonRegisterInput.parse(input))
+  .handler(async ({ data }) => {
+    const { createTeam } = await import("@/lib/hackathon.server");
+    return createTeam(data);
+  });
+
+export const getHackathonTeam = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ token: z.string().trim().min(10).max(120) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { loadTeamByToken } = await import("@/lib/hackathon.server");
+    return loadTeamByToken(data.token);
+  });
+
+export const updateHackathonTeam = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => hackathonTeamUpdateInput.parse(input))
+  .handler(async ({ data }) => {
+    const { updateTeam } = await import("@/lib/hackathon.server");
+    return updateTeam(data);
+  });
+
+export const saveHackathonSubmission = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => hackathonSubmissionInput.parse(input))
+  .handler(async ({ data }) => {
+    const { saveSubmission } = await import("@/lib/hackathon.server");
+    return saveSubmission(data);
+  });
+
+export const hackathonAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertStaff } = await import("@/lib/roles.server");
+    await assertStaff(context.supabase, context.userId);
+    const { adminOverviewData } = await import("@/lib/hackathon.server");
+    return adminOverviewData();
+  });
+
+export const saveHackathonWorkspace = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => hackathonWorkspaceInput.parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("@/lib/roles.server");
+    await assertAdmin(context.supabase, context.userId);
+    const { eventId } = await import("@/lib/hackathon.server").then((m) => m.resolveEvent());
+    const { error } = await context.supabase
+      .from("event_workspaces")
+      .update({
+        registration_open: data.registrationOpen,
+        submissions_open: data.submissionsOpen,
+        min_team_size: data.minTeamSize,
+        max_team_size: data.maxTeamSize,
+        rules: data.rules,
+      })
+      .eq("event_id", eventId);
+    if (error) throw new Error("Could not update the hackathon settings.");
+    return { ok: true };
+  });
+
+export const saveMilestone = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => milestoneInput.parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("@/lib/roles.server");
+    await assertAdmin(context.supabase, context.userId);
+    const { eventId } = await import("@/lib/hackathon.server").then((m) => m.resolveEvent());
+    const row = {
+      event_id: eventId,
+      title: data.title,
+      description: data.description,
+      starts_at: data.startsAt,
+      ends_at: data.endsAt,
+      sort_order: data.sortOrder,
+      published: data.published,
+    };
+    const { error } = data.id
+      ? await context.supabase.from("event_milestones").update(row).eq("id", data.id)
+      : await context.supabase.from("event_milestones").insert(row);
+    if (error) throw new Error("Could not save that milestone.");
+    return { ok: true };
+  });
+
+export const deleteMilestone = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("@/lib/roles.server");
+    await assertAdmin(context.supabase, context.userId);
+    const { error } = await context.supabase.from("event_milestones").delete().eq("id", data.id);
+    if (error) throw new Error("Could not delete that milestone.");
+    return { ok: true };
+  });
+
+export const saveEventAnnouncement = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => eventAnnouncementInput.parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("@/lib/roles.server");
+    await assertAdmin(context.supabase, context.userId);
+    const { eventId } = await import("@/lib/hackathon.server").then((m) => m.resolveEvent());
+    const { error } = await context.supabase.from("event_announcements").insert({
+      event_id: eventId,
+      title: data.title,
+      body: data.body,
+      pinned: data.pinned,
+      published: data.published,
+    });
+    if (error) throw new Error("Could not post that update.");
+    return { ok: true };
+  });
+
+export const setHackathonTeamStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        status: z.enum(["registered", "confirmed", "shortlisted", "withdrawn"]),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertStaff } = await import("@/lib/roles.server");
+    await assertStaff(context.supabase, context.userId);
+    const { error } = await context.supabase
+      .from("hackathon_teams")
+      .update({ status: data.status })
+      .eq("id", data.id);
+    if (error) throw new Error("Could not update that team.");
+    return { ok: true };
+  });
