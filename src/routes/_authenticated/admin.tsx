@@ -445,7 +445,7 @@ type EventRow = {
   id: string;
   slug: string;
   title: string;
-  event_date: string;
+  event_date: string | null;
   start_time: string | null;
   location: string;
   tag: string;
@@ -532,7 +532,7 @@ function Events({ events }: { events: EventRow[] }) {
             <input name="slug" defaultValue={editing.slug} placeholder="auto from title" className={field} />
           </Label>
           <Label text="Date">
-            <input name="date" type="date" required defaultValue={editing.event_date} className={field} />
+            <input name="date" type="date" required defaultValue={editing.event_date ?? ""} className={field} />
           </Label>
           <Label text="Start time">
             <input name="time" defaultValue={editing.start_time ?? ""} className={field} />
@@ -569,7 +569,7 @@ function Events({ events }: { events: EventRow[] }) {
             <div>
               <div className="font-display text-base">{e.title}</div>
               <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                {new Date(e.event_date).toDateString()} · {e.location} · {e.published ? "live" : "draft"}
+                {e.event_date ? new Date(e.event_date).toDateString() : "Date TBA"} · {e.location} · {e.published ? "live" : "draft"}
               </div>
             </div>
             <button className={ghost} onClick={() => open(e)}>
