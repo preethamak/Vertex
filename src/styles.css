@@ -35,7 +35,12 @@
   --color-ring: var(--ring);
   --color-hairline: var(--hairline);
   --color-silver: var(--silver);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-glass-border: var(--glass-border);
 }
+
 
 :root {
   --radius: 0.5rem;
