@@ -3,6 +3,9 @@ import { MemberCard, Avatar } from "@/components/MemberCard";
 import { DirectoryExplorer } from "@/components/DirectoryExplorer";
 import { SiteHeader, SiteFooter } from "@/components/SiteChrome";
 import { VertexLogo } from "@/components/VertexLogo";
+import { Atmosphere } from "@/components/Atmosphere";
+import { Reveal } from "@/components/Reveal";
+import { motion } from "motion/react";
 import { getDirectory, getEvents } from "@/lib/club.functions";
 
 export const Route = createFileRoute("/")({
@@ -42,57 +45,65 @@ function Home() {
   const totalMembers = all.length;
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground">
+    <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
       <SiteHeader />
 
       {/* Hero */}
       <section id="top" className="relative overflow-hidden">
-        <div className="absolute inset-0 grid-backdrop opacity-60" />
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-[520px]"
-          style={{
-            background:
-              "radial-gradient(ellipse at 50% 0%, oklch(0.18 0 0) 0%, transparent 60%)",
-          }}
-        />
-        <div className="relative mx-auto max-w-6xl px-6 pb-24 pt-20 md:pt-32">
-          <div className="mb-10 flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+        <Atmosphere />
+        <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-20 md:pb-28 md:pt-28">
+          <motion.div
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.55 }}
+            className="mb-10 flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground"
+          >
             <span className="inline-block h-px w-8 bg-silver" />
-            Est. 2026 · Vertex Technical Club
-          </div>
+            Est. 2026 · Technical Club
+            <span className="ml-2 hidden items-center gap-2 text-silver sm:inline-flex">
+              <i className="h-1.5 w-1.5 rounded-full bg-silver shadow-[0_0_12px_white]" /> Club is
+              active
+            </span>
+          </motion.div>
 
-          <div className="flex flex-col items-start gap-8 md:flex-row md:items-center">
-            <VertexLogo className="h-20 w-auto text-foreground md:h-28" />
+          <div className="flex flex-col items-start gap-8 md:flex-row md:items-center md:gap-10">
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <VertexLogo className="h-20 w-auto text-foreground drop-shadow-[0_0_45px_rgba(255,255,255,.24)] md:h-32" />
+            </motion.div>
             <div>
-              <h1 className="font-display text-6xl font-semibold leading-[0.95] tracking-tight md:text-8xl">
+              <h1 className="text-silver-gradient font-display text-6xl font-semibold leading-[0.86] tracking-[-0.06em] md:text-8xl lg:text-9xl">
                 Vertex
               </h1>
-              <p className="mt-3 max-w-xl font-mono text-sm uppercase tracking-widest text-muted-foreground">
-                A technical club — built by teams, run by people.
+              <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
+                A home for people who build, organise, experiment, and leave campus better than they
+                found it.
               </p>
             </div>
           </div>
 
-          <div className="mt-12 max-w-2xl">
+          <div className="mt-10 max-w-2xl">
             <DirectoryExplorer directory={directory} />
           </div>
 
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               to="/join"
-              className="border border-silver bg-foreground px-5 py-3 font-mono text-[11px] uppercase tracking-widest text-background hover:opacity-90"
+              className="btn-primary rounded-lg px-5 py-3 font-mono text-[11px] uppercase tracking-widest"
             >
               Apply to a team →
             </Link>
             <Link
               to="/events"
-              className="border border-hairline px-5 py-3 font-mono text-[11px] uppercase tracking-widest hover:border-silver"
+              className="btn-ghost rounded-lg px-5 py-3 font-mono text-[11px] uppercase tracking-widest"
             >
               See events
             </Link>
           </div>
 
-          <div className="mt-16 grid grid-cols-2 gap-px overflow-hidden border border-hairline bg-hairline md:grid-cols-4">
+          <div className="mt-16 grid grid-cols-2 gap-3 md:grid-cols-4">
             <Stat label="Members" value={String(totalMembers).padStart(2, "0")} />
             <Stat label="Teams" value={String(teams.length).padStart(2, "0")} />
             <Stat label="Leadership" value={String(leadership.length).padStart(2, "0")} />
@@ -102,46 +113,51 @@ function Home() {
       </section>
 
       {/* Leadership */}
-      <section id="leadership" className="hairline-t">
+      <section id="leadership" className="relative border-t border-white/10">
         <div className="mx-auto max-w-6xl px-6 py-24">
-          <SectionHeader index="01" label="Leadership" title="The people at the top." />
+          <Reveal>
+            <SectionHeader index="01" label="Leadership" title="The people who set the pace." />
+          </Reveal>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {leadership.map((m) => (
-              <Link
-                key={m.slug}
-                to="/member/$slug"
-                params={{ slug: m.slug }}
-                className="group relative flex flex-col items-start gap-6 border border-hairline bg-card/40 p-8 transition-colors hover:border-silver/50"
-              >
-                <div className="flex w-full items-start justify-between">
-                  <Avatar name={m.name} size={80} photo={m.photo} />
-                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                    {m.role}
-                  </span>
-                </div>
-                <div>
-                  <div className="font-display text-2xl leading-tight">{m.name}</div>
-                  <div className="mt-1 font-mono text-xs uppercase tracking-widest text-silver">
-                    Vertex · {m.role}
+            {leadership.map((m, index) => (
+              <Reveal key={m.slug} delay={index * 0.08}>
+                <Link
+                  to="/member/$slug"
+                  params={{ slug: m.slug }}
+                  className="surface-card edge-highlight group flex h-full flex-col items-start gap-6 rounded-2xl p-8"
+                >
+                  <div className="flex w-full items-start justify-between">
+                    <Avatar name={m.name} size={80} photo={m.photo} />
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      {m.role}
+                    </span>
                   </div>
-                </div>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
-                  View profile →
-                </span>
-              </Link>
+                  <div>
+                    <div className="font-display text-2xl leading-tight">{m.name}</div>
+                    <div className="mt-1 font-mono text-xs uppercase tracking-widest text-silver">
+                      Vertex · {m.role}
+                    </div>
+                  </div>
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
+                    View profile →
+                  </span>
+                </Link>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
       {/* Teams */}
-      <section id="teams" className="hairline-t">
+      <section id="teams" className="relative border-t border-white/10">
         <div className="mx-auto max-w-6xl px-6 py-24">
-          <SectionHeader index="02" label="Teams" title="Every team, every member." />
+          <Reveal>
+            <SectionHeader index="02" label="Teams" title="Five teams. One shared signal." />
+          </Reveal>
 
           <div className="mt-16 flex flex-col gap-24">
             {teams.map((team, i) => (
-              <div key={team.id} className="relative">
+              <Reveal key={team.id} className="relative">
                 <div className="mb-8 flex items-end justify-between gap-6 hairline-b pb-4">
                   <div>
                     <div className="font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
@@ -151,9 +167,7 @@ function Home() {
                       {team.name}
                     </h3>
                     {team.blurb && (
-                      <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-                        {team.blurb}
-                      </p>
+                      <p className="mt-2 max-w-xl text-sm text-muted-foreground">{team.blurb}</p>
                     )}
                   </div>
                   <div className="hidden font-mono text-xs text-muted-foreground md:block">
@@ -167,25 +181,29 @@ function Home() {
                     <MemberCard key={m.slug} member={m} index={idx + 2} />
                   ))}
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
       {/* Events */}
-      <section id="events" className="hairline-t">
+      <section id="events" className="relative border-t border-white/10">
         <div className="mx-auto max-w-6xl px-6 py-24">
-          <SectionHeader index="03" label="Events" title="What's on the schedule." />
-          <div className="mt-12 grid gap-px border border-hairline bg-hairline md:grid-cols-2">
+          <Reveal>
+            <SectionHeader index="03" label="Events" title="Something worth showing up for." />
+          </Reveal>
+          <div className="mt-12 grid gap-4 md:grid-cols-2">
             {events.map((e) => {
               const d = e.event_date ? new Date(e.event_date) : null;
               const day = d ? d.toLocaleDateString("en-US", { day: "2-digit" }) : "--";
-              const mon = d ? d.toLocaleDateString("en-US", { month: "short" }).toUpperCase() : "TBA";
+              const mon = d
+                ? d.toLocaleDateString("en-US", { month: "short" }).toUpperCase()
+                : "TBA";
               return (
                 <article
                   key={e.id}
-                  className="group relative flex gap-6 bg-background p-6 transition-colors hover:bg-card/40"
+                  className="surface-card group relative flex gap-6 rounded-2xl p-6"
                 >
                   <div className="flex w-20 shrink-0 flex-col items-center border border-hairline p-3">
                     <div className="font-display text-3xl leading-none">{day}</div>
@@ -214,7 +232,7 @@ function Home() {
           </div>
           <Link
             to="/events"
-            className="mt-8 inline-block border border-hairline px-5 py-3 font-mono text-[11px] uppercase tracking-widest hover:border-silver"
+            className="btn-ghost mt-8 rounded-lg px-5 py-3 font-mono text-[11px] uppercase tracking-widest"
           >
             Register for an event →
           </Link>
@@ -222,10 +240,12 @@ function Home() {
       </section>
 
       {/* Contact */}
-      <section id="contact" className="hairline-t">
+      <section id="contact" className="relative border-t border-white/10">
         <div className="mx-auto max-w-6xl px-6 py-24">
-          <SectionHeader index="04" label="Contact" title="Reach the club." />
-          <div className="mt-12 grid gap-px border border-hairline bg-hairline md:grid-cols-3">
+          <Reveal>
+            <SectionHeader index="04" label="Contact" title="Start a conversation." />
+          </Reveal>
+          <div className="mt-12 grid gap-4 md:grid-cols-3">
             <ContactCard label="Email" value="hello@vertex.club" href="mailto:hello@vertex.club" />
             <ContactCard
               label="Instagram"
@@ -236,7 +256,7 @@ function Home() {
           </div>
 
           <form
-            className="mt-12 grid gap-4 border border-hairline bg-card/40 p-6 md:grid-cols-2"
+            className="glass-panel mt-12 grid gap-4 rounded-2xl p-6 md:grid-cols-2"
             onSubmit={(e) => {
               e.preventDefault();
               const f = new FormData(e.currentTarget);
@@ -254,7 +274,7 @@ function Home() {
               <input
                 required
                 name="name"
-                className="border border-hairline bg-background px-3 py-2 font-mono text-sm focus:border-silver focus:outline-none"
+                className="field-input rounded-lg px-3 py-2 font-mono text-sm"
               />
             </label>
             <label className="flex flex-col gap-2">
@@ -265,7 +285,7 @@ function Home() {
                 required
                 type="email"
                 name="email"
-                className="border border-hairline bg-background px-3 py-2 font-mono text-sm focus:border-silver focus:outline-none"
+                className="field-input rounded-lg px-3 py-2 font-mono text-sm"
               />
             </label>
             <label className="flex flex-col gap-2 md:col-span-2">
@@ -276,13 +296,13 @@ function Home() {
                 required
                 name="message"
                 rows={4}
-                className="resize-none border border-hairline bg-background px-3 py-2 font-mono text-sm focus:border-silver focus:outline-none"
+                className="field-input resize-none rounded-lg px-3 py-2 font-mono text-sm"
               />
             </label>
             <div className="md:col-span-2">
               <button
                 type="submit"
-                className="border border-silver bg-foreground px-6 py-3 font-mono text-[11px] uppercase tracking-widest text-background transition-opacity hover:opacity-90"
+                className="btn-primary rounded-lg px-6 py-3 font-mono text-[11px] uppercase tracking-widest"
               >
                 Send message →
               </button>
@@ -298,8 +318,10 @@ function Home() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-background p-6">
-      <div className="font-display text-4xl font-semibold tracking-tight">{value}</div>
+    <div className="glass-panel rounded-xl p-6">
+      <div className="text-silver-gradient font-display text-4xl font-semibold tracking-tight">
+        {value}
+      </div>
       <div className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
         {label}
       </div>
@@ -307,21 +329,13 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ContactCard({
-  label,
-  value,
-  href,
-}: {
-  label: string;
-  value: string;
-  href: string;
-}) {
+function ContactCard({ label, value, href }: { label: string; value: string; href: string }) {
   return (
     <a
       href={href}
       target={href.startsWith("http") ? "_blank" : undefined}
       rel="noreferrer"
-      className="group flex flex-col gap-3 bg-background p-6 transition-colors hover:bg-card/40"
+      className="surface-card group flex flex-col gap-3 rounded-2xl p-6"
     >
       <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
         {label}
@@ -334,15 +348,7 @@ function ContactCard({
   );
 }
 
-function SectionHeader({
-  index,
-  label,
-  title,
-}: {
-  index: string;
-  label: string;
-  title: string;
-}) {
+function SectionHeader({ index, label, title }: { index: string; label: string; title: string }) {
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
       <div className="flex items-center gap-4 font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
@@ -350,9 +356,7 @@ function SectionHeader({
         <span className="inline-block h-px w-10 bg-hairline" />
         <span>{label}</span>
       </div>
-      <h2 className="font-display text-4xl font-semibold tracking-tight md:text-5xl">
-        {title}
-      </h2>
+      <h2 className="font-display text-4xl font-semibold tracking-tight md:text-5xl">{title}</h2>
     </div>
   );
 }

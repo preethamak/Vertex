@@ -1,51 +1,104 @@
 import { Link } from "@tanstack/react-router";
+import { AnimatePresence, motion, useScroll } from "motion/react";
+import { Menu, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { VertexLogo } from "@/components/VertexLogo";
 
 export function SiteHeader() {
+  const [open, setOpen] = useState(false);
+  const { scrollY } = useScroll();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => scrollY.on("change", (value) => setScrolled(value > 18)), [scrollY]);
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  const nav = [
+    { label: "Teams", to: "/" as const, hash: "teams" },
+    { label: "Events", to: "/events" as const },
+    { label: "Projects", to: "/projects" as const },
+    { label: "Feed", to: "/announcements" as const },
+    { label: "Mentors", to: "/mentors" as const },
+    { label: "Dashboard", to: "/me" as const },
+  ];
+
   return (
-    <header className="sticky top-0 z-40 hairline-b bg-background/80 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+    <header className="sticky top-0 z-40 px-3 pt-3 sm:px-5">
+      <div
+        className={`mx-auto flex max-w-6xl items-center justify-between rounded-2xl px-4 py-3 transition-all duration-300 sm:px-5 ${scrolled ? "glass-strong shadow-[var(--shadow-glow)]" : "border border-transparent"}`}
+      >
         <Link to="/" className="flex items-center gap-2 text-foreground">
           <VertexLogo className="h-6 w-auto" />
           <span className="font-display text-lg font-semibold tracking-tight">Vertex</span>
         </Link>
-        <nav className="flex items-center gap-6 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-          <Link to="/" hash="teams" className="hidden hover:text-foreground sm:block">
-            Teams
-          </Link>
-          <Link to="/events" className="hover:text-foreground">
-            Events
-          </Link>
-          <Link to="/projects" className="hidden hover:text-foreground sm:block">
-            Projects
-          </Link>
-          <Link to="/announcements" className="hidden hover:text-foreground md:block">
-            Feed
-          </Link>
-          <Link to="/mentors" className="hidden hover:text-foreground md:block">
-            Mentors
-          </Link>
-          <Link to="/me" className="hidden hover:text-foreground sm:block">
-            Dashboard
-          </Link>
+        <nav className="hidden items-center gap-5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground lg:flex">
+          {nav.map(({ label, to, hash }) => (
+            <Link
+              key={label}
+              to={to}
+              hash={hash}
+              className="transition-colors hover:text-foreground"
+            >
+              {label}
+            </Link>
+          ))}
           <Link to="/join" className="hover:text-foreground">
             Join
           </Link>
-          <Link
-            to="/auth"
-            className="border border-hairline px-3 py-1.5 hover:border-silver hover:text-foreground"
-          >
+          <Link to="/auth" className="btn-ghost rounded-lg px-3 py-1.5 hover:text-foreground">
             Sign in
           </Link>
         </nav>
+        <button
+          aria-label={open ? "Close menu" : "Open menu"}
+          onClick={() => setOpen(!open)}
+          className="glass-panel rounded-lg p-2 lg:hidden"
+        >
+          {open ? <X size={18} /> : <Menu size={18} />}
+        </button>
       </div>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="glass-strong absolute inset-x-3 top-[4.8rem] rounded-2xl p-4 sm:inset-x-5 lg:hidden"
+          >
+            <nav className="grid gap-1 font-display text-2xl">
+              {nav.map(({ label, to, hash }) => (
+                <Link
+                  key={label}
+                  to={to}
+                  hash={hash}
+                  onClick={() => setOpen(false)}
+                  className="rounded-xl px-4 py-3 hover:bg-white/10"
+                >
+                  {label}
+                </Link>
+              ))}
+              <Link
+                to="/join"
+                onClick={() => setOpen(false)}
+                className="mt-2 rounded-xl bg-foreground px-4 py-3 text-background"
+              >
+                Join Vertex →
+              </Link>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
 
 export function SiteFooter() {
   return (
-    <footer className="hairline-t">
+    <footer className="relative border-t border-white/10">
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-16 md:flex-row md:items-end md:justify-between">
         <div className="flex items-center gap-3">
           <VertexLogo className="h-8 w-auto" />
