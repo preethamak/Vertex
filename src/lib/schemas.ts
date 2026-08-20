@@ -85,6 +85,82 @@ export const mentorRequestInput = z.object({
   message: z.string().trim().max(1000).nullable(),
 });
 
+const hackathonPerson = z.object({
+  name: z.string().trim().max(100),
+  email: z.string().trim().max(160),
+  phone: z.string().trim().max(30).optional().default(""),
+  usn: z.string().trim().max(40).optional().default(""),
+  branch: z.string().trim().max(80).optional().default(""),
+  year: z.string().trim().max(20).optional().default(""),
+});
+
+export const hackathonRegisterInput = z.object({
+  name: z.string().trim().min(2).max(100),
+  leadName: z.string().trim().min(2).max(100),
+  leadEmail: z.string().trim().email().max(160),
+  leadPhone: z.string().trim().max(30).optional().default(""),
+  leadUsn: z.string().trim().max(40).optional().default(""),
+  leadBranch: z.string().trim().max(80).optional().default(""),
+  leadYear: z.string().trim().max(20).optional().default(""),
+  college: z.string().trim().max(140).optional().default(""),
+  members: z.array(hackathonPerson).max(10).default([]),
+});
+
+export const hackathonTeamUpdateInput = z.object({
+  token: z.string().trim().min(10).max(120),
+  name: z.string().trim().min(2).max(100),
+  college: z.string().trim().max(140).optional().default(""),
+  mentorName: z.string().trim().max(100).optional().default(""),
+  mentorEmail: z.string().trim().max(160).optional().default(""),
+  members: z.array(hackathonPerson.extend({ isLead: z.boolean() })).max(10).default([]),
+});
+
+export const hackathonSubmissionInput = z.object({
+  token: z.string().trim().min(10).max(120),
+  problemStatementId: z.string().trim().max(60).optional().default(""),
+  problemStatementTitle: z.string().trim().max(200).optional().default(""),
+  theme: z.string().trim().max(120).optional().default(""),
+  solutionTitle: z.string().trim().max(160).optional().default(""),
+  solutionSummary: z.string().trim().max(4000).optional().default(""),
+  repositoryUrl: z.string().trim().max(500).optional().default(""),
+  demoUrl: z.string().trim().max(500).optional().default(""),
+  videoUrl: z.string().trim().max(500).optional().default(""),
+  deckPath: z.string().trim().max(500).optional().default(""),
+  submit: z.boolean().default(false),
+});
+
+export const hackathonWorkspaceInput = z.object({
+  registrationOpen: z.boolean(),
+  submissionsOpen: z.boolean(),
+  minTeamSize: z.number().int().min(1).max(10),
+  maxTeamSize: z.number().int().min(1).max(10),
+  rules: z.string().trim().max(8000).nullable(),
+});
+
+export const milestoneInput = z.object({
+  id: z.string().uuid().optional(),
+  title: z.string().trim().min(2).max(160),
+  description: z.string().trim().max(2000).nullable(),
+  startsAt: z.string().trim().max(60).nullable(),
+  endsAt: z.string().trim().max(60).nullable(),
+  sortOrder: z.number().int().min(0).max(999),
+  published: z.boolean(),
+});
+
+export const eventAnnouncementInput = z.object({
+  title: z.string().trim().min(2).max(160),
+  body: z.string().trim().min(2).max(5000),
+  pinned: z.boolean(),
+  published: z.boolean(),
+});
+
+export type HackathonRegisterInput = z.infer<typeof hackathonRegisterInput>;
+export type HackathonTeamUpdateInput = z.infer<typeof hackathonTeamUpdateInput>;
+export type HackathonSubmissionInput = z.infer<typeof hackathonSubmissionInput>;
+export type HackathonWorkspaceInput = z.infer<typeof hackathonWorkspaceInput>;
+export type MilestoneInput = z.infer<typeof milestoneInput>;
+export type EventAnnouncementInput = z.infer<typeof eventAnnouncementInput>;
+
 export type MemberInput = z.infer<typeof memberInput>;
 export type EventInput = z.infer<typeof eventInput>;
 export type ProjectInput = z.infer<typeof projectInput>;
