@@ -8,6 +8,12 @@ import { Atmosphere } from "@/components/Atmosphere";
 import { Reveal } from "@/components/Reveal";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import { getHackathon, registerHackathonTeam } from "@/lib/hackathon.functions";
+import {
+  SIH_2026_GUIDELINES_URL,
+  SIH_2026_RULES,
+  SIH_2026_SOURCE_URL,
+  SIH_2026_THEME_NAMES,
+} from "@/data/sih-2026";
 
 export const Route = createFileRoute("/events/sih-internal-hackathon/")({
   loader: () => getHackathon(),
@@ -151,10 +157,22 @@ function HackathonPage() {
               <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-silver">
                 <FileText size={14} /> Rules
               </div>
-              <p className="mt-4 whitespace-pre-line text-sm leading-7 text-muted-foreground">
-                {workspace?.rules ||
-                  "The event team will publish the verified rules here before registration opens."}
-              </p>
+              <ul className="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
+                {SIH_2026_RULES.map((rule) => (
+                  <li key={rule} className="flex gap-3">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-silver" />
+                    {rule}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={SIH_2026_GUIDELINES_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-ghost mt-5 rounded-lg px-3 py-2 font-mono text-[10px] uppercase tracking-widest"
+              >
+                Read official SIH guidelines
+              </a>
             </div>
             <div className="glass-panel rounded-2xl p-6">
               <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-silver">
@@ -257,9 +275,32 @@ function HackathonPage() {
           </div>
         </section>
 
+        <section className="mx-auto max-w-6xl px-6 py-20">
+          <Reveal>
+            <Eyebrow
+              number="03"
+              label="Official SIH themes"
+              title="Find the right lane for your idea."
+            />
+          </Reveal>
+          <div className="mt-10 flex flex-wrap gap-3">
+            {SIH_2026_THEME_NAMES.map((theme) => (
+              <a
+                key={theme}
+                href={SIH_2026_SOURCE_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="chip rounded-full px-4 py-2 text-sm text-muted-foreground hover:text-foreground"
+              >
+                {theme}
+              </a>
+            ))}
+          </div>
+        </section>
+
         {roster.length > 0 && (
           <section className="mx-auto max-w-6xl px-6 py-20">
-            <Eyebrow number="03" label="Teams" title="The builders in the room." />
+            <Eyebrow number="04" label="Teams" title="The builders in the room." />
             <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {roster.map((team) => (
                 <article key={team.id} className="surface-card rounded-2xl p-5">
