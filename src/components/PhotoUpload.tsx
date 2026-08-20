@@ -1,8 +1,7 @@
 import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { finalizeUpload } from "@/lib/admin.functions";
+import { uploadMedia } from "@/lib/admin.functions";
 
 export function PhotoUpload({
   value,
@@ -15,7 +14,7 @@ export function PhotoUpload({
   folder?: string;
   label?: string;
 }) {
-  const finalize = useServerFn(finalizeUpload);
+  const upload = useServerFn(uploadMedia);
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
 
@@ -49,15 +48,16 @@ export function PhotoUpload({
     setBusy(true);
     try {
       const body = await compress(file);
-      const ext = body.type === "image/jpeg" ? "jpg" : (file.name.split(".").pop()?.toLowerCase() ?? "jpg");
-      const path = `${folder}/${crypto.randomUUID()}.${ext}`;
-      const { error } = await supabase.storage.from("media").upload(path, body, {
-        cacheControl: "31536000",
-        upsert: false,
-        contentType: body.type || file.type || undefined,
+      const type = body.type || file.type || "image/jpeg";
+      const ext = type === "image/png" ? "png" : type === "image/webp" ? "webp" : "jpg";
+      const buf = new Uint8Array(await body.arrayBuffer());
+      let bin = "";
+      for (let i = 0; i < buf.length; i += 0x8000) {
+        bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+      }
+      const { url } = await upload({
+        data: { folder, ext, contentType: type, base64: btoa(bin) },
       });
-      if (error) throw error;
-      const { url } = await finalize({ data: { path } });
       onChange(url);
       toast.success("Photo uploaded.");
     } catch {
