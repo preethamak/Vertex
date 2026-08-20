@@ -88,6 +88,7 @@ export const mentorRequestInput = z.object({
 const hackathonPerson = z.object({
   name: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(160),
+  gender: z.enum(["female", "male", "prefer_not_to_say"]),
   phone: z.string().trim().max(30).optional().default(""),
   usn: z.string().trim().max(40).optional().default(""),
   branch: z.string().trim().max(80).optional().default(""),
@@ -98,6 +99,7 @@ export const hackathonRegisterInput = z.object({
   name: z.string().trim().min(2).max(100),
   leadName: z.string().trim().min(2).max(100),
   leadEmail: z.string().trim().email().max(160),
+  leadGender: z.enum(["female", "male", "prefer_not_to_say"]),
   leadPhone: z.string().trim().max(30).optional().default(""),
   leadUsn: z.string().trim().max(40).optional().default(""),
   leadBranch: z.string().trim().max(80).optional().default(""),

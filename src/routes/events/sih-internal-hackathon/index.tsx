@@ -33,6 +33,7 @@ export const Route = createFileRoute("/events/sih-internal-hackathon/")({
 type Person = {
   name: string;
   email: string;
+  gender: "female" | "male" | "prefer_not_to_say";
   usn: string;
   branch: string;
   year: string;
@@ -41,6 +42,7 @@ type Person = {
 const blankPerson = (): Person => ({
   name: "",
   email: "",
+  gender: "prefer_not_to_say",
   usn: "",
   branch: "",
   year: "",
@@ -423,6 +425,8 @@ function Registration({
                   name: String(form.get("teamName")),
                   leadName: String(form.get("leadName")),
                   leadEmail: String(form.get("leadEmail")),
+                  leadGender: String(form.get("leadGender")) as
+                    "female" | "male" | "prefer_not_to_say",
                   leadPhone: String(form.get("leadPhone")),
                   leadUsn: String(form.get("leadUsn")),
                   leadBranch: String(form.get("leadBranch")),
@@ -447,6 +451,7 @@ function Registration({
             <Field name="college" label="College" />
             <Field name="leadName" label="Team lead name" required />
             <Field name="leadEmail" label="Team lead email" type="email" required />
+            <GenderField name="leadGender" label="Lead gender (SIH eligibility)" />
             <Field name="leadUsn" label="Lead USN" />
             <Field name="leadPhone" label="Lead phone" />
             <Field name="leadBranch" label="Lead branch" />
@@ -493,6 +498,22 @@ function Registration({
                     )}
                   </div>
                   <div className="grid gap-3 md:grid-cols-3">
+                    <label className="flex flex-col gap-1">
+                      <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                        Gender (SIH eligibility)
+                      </span>
+                      <select
+                        value={member.gender}
+                        onChange={(event) =>
+                          updateMember(index, "gender", event.target.value as Person["gender"])
+                        }
+                        className="field-input rounded-lg px-3 py-2 text-sm"
+                      >
+                        <option value="prefer_not_to_say">Prefer not to say</option>
+                        <option value="female">Female</option>
+                        <option value="male">Male</option>
+                      </select>
+                    </label>
                     {(["name", "email", "usn", "branch", "year", "phone"] as const).map((key) => (
                       <label key={key} className="flex flex-col gap-1">
                         <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
@@ -521,6 +542,25 @@ function Registration({
         </form>
       </div>
     </section>
+  );
+}
+
+function GenderField({ name, label }: { name: string; label: string }) {
+  return (
+    <label className="flex flex-col gap-2">
+      <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        {label}
+      </span>
+      <select
+        name={name}
+        defaultValue="prefer_not_to_say"
+        className="field-input rounded-lg px-3 py-2.5 text-sm"
+      >
+        <option value="prefer_not_to_say">Prefer not to say</option>
+        <option value="female">Female</option>
+        <option value="male">Male</option>
+      </select>
+    </label>
   );
 }
 

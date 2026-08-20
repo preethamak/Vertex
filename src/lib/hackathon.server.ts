@@ -7,6 +7,24 @@ import type {
 
 export const EVENT_SLUG = "sih-internal-hackathon";
 
+function normalized(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function validateTeamEligibility(input: {
+  name: string;
+  college: string;
+  people: { gender: "female" | "male" | "prefer_not_to_say" }[];
+}) {
+  if (!input.people.some((person) => person.gender === "female")) {
+    throw new Error("SIH 2026 requires each team to include at least one female student.");
+  }
+  const college = normalized(input.college);
+  if (college.length >= 5 && normalized(input.name).includes(college)) {
+    throw new Error("SIH 2026 team names cannot include the institute name.");
+  }
+}
+
 export async function hashToken(token: string): Promise<string> {
   const bytes = new TextEncoder().encode(`vertex:${token}`);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
@@ -80,6 +98,11 @@ export async function createTeam(data: HackathonRegisterInput) {
       `Teams must have between ${ws.min_team_size} and ${ws.max_team_size} people (including the lead).`,
     );
   }
+  validateTeamEligibility({
+    name: data.name,
+    college: data.college,
+    people: [{ gender: data.leadGender }, ...members],
+  });
 
   const identities = [data.leadEmail, ...members.map((member) => member.email)].map((email) =>
     email.trim().toLowerCase(),
@@ -123,6 +146,7 @@ export async function createTeam(data: HackathonRegisterInput) {
       team_id: team.id,
       name: data.leadName,
       email: data.leadEmail.toLowerCase(),
+      gender: data.leadGender,
       phone: data.leadPhone || null,
       usn: data.leadUsn || null,
       branch: data.leadBranch || null,
@@ -133,6 +157,7 @@ export async function createTeam(data: HackathonRegisterInput) {
       team_id: team.id,
       name: m.name,
       email: m.email.toLowerCase(),
+      gender: m.gender,
       phone: m.phone || null,
       usn: m.usn || null,
       branch: m.branch || null,
@@ -224,6 +249,7 @@ export async function updateTeam(data: HackathonTeamUpdateInput) {
     throw new Error(`Teams must have between ${ws.min_team_size} and ${ws.max_team_size} people.`);
   }
   if (!people.some((m) => m.isLead)) throw new Error("Mark one person as the team lead.");
+  validateTeamEligibility({ name: data.name, college: data.college, people });
   const emails = people.map((member) => member.email.toLowerCase());
   if (new Set(emails).size !== emails.length)
     throw new Error("Each team member must use a different email address.");
@@ -259,6 +285,7 @@ export async function updateTeam(data: HackathonTeamUpdateInput) {
       team_id: team.id,
       name: m.name,
       email: m.email.toLowerCase(),
+      gender: m.gender,
       phone: m.phone || null,
       usn: m.usn || null,
       branch: m.branch || null,

@@ -92,6 +92,7 @@ export type Database = {
           branch: string | null;
           created_at: string;
           email: string;
+          gender: string | null;
           id: string;
           links: string | null;
           name: string;
@@ -109,6 +110,7 @@ export type Database = {
           branch?: string | null;
           created_at?: string;
           email: string;
+          gender?: string | null;
           id?: string;
           links?: string | null;
           name: string;
@@ -126,6 +128,7 @@ export type Database = {
           branch?: string | null;
           created_at?: string;
           email?: string;
+          gender?: string | null;
           id?: string;
           links?: string | null;
           name?: string;
