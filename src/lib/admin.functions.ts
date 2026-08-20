@@ -287,7 +287,32 @@ export const finalizeUpload = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z.object({ path: z.string().trim().min(3).max(400) }).parse(input),
   )
-  .handler(async ({ data, context }) => {
-    const { signMediaUrl } = await import("@/lib/roles.server");
-    return { url: await signMediaUrl(context.supabase, data.path) };
+  .handler(async ({ data }) => {
+    return { url: `/api/public/media/${data.path}`, path: data.path };
+  });
+
+export const uploadMedia = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        folder: z.string().trim().regex(/^[a-z0-9-]{2,40}$/),
+        ext: z.string().trim().regex(/^[a-z0-9]{2,5}$/),
+        contentType: z.string().trim().regex(/^image\/[a-z0-9.+-]{2,20}$/),
+        base64: z.string().min(16).max(14_000_000),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const binary = Uint8Array.from(atob(data.base64), (c) => c.charCodeAt(0));
+    if (binary.byteLength > 8 * 1024 * 1024) throw new Error("That image is too large.");
+    const path = `${data.folder}/${crypto.randomUUID()}.${data.ext}`;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.storage.from("media").upload(path, binary, {
+      contentType: data.contentType,
+      cacheControl: "31536000",
+      upsert: false,
+    });
+    if (error) throw new Error("Could not store that image.");
+    return { url: `/api/public/media/${path}`, path };
   });
