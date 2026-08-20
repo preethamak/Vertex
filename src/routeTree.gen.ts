@@ -14,14 +14,14 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AnnouncementsRouteImport } from './routes/announcements'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as EventsRouteImport } from './routes/events'
-import { Route as HackathonRouteImport } from './routes/hackathon'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as MentorsRouteImport } from './routes/mentors'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
-import { Route as HackathonTeamRouteImport } from './routes/hackathon/team'
 import { Route as MemberSlugRouteImport } from './routes/member.$slug'
+import { Route as EventsSihInternalHackathonIndexRouteImport } from './routes/events/sih-internal-hackathon/index'
+import { Route as EventsSihInternalHackathonTeamRouteImport } from './routes/events/sih-internal-hackathon/team'
 import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -46,11 +46,6 @@ const AuthRoute = AuthRouteImport.update({
 const EventsRoute = EventsRouteImport.update({
   id: '/events',
   path: '/events',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HackathonRoute = HackathonRouteImport.update({
-  id: '/hackathon',
-  path: '/hackathon',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JoinRoute = JoinRouteImport.update({
@@ -78,16 +73,23 @@ const AuthenticatedMeRoute = AuthenticatedMeRouteImport.update({
   path: '/me',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const HackathonTeamRoute = HackathonTeamRouteImport.update({
-  id: '/team',
-  path: '/team',
-  getParentRoute: () => HackathonRoute,
-} as any)
 const MemberSlugRoute = MemberSlugRouteImport.update({
   id: '/member/$slug',
   path: '/member/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventsSihInternalHackathonIndexRoute =
+  EventsSihInternalHackathonIndexRouteImport.update({
+    id: '/sih-internal-hackathon/',
+    path: '/sih-internal-hackathon/',
+    getParentRoute: () => EventsRoute,
+  } as any)
+const EventsSihInternalHackathonTeamRoute =
+  EventsSihInternalHackathonTeamRouteImport.update({
+    id: '/sih-internal-hackathon/team',
+    path: '/sih-internal-hackathon/team',
+    getParentRoute: () => EventsRoute,
+  } as any)
 const ApiPublicMediaSplatRoute = ApiPublicMediaSplatRouteImport.update({
   id: '/api/public/media/$',
   path: '/api/public/media/$',
@@ -98,30 +100,30 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/announcements': typeof AnnouncementsRoute
   '/auth': typeof AuthRoute
-  '/events': typeof EventsRoute
-  '/hackathon': typeof HackathonRouteWithChildren
+  '/events': typeof EventsRouteWithChildren
   '/join': typeof JoinRoute
   '/mentors': typeof MentorsRoute
   '/projects': typeof ProjectsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/me': typeof AuthenticatedMeRoute
-  '/hackathon/team': typeof HackathonTeamRoute
   '/member/$slug': typeof MemberSlugRoute
+  '/events/sih-internal-hackathon/team': typeof EventsSihInternalHackathonTeamRoute
+  '/events/sih-internal-hackathon/': typeof EventsSihInternalHackathonIndexRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/announcements': typeof AnnouncementsRoute
   '/auth': typeof AuthRoute
-  '/events': typeof EventsRoute
-  '/hackathon': typeof HackathonRouteWithChildren
+  '/events': typeof EventsRouteWithChildren
   '/join': typeof JoinRoute
   '/mentors': typeof MentorsRoute
   '/projects': typeof ProjectsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/me': typeof AuthenticatedMeRoute
-  '/hackathon/team': typeof HackathonTeamRoute
   '/member/$slug': typeof MemberSlugRoute
+  '/events/sih-internal-hackathon/team': typeof EventsSihInternalHackathonTeamRoute
+  '/events/sih-internal-hackathon': typeof EventsSihInternalHackathonIndexRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
 }
 export interface FileRoutesById {
@@ -130,15 +132,15 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/announcements': typeof AnnouncementsRoute
   '/auth': typeof AuthRoute
-  '/events': typeof EventsRoute
-  '/hackathon': typeof HackathonRouteWithChildren
+  '/events': typeof EventsRouteWithChildren
   '/join': typeof JoinRoute
   '/mentors': typeof MentorsRoute
   '/projects': typeof ProjectsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/me': typeof AuthenticatedMeRoute
-  '/hackathon/team': typeof HackathonTeamRoute
   '/member/$slug': typeof MemberSlugRoute
+  '/events/sih-internal-hackathon/team': typeof EventsSihInternalHackathonTeamRoute
+  '/events/sih-internal-hackathon/': typeof EventsSihInternalHackathonIndexRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
 }
 export interface FileRouteTypes {
@@ -148,14 +150,14 @@ export interface FileRouteTypes {
     | '/announcements'
     | '/auth'
     | '/events'
-    | '/hackathon'
     | '/join'
     | '/mentors'
     | '/projects'
     | '/admin'
     | '/me'
-    | '/hackathon/team'
     | '/member/$slug'
+    | '/events/sih-internal-hackathon/team'
+    | '/events/sih-internal-hackathon/'
     | '/api/public/media/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -163,14 +165,14 @@ export interface FileRouteTypes {
     | '/announcements'
     | '/auth'
     | '/events'
-    | '/hackathon'
     | '/join'
     | '/mentors'
     | '/projects'
     | '/admin'
     | '/me'
-    | '/hackathon/team'
     | '/member/$slug'
+    | '/events/sih-internal-hackathon/team'
+    | '/events/sih-internal-hackathon'
     | '/api/public/media/$'
   id:
     | '__root__'
@@ -179,14 +181,14 @@ export interface FileRouteTypes {
     | '/announcements'
     | '/auth'
     | '/events'
-    | '/hackathon'
     | '/join'
     | '/mentors'
     | '/projects'
     | '/_authenticated/admin'
     | '/_authenticated/me'
-    | '/hackathon/team'
     | '/member/$slug'
+    | '/events/sih-internal-hackathon/team'
+    | '/events/sih-internal-hackathon/'
     | '/api/public/media/$'
   fileRoutesById: FileRoutesById
 }
@@ -195,8 +197,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AnnouncementsRoute: typeof AnnouncementsRoute
   AuthRoute: typeof AuthRoute
-  EventsRoute: typeof EventsRoute
-  HackathonRoute: typeof HackathonRouteWithChildren
+  EventsRoute: typeof EventsRouteWithChildren
   JoinRoute: typeof JoinRoute
   MentorsRoute: typeof MentorsRoute
   ProjectsRoute: typeof ProjectsRoute
@@ -241,13 +242,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/hackathon': {
-      id: '/hackathon'
-      path: '/hackathon'
-      fullPath: '/hackathon'
-      preLoaderRoute: typeof HackathonRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/join': {
       id: '/join'
       path: '/join'
@@ -283,19 +277,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/hackathon/team': {
-      id: '/hackathon/team'
-      path: '/team'
-      fullPath: '/hackathon/team'
-      preLoaderRoute: typeof HackathonTeamRouteImport
-      parentRoute: typeof HackathonRoute
-    }
     '/member/$slug': {
       id: '/member/$slug'
       path: '/member/$slug'
       fullPath: '/member/$slug'
       preLoaderRoute: typeof MemberSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/events/sih-internal-hackathon/': {
+      id: '/events/sih-internal-hackathon/'
+      path: '/sih-internal-hackathon'
+      fullPath: '/events/sih-internal-hackathon/'
+      preLoaderRoute: typeof EventsSihInternalHackathonIndexRouteImport
+      parentRoute: typeof EventsRoute
+    }
+    '/events/sih-internal-hackathon/team': {
+      id: '/events/sih-internal-hackathon/team'
+      path: '/sih-internal-hackathon/team'
+      fullPath: '/events/sih-internal-hackathon/team'
+      preLoaderRoute: typeof EventsSihInternalHackathonTeamRouteImport
+      parentRoute: typeof EventsRoute
     }
     '/api/public/media/$': {
       id: '/api/public/media/$'
@@ -320,25 +321,25 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface HackathonRouteChildren {
-  HackathonTeamRoute: typeof HackathonTeamRoute
+interface EventsRouteChildren {
+  EventsSihInternalHackathonTeamRoute: typeof EventsSihInternalHackathonTeamRoute
+  EventsSihInternalHackathonIndexRoute: typeof EventsSihInternalHackathonIndexRoute
 }
 
-const HackathonRouteChildren: HackathonRouteChildren = {
-  HackathonTeamRoute: HackathonTeamRoute,
+const EventsRouteChildren: EventsRouteChildren = {
+  EventsSihInternalHackathonTeamRoute: EventsSihInternalHackathonTeamRoute,
+  EventsSihInternalHackathonIndexRoute: EventsSihInternalHackathonIndexRoute,
 }
 
-const HackathonRouteWithChildren = HackathonRoute._addFileChildren(
-  HackathonRouteChildren,
-)
+const EventsRouteWithChildren =
+  EventsRoute._addFileChildren(EventsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AnnouncementsRoute: AnnouncementsRoute,
   AuthRoute: AuthRoute,
-  EventsRoute: EventsRoute,
-  HackathonRoute: HackathonRouteWithChildren,
+  EventsRoute: EventsRouteWithChildren,
   JoinRoute: JoinRoute,
   MentorsRoute: MentorsRoute,
   ProjectsRoute: ProjectsRoute,
