@@ -6,6 +6,7 @@ import type {
 } from "@/lib/schemas";
 
 export const EVENT_SLUG = "sih-internal-hackathon";
+export const OFFICIAL_SIH_TEAM_SIZE = 6;
 
 function normalized(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -22,6 +23,14 @@ function validateTeamEligibility(input: {
   const college = normalized(input.college);
   if (college.length >= 5 && normalized(input.name).includes(college)) {
     throw new Error("SIH 2026 team names cannot include the institute name.");
+  }
+}
+
+function validateTeamSize(total: number) {
+  if (total !== OFFICIAL_SIH_TEAM_SIZE) {
+    throw new Error(
+      `SIH 2026 teams must have exactly ${OFFICIAL_SIH_TEAM_SIZE} student members, including the team lead.`,
+    );
   }
 }
 
@@ -93,11 +102,7 @@ export async function createTeam(data: HackathonRegisterInput) {
 
   const members = data.members.filter((m) => m.name.trim() && m.email.trim());
   const total = members.length + 1;
-  if (total < ws.min_team_size || total > ws.max_team_size) {
-    throw new Error(
-      `Teams must have between ${ws.min_team_size} and ${ws.max_team_size} people (including the lead).`,
-    );
-  }
+  validateTeamSize(total);
   validateTeamEligibility({
     name: data.name,
     college: data.college,
@@ -243,11 +248,8 @@ export async function loadTeamByToken(token: string) {
 
 export async function updateTeam(data: HackathonTeamUpdateInput) {
   const team = await teamFromToken(data.token);
-  const ws = await loadWorkspace(team.event_id);
   const people = data.members.filter((m) => m.name.trim() && m.email.trim());
-  if (ws && (people.length < ws.min_team_size || people.length > ws.max_team_size)) {
-    throw new Error(`Teams must have between ${ws.min_team_size} and ${ws.max_team_size} people.`);
-  }
+  validateTeamSize(people.length);
   if (!people.some((m) => m.isLead)) throw new Error("Mark one person as the team lead.");
   validateTeamEligibility({ name: data.name, college: data.college, people });
   const emails = people.map((member) => member.email.toLowerCase());

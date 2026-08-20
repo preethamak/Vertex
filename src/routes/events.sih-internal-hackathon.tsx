@@ -15,7 +15,7 @@ import {
   SIH_2026_THEME_NAMES,
 } from "@/data/sih-2026";
 
-export const Route = createFileRoute("/events/sih-internal-hackathon/")({
+export const Route = createFileRoute("/events/sih-internal-hackathon")({
   loader: () => getHackathon(),
   head: () => ({
     meta: [
@@ -132,7 +132,9 @@ function HackathonPage() {
                     <dt className="text-muted-foreground">Team size</dt>
                     <dd>
                       {workspace
-                        ? `${workspace.min_team_size}–${workspace.max_team_size} members`
+                        ? workspace.min_team_size === workspace.max_team_size
+                          ? `Exactly ${workspace.min_team_size} members`
+                          : `${workspace.min_team_size}–${workspace.max_team_size} members`
                         : "To be confirmed"}
                     </dd>
                   </div>
@@ -462,8 +464,8 @@ function Registration({
               <div>
                 <h3 className="font-display text-xl">Team members</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Total team size must be {workspace.min_team_size}–{workspace.max_team_size},
-                  including the lead.
+                  Total team size must be exactly {workspace.min_team_size} members, including
+                  the lead.
                 </p>
               </div>
               {members.length < workspace.max_team_size - 1 && (

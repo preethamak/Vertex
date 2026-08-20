@@ -11,6 +11,7 @@ import {
 } from "@/lib/schemas";
 
 export const EVENT_SLUG = "sih-internal-hackathon";
+const OFFICIAL_SIH_TEAM_SIZE = 6;
 
 export const getHackathon = createServerFn({ method: "GET" }).handler(async () => {
   const { serverPublicClient } = await import("@/lib/supabase-public.server");
@@ -63,13 +64,44 @@ export const getHackathon = createServerFn({ method: "GET" }).handler(async () =
       .order("statement_code"),
   ]);
 
-  // Public roster: team names + member names only (no contact details).
-  const { getPublicRoster } = await import("@/lib/hackathon.server");
-  const roster = await getPublicRoster(event.id);
+  // Public roster: team names + member names only (no contact details). This must use the
+  // public client so the page never depends on the server-only service-role key.
+  const { data: teams } = await sb
+    .from("hackathon_teams")
+    .select("id, name, college, status, created_at")
+    .eq("event_id", event.id)
+    .neq("status", "withdrawn")
+    .order("created_at");
+  const teamIds = (teams ?? []).map((team) => team.id);
+  const { data: members } = teamIds.length
+    ? await sb
+        .from("hackathon_team_members")
+        .select("team_id, name, branch, year, is_lead")
+        .in("team_id", teamIds)
+    : { data: [] };
+  const roster = (teams ?? []).map((team) => ({
+    ...team,
+    members: (members ?? [])
+      .filter((member) => member.team_id === team.id)
+      .map((member) => ({
+        name: member.name,
+        branch: member.branch,
+        year: member.year,
+        isLead: member.is_lead,
+      })),
+  }));
 
   return {
     event,
-    workspace: workspace.data ?? null,
+    workspace: workspace.data
+      ? {
+          ...workspace.data,
+          // The official SIH 2026 rule overrides older workspace values until the migration
+          // is applied to the production database.
+          min_team_size: OFFICIAL_SIH_TEAM_SIZE,
+          max_team_size: OFFICIAL_SIH_TEAM_SIZE,
+        }
+      : null,
     milestones: milestones.data ?? [],
     announcements: announcements.data ?? [],
     showcase: submissions.data ?? [],
