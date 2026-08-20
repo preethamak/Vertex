@@ -47,7 +47,15 @@ export async function getPublicRoster(eventId: string) {
         .from("hackathon_team_members")
         .select("team_id, name, branch, year, is_lead")
         .in("team_id", ids)
-    : { data: [] as { team_id: string; name: string; branch: string | null; year: string | null; is_lead: boolean }[] };
+    : {
+        data: [] as {
+          team_id: string;
+          name: string;
+          branch: string | null;
+          year: string | null;
+          is_lead: boolean;
+        }[],
+      };
 
   return (teams ?? []).map((t) => ({
     id: t.id,
@@ -68,10 +76,26 @@ export async function createTeam(data: HackathonRegisterInput) {
   const members = data.members.filter((m) => m.name.trim() && m.email.trim());
   const total = members.length + 1;
   if (total < ws.min_team_size || total > ws.max_team_size) {
-    throw new Error(`Teams must have between ${ws.min_team_size} and ${ws.max_team_size} people (including the lead).`);
+    throw new Error(
+      `Teams must have between ${ws.min_team_size} and ${ws.max_team_size} people (including the lead).`,
+    );
+  }
+
+  const identities = [data.leadEmail, ...members.map((member) => member.email)].map((email) =>
+    email.trim().toLowerCase(),
+  );
+  if (new Set(identities).size !== identities.length) {
+    throw new Error("Each team member must use a different email address.");
+  }
+  const usns = [data.leadUsn, ...members.map((member) => member.usn)]
+    .map((usn) => usn.trim().toLowerCase())
+    .filter(Boolean);
+  if (new Set(usns).size !== usns.length) {
+    throw new Error("A USN can only appear once in a team.");
   }
 
   const token = crypto.randomUUID().replace(/-/g, "");
+  const checkinToken = crypto.randomUUID().replace(/-/g, "");
   const { data: team, error } = await supabaseAdmin
     .from("hackathon_teams")
     .insert({
@@ -82,12 +106,15 @@ export async function createTeam(data: HackathonRegisterInput) {
       lead_phone: data.leadPhone || null,
       college: data.college || null,
       management_token_hash: await hashToken(token),
+      checkin_token_hash: await hashToken(`checkin:${checkinToken}`),
     })
     .select("id, name")
     .single();
   if (error || !team) {
     throw new Error(
-      error?.code === "23505" ? "A team with that name is already registered." : "Could not register your team.",
+      error?.code === "23505"
+        ? "A team with that name is already registered."
+        : "Could not register your team.",
     );
   }
 
@@ -113,15 +140,31 @@ export async function createTeam(data: HackathonRegisterInput) {
       is_lead: false,
     })),
   ];
-  await supabaseAdmin.from("hackathon_team_members").insert(rows);
-  await supabaseAdmin.from("hackathon_submissions").insert({ team_id: team.id });
-  await supabaseAdmin.from("hackathon_activities").insert({
+  const { error: membersError } = await supabaseAdmin.from("hackathon_team_members").insert(rows);
+  if (membersError) {
+    await supabaseAdmin.from("hackathon_teams").delete().eq("id", team.id);
+    throw new Error("Could not save the team roster. Please try registering again.");
+  }
+  const { error: submissionError } = await supabaseAdmin
+    .from("hackathon_submissions")
+    .insert({ team_id: team.id });
+  if (submissionError) {
+    await supabaseAdmin.from("hackathon_teams").delete().eq("id", team.id);
+    throw new Error("Could not prepare the submission workspace. Please try registering again.");
+  }
+  const { error: activityError } = await supabaseAdmin.from("hackathon_activities").insert({
     team_id: team.id,
     activity_type: "registered",
     summary: `${team.name} registered with ${rows.length} members.`,
   });
+  if (activityError) console.error("SIH registration activity was not recorded", activityError);
 
-  return { token, teamId: team.id, teamName: team.name };
+  return {
+    token,
+    teamId: team.id,
+    teamName: team.name,
+    checkinCode: `VTX-SIH:${checkinToken}`,
+  };
 }
 
 async function teamFromToken(token: string) {
@@ -181,6 +224,22 @@ export async function updateTeam(data: HackathonTeamUpdateInput) {
     throw new Error(`Teams must have between ${ws.min_team_size} and ${ws.max_team_size} people.`);
   }
   if (!people.some((m) => m.isLead)) throw new Error("Mark one person as the team lead.");
+  const emails = people.map((member) => member.email.toLowerCase());
+  if (new Set(emails).size !== emails.length)
+    throw new Error("Each team member must use a different email address.");
+  const usns = people.map((member) => member.usn.trim().toLowerCase()).filter(Boolean);
+  if (new Set(usns).size !== usns.length) throw new Error("A USN can only appear once in a team.");
+
+  const { data: submission } = await supabaseAdmin
+    .from("hackathon_submissions")
+    .select("finalized_at")
+    .eq("team_id", team.id)
+    .maybeSingle();
+  if (submission?.finalized_at) {
+    throw new Error(
+      "This team is locked after final submission. Ask an administrator to reopen it.",
+    );
+  }
 
   await supabaseAdmin
     .from("hackathon_teams")
@@ -220,6 +279,26 @@ export async function saveSubmission(data: HackathonSubmissionInput) {
   const ws = await loadWorkspace(team.event_id);
   if (!ws?.submissions_open) throw new Error("Submissions are not open yet.");
 
+  const { data: existing } = await supabaseAdmin
+    .from("hackathon_submissions")
+    .select("id, finalized_at")
+    .eq("team_id", team.id)
+    .maybeSingle();
+  if (existing?.finalized_at) {
+    throw new Error("This submission is already final. Ask an administrator to reopen it.");
+  }
+  if (
+    data.submit &&
+    (!data.problemStatementId ||
+      !data.problemStatementTitle ||
+      !data.solutionTitle ||
+      !data.solutionSummary)
+  ) {
+    throw new Error(
+      "Select a problem statement and complete the solution title and summary before final submission.",
+    );
+  }
+
   const row = {
     team_id: team.id,
     problem_statement_id: data.problemStatementId || null,
@@ -231,15 +310,11 @@ export async function saveSubmission(data: HackathonSubmissionInput) {
     demo_url: data.demoUrl || null,
     video_url: data.videoUrl || null,
     deck_path: data.deckPath || null,
-    status: data.submit ? "submitted" : "draft",
+    status: data.submit ? "final" : "draft",
     submitted_at: data.submit ? new Date().toISOString() : null,
+    finalized_at: data.submit ? new Date().toISOString() : null,
+    finalized_by_token_hash: data.submit ? await hashToken(data.token) : null,
   };
-
-  const { data: existing } = await supabaseAdmin
-    .from("hackathon_submissions")
-    .select("id")
-    .eq("team_id", team.id)
-    .maybeSingle();
 
   const { error } = existing
     ? await supabaseAdmin.from("hackathon_submissions").update(row).eq("id", existing.id)
@@ -259,7 +334,9 @@ export async function adminOverviewData() {
   const [teams, members, submissions, milestones, announcements, ws] = await Promise.all([
     supabaseAdmin
       .from("hackathon_teams")
-      .select("id, name, status, college, lead_name, lead_email, lead_phone, mentor_name, created_at")
+      .select(
+        "id, name, status, college, lead_name, lead_email, lead_phone, mentor_name, created_at",
+      )
       .eq("event_id", eventId)
       .order("created_at"),
     supabaseAdmin

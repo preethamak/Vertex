@@ -86,8 +86,8 @@ export const mentorRequestInput = z.object({
 });
 
 const hackathonPerson = z.object({
-  name: z.string().trim().max(100),
-  email: z.string().trim().max(160),
+  name: z.string().trim().min(2).max(100),
+  email: z.string().trim().email().max(160),
   phone: z.string().trim().max(30).optional().default(""),
   usn: z.string().trim().max(40).optional().default(""),
   branch: z.string().trim().max(80).optional().default(""),
@@ -112,7 +112,10 @@ export const hackathonTeamUpdateInput = z.object({
   college: z.string().trim().max(140).optional().default(""),
   mentorName: z.string().trim().max(100).optional().default(""),
   mentorEmail: z.string().trim().max(160).optional().default(""),
-  members: z.array(hackathonPerson.extend({ isLead: z.boolean() })).max(10).default([]),
+  members: z
+    .array(hackathonPerson.extend({ isLead: z.boolean() }))
+    .max(10)
+    .default([]),
 });
 
 export const hackathonSubmissionInput = z.object({
@@ -122,9 +125,9 @@ export const hackathonSubmissionInput = z.object({
   theme: z.string().trim().max(120).optional().default(""),
   solutionTitle: z.string().trim().max(160).optional().default(""),
   solutionSummary: z.string().trim().max(4000).optional().default(""),
-  repositoryUrl: z.string().trim().max(500).optional().default(""),
-  demoUrl: z.string().trim().max(500).optional().default(""),
-  videoUrl: z.string().trim().max(500).optional().default(""),
+  repositoryUrl: z.string().trim().url().max(500).or(z.literal("")).optional().default(""),
+  demoUrl: z.string().trim().url().max(500).or(z.literal("")).optional().default(""),
+  videoUrl: z.string().trim().url().max(500).or(z.literal("")).optional().default(""),
   deckPath: z.string().trim().max(500).optional().default(""),
   submit: z.boolean().default(false),
 });
