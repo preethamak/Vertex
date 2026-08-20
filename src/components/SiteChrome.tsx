@@ -19,7 +19,6 @@ export function SiteHeader() {
 
   const nav = [
     { label: "Teams", to: "/" as const, hash: "teams" },
-    { label: "SIH 2026", to: "/hackathon" as const },
     { label: "Events", to: "/events" as const },
     { label: "Projects", to: "/projects" as const },
     { label: "Feed", to: "/announcements" as const },

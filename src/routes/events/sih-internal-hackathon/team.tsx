@@ -6,7 +6,9 @@ import { toast } from "sonner";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import { getHackathonTeam } from "@/lib/hackathon.functions";
 
-export const Route = createFileRoute("/hackathon/team")({ component: TeamConsole });
+export const Route = createFileRoute("/events/sih-internal-hackathon/team")({
+  component: TeamConsole,
+});
 
 type TeamData = Awaited<ReturnType<typeof getHackathonTeam>>;
 
@@ -37,7 +39,7 @@ function TeamConsole() {
       <SiteHeader />
       <main className="mx-auto max-w-5xl px-6 py-16">
         <Link
-          to="/hackathon"
+          to="/events/sih-internal-hackathon"
           className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft size={14} /> SIH workspace

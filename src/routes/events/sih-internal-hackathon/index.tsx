@@ -9,7 +9,7 @@ import { Reveal } from "@/components/Reveal";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import { getHackathon, registerHackathonTeam } from "@/lib/hackathon.functions";
 
-export const Route = createFileRoute("/hackathon")({
+export const Route = createFileRoute("/events/sih-internal-hackathon/")({
   loader: () => getHackathon(),
   head: () => ({
     meta: [
@@ -165,7 +165,7 @@ function HackathonPage() {
                 registration.
               </p>
               <Link
-                to="/hackathon/team"
+                to="/events/sih-internal-hackathon/team"
                 className="btn-ghost mt-5 rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest"
               >
                 Open team console <ArrowRight size={14} />
@@ -342,7 +342,7 @@ function Registration({
                 <Copy size={14} /> Copy team key
               </button>
               <Link
-                to="/hackathon/team"
+                to="/events/sih-internal-hackathon/team"
                 className="btn-ghost rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest"
               >
                 Open team console

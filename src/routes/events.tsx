@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { QRCodeSVG } from "qrcode.react";
@@ -63,7 +63,9 @@ function EventsPage() {
             {events.map((e) => {
               const d = e.event_date ? new Date(e.event_date) : null;
               const day = d ? d.toLocaleDateString("en-US", { day: "2-digit" }) : "--";
-              const mon = d ? d.toLocaleDateString("en-US", { month: "short" }).toUpperCase() : "TBA";
+              const mon = d
+                ? d.toLocaleDateString("en-US", { month: "short" }).toUpperCase()
+                : "TBA";
               const open = openSlug === e.slug;
               return (
                 <article key={e.id} className="bg-background p-6">
@@ -94,12 +96,21 @@ function EventsPage() {
                         </p>
                       )}
                     </div>
-                    <button
-                      onClick={() => setOpenSlug(open ? null : e.slug)}
-                      className="border border-hairline px-4 py-2 font-mono text-[11px] uppercase tracking-widest hover:border-silver"
-                    >
-                      {open ? "Close" : "Register →"}
-                    </button>
+                    {e.slug === "sih-internal-hackathon" ? (
+                      <Link
+                        to="/events/sih-internal-hackathon"
+                        className="btn-primary rounded-lg px-4 py-2 font-mono text-[11px] uppercase tracking-widest"
+                      >
+                        Open SIH workspace →
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={() => setOpenSlug(open ? null : e.slug)}
+                        className="border border-hairline px-4 py-2 font-mono text-[11px] uppercase tracking-widest hover:border-silver"
+                      >
+                        {open ? "Close" : "Register →"}
+                      </button>
+                    )}
                   </div>
 
                   {open && (
@@ -123,13 +134,7 @@ function EventsPage() {
   );
 }
 
-function RegisterForm({
-  slug,
-  onDone,
-}: {
-  slug: string;
-  onDone: (p: Pass) => void;
-}) {
+function RegisterForm({ slug, onDone }: { slug: string; onDone: (p: Pass) => void }) {
   const register = useServerFn(registerForEvent);
   const [sending, setSending] = useState(false);
 
@@ -203,7 +208,8 @@ function PassCard({ pass, onClose }: { pass: Pass; onClose: () => void }) {
           {pass.event.title}
         </h2>
         <div className="mt-2 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-          {pass.event.date ? new Date(pass.event.date).toDateString() : "Date TBA"} · {pass.event.location}
+          {pass.event.date ? new Date(pass.event.date).toDateString() : "Date TBA"} ·{" "}
+          {pass.event.location}
         </div>
         <div className="mt-6 break-all border border-hairline bg-background px-4 py-3 font-mono text-sm text-foreground">
           {pass.code}
