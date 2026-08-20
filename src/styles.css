@@ -69,8 +69,31 @@
   --hairline: oklch(0.22 0 0);
   --silver: oklch(0.85 0 0);
 
+  /* Elevated surfaces on pure black */
+  --surface-1: oklch(0.07 0 0);
+  --surface-2: oklch(0.11 0 0);
+  --surface-3: oklch(0.15 0 0);
+
+  /* Glass */
+  --glass-fill: color-mix(in oklab, white 5%, transparent);
+  --glass-fill-strong: color-mix(in oklab, white 8%, transparent);
+  --glass-border: color-mix(in oklab, white 12%, transparent);
+  --glass-blur: 18px;
+
+  --shadow-glow: 0 0 0 1px color-mix(in oklab, white 8%, transparent),
+    0 24px 60px -24px color-mix(in oklab, white 22%, transparent);
+  --shadow-soft: 0 18px 50px -30px color-mix(in oklab, black 90%, transparent);
+
+  --gradient-silver: linear-gradient(
+    180deg,
+    oklch(1 0 0) 0%,
+    oklch(0.82 0 0) 55%,
+    oklch(0.6 0 0) 100%
+  );
+
   --grid-line: color-mix(in oklab, white 5%, transparent);
 }
+
 
 .dark {
   --background: oklch(0 0 0);
