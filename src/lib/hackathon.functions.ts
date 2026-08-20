@@ -18,13 +18,15 @@ export const getHackathon = createServerFn({ method: "GET" }).handler(async () =
 
   const { data: event } = await sb
     .from("events")
-    .select("id, slug, title, description, location, tag, event_date, start_time, schedule_tba, cover_url")
+    .select(
+      "id, slug, title, description, location, tag, event_date, start_time, schedule_tba, cover_url",
+    )
     .eq("slug", EVENT_SLUG)
     .eq("published", true)
     .maybeSingle();
   if (!event) return null;
 
-  const [workspace, milestones, announcements, submissions] = await Promise.all([
+  const [workspace, milestones, announcements, submissions, statements] = await Promise.all([
     sb
       .from("event_workspaces")
       .select("registration_open, submissions_open, min_team_size, max_team_size, rules")
@@ -46,8 +48,19 @@ export const getHackathon = createServerFn({ method: "GET" }).handler(async () =
       .order("created_at", { ascending: false }),
     sb
       .from("hackathon_submissions")
-      .select("id, solution_title, solution_summary, theme, problem_statement_title, repository_url, demo_url")
+      .select(
+        "id, solution_title, solution_summary, theme, problem_statement_title, repository_url, demo_url",
+      )
       .eq("published", true),
+    sb
+      .from("hackathon_problem_statements")
+      .select(
+        "id, statement_code, title, organization, category, theme, description, source_url, source_version",
+      )
+      .eq("event_id", event.id)
+      .eq("published", true)
+      .order("sort_order")
+      .order("statement_code"),
   ]);
 
   // Public roster: team names + member names only (no contact details).
@@ -60,6 +73,7 @@ export const getHackathon = createServerFn({ method: "GET" }).handler(async () =
     milestones: milestones.data ?? [],
     announcements: announcements.data ?? [],
     showcase: submissions.data ?? [],
+    statements: statements.data ?? [],
     roster,
   };
 });

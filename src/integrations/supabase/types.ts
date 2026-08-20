@@ -540,6 +540,65 @@ export type Database = {
           },
         ];
       };
+      hackathon_problem_statements: {
+        Row: {
+          category: string | null;
+          created_at: string;
+          description: string | null;
+          event_id: string;
+          id: string;
+          organization: string | null;
+          published: boolean;
+          sort_order: number;
+          source_url: string | null;
+          source_version: string | null;
+          statement_code: string;
+          theme: string | null;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          category?: string | null;
+          created_at?: string;
+          description?: string | null;
+          event_id: string;
+          id?: string;
+          organization?: string | null;
+          published?: boolean;
+          sort_order?: number;
+          source_url?: string | null;
+          source_version?: string | null;
+          statement_code: string;
+          theme?: string | null;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          category?: string | null;
+          created_at?: string;
+          description?: string | null;
+          event_id?: string;
+          id?: string;
+          organization?: string | null;
+          published?: boolean;
+          sort_order?: number;
+          source_url?: string | null;
+          source_version?: string | null;
+          statement_code?: string;
+          theme?: string | null;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "hackathon_problem_statements_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       hackathon_submissions: {
         Row: {
           created_at: string;
