@@ -71,7 +71,7 @@ function Home() {
               <HomeLink
                 to="/join"
                 icon={<UsersRound size={17} />}
-                label="People"
+                label="Members"
                 detail="Find your team"
               />
               <HomeLink

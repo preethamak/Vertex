@@ -18,11 +18,10 @@ export function SiteHeader() {
   }, [open]);
 
   const nav = [
-    { label: "People", to: "/members" as const },
+    { label: "Members", to: "/members" as const },
     { label: "Events", to: "/events" as const },
     { label: "Projects", to: "/projects" as const },
     { label: "Feed", to: "/announcements" as const },
-    { label: "Mentors", to: "/mentors" as const },
     { label: "Dashboard", to: "/me" as const },
   ];
 

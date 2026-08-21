@@ -1,9 +1,13 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
+import { ArrowUpRight, Award, BriefcaseBusiness, Link2 } from "lucide-react";
+import { motion } from "motion/react";
 import { VertexLogo } from "@/components/VertexLogo";
 import { Avatar } from "@/components/MemberCard";
+import { SpotlightCard } from "@/components/SpotlightCard";
 import { getDirectory } from "@/lib/club.functions";
+import { getMemberExtras } from "@/lib/public.functions";
 
 export const Route = createFileRoute("/member/$slug")({
   loader: async ({ params }) => {
@@ -13,7 +17,8 @@ export const Route = createFileRoute("/member/$slug")({
     const teammates = directory.all
       .filter((m) => m.teamId === member.teamId && m.slug !== member.slug)
       .slice(0, 6);
-    return { member, teammates };
+    const extras = await getMemberExtras({ data: { slug: params.slug } });
+    return { member, teammates, extras };
   },
   head: ({ loaderData }) => ({
     meta: loaderData
@@ -58,7 +63,7 @@ function MemberNotFound() {
 }
 
 function MemberProfile() {
-  const { member, teammates } = Route.useLoaderData();
+  const { member, teammates, extras } = Route.useLoaderData();
   const [url, setUrl] = useState("");
 
   useEffect(() => {
@@ -113,7 +118,11 @@ function MemberProfile() {
           </div>
 
           <div className="grid gap-12 md:grid-cols-[1fr_auto] md:items-start">
-            <div>
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55 }}
+            >
               <div className="flex items-start gap-6">
                 <Avatar name={member.name} size={140} photo={member.photo} />
                 <div className="pt-2">
@@ -165,10 +174,36 @@ function MemberProfile() {
                   Copy link
                 </button>
               </div>
-            </div>
+
+              {Object.keys(member.links).length > 0 && (
+                <div className="mt-8">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                    Elsewhere
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {Object.entries(member.links).map(([label, href]) => (
+                      <a
+                        key={label}
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 border border-hairline px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground transition-colors hover:border-silver hover:text-foreground"
+                      >
+                        <Link2 size={12} /> {socialLabel(label, href)} <ArrowUpRight size={12} />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </motion.div>
 
             {/* QR */}
-            <div className="border border-hairline bg-card/40 p-6">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.12 }}
+              className="glass-panel rounded-2xl p-6"
+            >
               <div className="mb-4 flex items-center justify-between">
                 <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                   QR · Scan to open
@@ -185,6 +220,70 @@ function MemberProfile() {
               <div className="mt-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                 Point a camera → land on this profile.
               </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-hairline">
+        <div className="mx-auto grid max-w-5xl gap-12 px-6 py-16 md:grid-cols-2">
+          <div>
+            <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              <BriefcaseBusiness size={13} /> Project work
+            </div>
+            <div className="mt-5 grid gap-2">
+              {extras.projects.map((project) => (
+                <SpotlightCard key={project.id}>
+                  <Link
+                    to="/projects"
+                    className="group flex items-center justify-between border border-hairline bg-card/40 p-4 transition-colors hover:border-silver"
+                  >
+                    <span className="font-display text-lg">{project.title}</span>
+                    <span className="font-mono text-[10px] text-muted-foreground">
+                      {project.year ?? ""} →
+                    </span>
+                  </Link>
+                </SpotlightCard>
+              ))}
+              {extras.projects.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Project work will appear here when it is credited in the club showcase.
+                </p>
+              )}
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              <Award size={13} /> Record
+            </div>
+            <div className="mt-5 grid gap-2">
+              {extras.achievements.map((achievement) => (
+                <SpotlightCard key={achievement.id}>
+                  <div className="p-4">
+                    <div className="font-display text-lg">{achievement.title}</div>
+                    {achievement.description && (
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {achievement.description}
+                      </p>
+                    )}
+                  </div>
+                </SpotlightCard>
+              ))}
+              {extras.badges.map((badge) => (
+                <SpotlightCard key={badge.id}>
+                  <div className="p-4">
+                    <div className="font-display text-lg">{badge.name}</div>
+                    {badge.note && (
+                      <p className="mt-1 text-sm text-muted-foreground">{badge.note}</p>
+                    )}
+                  </div>
+                </SpotlightCard>
+              ))}
+              {extras.achievements.length === 0 && extras.badges.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Achievements will appear here as the club records them.
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -226,6 +325,16 @@ function MemberProfile() {
       )}
     </div>
   );
+}
+
+function socialLabel(label: string, href: string) {
+  const lower = `${label} ${href}`.toLowerCase();
+  if (lower.includes("linkedin")) return "LinkedIn";
+  if (lower.includes("github")) return "GitHub";
+  if (lower.includes("instagram")) return "Instagram";
+  if (lower.includes("twitter") || lower.includes("x.com")) return "X";
+  if (lower.includes("portfolio") || lower.includes("website")) return "Portfolio";
+  return label || "Link";
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
