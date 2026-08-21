@@ -64,32 +64,16 @@ export const getHackathon = createServerFn({ method: "GET" }).handler(async () =
       .order("statement_code"),
   ]);
 
-  // Public roster: team names + member names only (no contact details). This must use the
-  // public client so the page never depends on the server-only service-role key.
-  const { data: teams } = await sb
-    .from("hackathon_teams")
-    .select("id, name, college, status, created_at")
-    .eq("event_id", event.id)
-    .neq("status", "withdrawn")
-    .order("created_at");
-  const teamIds = (teams ?? []).map((team) => team.id);
-  const { data: members } = teamIds.length
-    ? await sb
-        .from("hackathon_team_members")
-        .select("team_id, name, branch, year, is_lead")
-        .in("team_id", teamIds)
-    : { data: [] };
-  const roster = (teams ?? []).map((team) => ({
-    ...team,
-    members: (members ?? [])
-      .filter((member) => member.team_id === team.id)
-      .map((member) => ({
-        name: member.name,
-        branch: member.branch,
-        year: member.year,
-        isLead: member.is_lead,
-      })),
-  }));
+  // Contact data remains protected by RLS. A server-only query intentionally exposes only
+  // names, team names, branch/year, and status for the public roster.
+  let roster: Awaited<ReturnType<(typeof import("@/lib/hackathon.server"))["getPublicRoster"]>> =
+    [];
+  try {
+    const { getPublicRoster } = await import("@/lib/hackathon.server");
+    roster = await getPublicRoster(event.id);
+  } catch (error) {
+    console.error("Could not load the public SIH roster", error);
+  }
 
   return {
     event,
@@ -138,6 +122,18 @@ export const saveHackathonSubmission = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { saveSubmission } = await import("@/lib/hackathon.server");
     return saveSubmission(data);
+  });
+
+export const checkInHackathonTeam = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ code: z.string().trim().min(8).max(240) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertStaff } = await import("@/lib/roles.server");
+    await assertStaff(context.supabase, context.userId);
+    const { checkInHackathonTeam: checkIn } = await import("@/lib/hackathon.server");
+    return checkIn(data.code, context.userId);
   });
 
 export const hackathonAdmin = createServerFn({ method: "GET" })
@@ -228,7 +224,15 @@ export const setHackathonTeamStatus = createServerFn({ method: "POST" })
     z
       .object({
         id: z.string().uuid(),
-        status: z.enum(["registered", "confirmed", "shortlisted", "withdrawn"]),
+        status: z.enum([
+          "registered",
+          "in_review",
+          "shortlisted",
+          "selected",
+          "waitlisted",
+          "rejected",
+          "withdrawn",
+        ]),
       })
       .parse(input),
   )

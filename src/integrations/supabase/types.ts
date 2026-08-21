@@ -92,7 +92,6 @@ export type Database = {
           branch: string | null;
           created_at: string;
           email: string;
-          gender: string | null;
           id: string;
           links: string | null;
           name: string;
@@ -110,7 +109,6 @@ export type Database = {
           branch?: string | null;
           created_at?: string;
           email: string;
-          gender?: string | null;
           id?: string;
           links?: string | null;
           name: string;
@@ -128,7 +126,6 @@ export type Database = {
           branch?: string | null;
           created_at?: string;
           email?: string;
-          gender?: string | null;
           id?: string;
           links?: string | null;
           name?: string;
@@ -682,11 +679,57 @@ export type Database = {
           },
         ];
       };
+      hackathon_checkins: {
+        Row: {
+          checked_in_at: string;
+          checked_in_by: string | null;
+          event_id: string;
+          id: string;
+          method: string;
+          note: string | null;
+          team_id: string;
+        };
+        Insert: {
+          checked_in_at?: string;
+          checked_in_by?: string | null;
+          event_id: string;
+          id?: string;
+          method?: string;
+          note?: string | null;
+          team_id: string;
+        };
+        Update: {
+          checked_in_at?: string;
+          checked_in_by?: string | null;
+          event_id?: string;
+          id?: string;
+          method?: string;
+          note?: string | null;
+          team_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "hackathon_checkins_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "hackathon_checkins_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "hackathon_teams";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       hackathon_team_members: {
         Row: {
           branch: string | null;
           created_at: string;
           email: string;
+          gender: string | null;
           id: string;
           is_lead: boolean;
           name: string;
@@ -700,6 +743,7 @@ export type Database = {
           branch?: string | null;
           created_at?: string;
           email: string;
+          gender?: string | null;
           id?: string;
           is_lead?: boolean;
           name: string;
@@ -713,6 +757,7 @@ export type Database = {
           branch?: string | null;
           created_at?: string;
           email?: string;
+          gender?: string | null;
           id?: string;
           is_lead?: boolean;
           name?: string;

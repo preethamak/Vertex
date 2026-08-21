@@ -95,6 +95,62 @@ export async function getPublicRoster(eventId: string) {
   }));
 }
 
+export async function checkInHackathonTeam(code: string, checkedInBy: string) {
+  const token =
+    code
+      .trim()
+      .split("/")
+      .pop()
+      ?.replace(/^VTX-SIH:/i, "") ?? "";
+  if (!token) return { status: "invalid" as const };
+
+  const { eventId } = await resolveEvent();
+  const { data: team } = await supabaseAdmin
+    .from("hackathon_teams")
+    .select("id, name")
+    .eq("event_id", eventId)
+    .eq("checkin_token_hash", await hashToken(`checkin:${token}`))
+    .maybeSingle();
+  if (!team) return { status: "invalid" as const };
+
+  const { data: existing } = await supabaseAdmin
+    .from("hackathon_checkins")
+    .select("checked_in_at")
+    .eq("event_id", eventId)
+    .eq("team_id", team.id)
+    .maybeSingle();
+  const { data: members } = await supabaseAdmin
+    .from("hackathon_team_members")
+    .select("name, is_lead")
+    .eq("team_id", team.id)
+    .order("is_lead", { ascending: false });
+
+  if (existing) {
+    return {
+      status: "already" as const,
+      team: team.name,
+      members: members ?? [],
+      at: existing.checked_in_at,
+    };
+  }
+
+  const checkedInAt = new Date().toISOString();
+  const { error } = await supabaseAdmin.from("hackathon_checkins").insert({
+    event_id: eventId,
+    team_id: team.id,
+    checked_in_by: checkedInBy,
+    checked_in_at: checkedInAt,
+    method: "qr",
+  });
+  if (error) throw new Error("Could not record SIH check-in.");
+  await supabaseAdmin.from("hackathon_activities").insert({
+    team_id: team.id,
+    activity_type: "checked_in",
+    summary: "Team checked in at the SIH desk.",
+  });
+  return { status: "ok" as const, team: team.name, members: members ?? [], at: checkedInAt };
+}
+
 export async function createTeam(data: HackathonRegisterInput) {
   const { eventId } = await resolveEvent();
   const ws = await loadWorkspace(eventId);

@@ -18,7 +18,6 @@ export function SiteHeader() {
   }, [open]);
 
   const nav = [
-    { label: "Teams", to: "/" as const, hash: "teams" },
     { label: "Events", to: "/events" as const },
     { label: "Projects", to: "/projects" as const },
     { label: "Feed", to: "/announcements" as const },
@@ -36,14 +35,9 @@ export function SiteHeader() {
           <span className="font-display text-lg font-semibold tracking-tight">Vertex</span>
         </Link>
         <nav className="hidden items-center gap-5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground lg:flex">
-          {nav.map(({ label, to, hash }) => (
-            <Link
-              key={label}
-              to={to}
-              hash={hash}
-              className="transition-colors hover:text-foreground"
-            >
-              {label}
+          {nav.map((item) => (
+            <Link key={item.label} to={item.to} className="transition-colors hover:text-foreground">
+              {item.label}
             </Link>
           ))}
           <Link to="/join" className="hover:text-foreground">
@@ -70,15 +64,14 @@ export function SiteHeader() {
             className="glass-strong absolute inset-x-3 top-[4.8rem] rounded-2xl p-4 sm:inset-x-5 lg:hidden"
           >
             <nav className="grid gap-1 font-display text-2xl">
-              {nav.map(({ label, to, hash }) => (
+              {nav.map((item) => (
                 <Link
-                  key={label}
-                  to={to}
-                  hash={hash}
+                  key={item.label}
+                  to={item.to}
                   onClick={() => setOpen(false)}
                   className="rounded-xl px-4 py-3 hover:bg-white/10"
                 >
-                  {label}
+                  {item.label}
                 </Link>
               ))}
               <Link
