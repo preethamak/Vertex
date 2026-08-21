@@ -11,12 +11,12 @@ export const Route = createFileRoute("/projects")({
       {
         name: "description",
         content:
-          "Everything Vertex members have built — filter the showcase by team, role, or the people who shipped it.",
+          "Selected work and Vertex projects.",
       },
       { property: "og:title", content: "Projects — Vertex Technical Club" },
       {
         property: "og:description",
-        content: "The Vertex build log: projects, the stack behind them, and who shipped them.",
+        content: "Selected work and Vertex projects.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -67,13 +67,17 @@ function ProjectsPage() {
         <div className="relative mx-auto max-w-6xl px-6 py-20">
           <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
             <span className="inline-block h-px w-8 bg-silver" />
-            Build log
+            Selected work
           </div>
           <h1 className="mt-6 font-display text-5xl font-semibold leading-[0.95] tracking-tight md:text-7xl">
             Projects.
           </h1>
 
-          <div className="mt-10 flex flex-wrap items-center gap-2">
+          <p className="mt-5 max-w-xl text-sm leading-6 text-muted-foreground">
+            A small, honest record of projects we can stand behind. Team credit appears only when it has been recorded.
+          </p>
+
+          {(teams.length > 0 || roles.length > 0) && <div className="mt-10 flex flex-wrap items-center gap-2">
             <Filter
               label="Team"
               value={team}
@@ -97,7 +101,7 @@ function ProjectsPage() {
                 Reset
               </button>
             )}
-          </div>
+          </div>}
 
           <div className="mt-10 grid gap-px border border-hairline bg-hairline md:grid-cols-2">
             {filtered.map((p) => (

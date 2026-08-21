@@ -1,6 +1,42 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+// These are public, working repositories chosen for the first Vertex showcase.
+// They are deliberately kept separate from club-contributed database projects so
+// the site never assigns team credit that has not been recorded.
+const SELECTED_INDEPENDENT_WORK = [
+  {
+    id: "selected-guardrails",
+    slug: "guardrails",
+    title: "GuardRails",
+    description: "A security-first developer environment that brings code scanning into the editing loop.",
+    tech: ["TypeScript", "VS Code", "Security"],
+    cover_url: null,
+    link: "https://github.com/preethamak/GuardRails-IDE",
+    year: 2026,
+  },
+  {
+    id: "selected-vyper-guard",
+    slug: "vyper-guard",
+    title: "Vyper Guard",
+    description: "Static analysis tooling for finding security issues in Vyper smart contracts.",
+    tech: ["Python", "Vyper", "Static analysis"],
+    cover_url: null,
+    link: "https://github.com/preethamak/vyper",
+    year: 2026,
+  },
+  {
+    id: "selected-codelab",
+    slug: "codelab",
+    title: "CodeLab",
+    description: "A browser-based coding evaluation platform with isolated execution and assessment workflows.",
+    tech: ["React", "FastAPI", "Docker"],
+    cover_url: null,
+    link: "https://github.com/preethamak/CodeLab1",
+    year: 2025,
+  },
+] as const;
+
 export const getAnnouncements = createServerFn({ method: "GET" }).handler(async () => {
   const { serverPublicClient } = await import("@/lib/supabase-public.server");
   const sb = serverPublicClient();
@@ -31,7 +67,7 @@ export const getShowcase = createServerFn({ method: "GET" }).handler(async () =>
     sb.from("teams").select("id, name").order("sort_order"),
   ]);
   return {
-    projects: projects.data ?? [],
+    projects: [...(projects.data ?? []), ...SELECTED_INDEPENDENT_WORK],
     contributors: contributors.data ?? [],
     members: members.data ?? [],
     teams: teams.data ?? [],
