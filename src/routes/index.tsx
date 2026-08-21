@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MemberCard, Avatar } from "@/components/MemberCard";
-import { DirectoryExplorer } from "@/components/DirectoryExplorer";
 import { SiteHeader, SiteFooter } from "@/components/SiteChrome";
 import { VertexLogo } from "@/components/VertexLogo";
 import { Atmosphere } from "@/components/Atmosphere";
 import { Reveal } from "@/components/Reveal";
 import { motion } from "motion/react";
+import { ArrowUpRight, Code2, ShieldCheck, Sparkles } from "lucide-react";
 import { getDirectory, getEvents } from "@/lib/club.functions";
+import { founderWork } from "@/data/founder-work";
 
 export const Route = createFileRoute("/")({
   loader: async () => {
@@ -66,41 +67,45 @@ function Home() {
             </span>
           </motion.div>
 
-          <div className="flex flex-col items-start gap-8 md:flex-row md:items-center md:gap-10">
-            <motion.div
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <VertexLogo className="h-20 w-auto text-foreground drop-shadow-[0_0_45px_rgba(255,255,255,.24)] md:h-32" />
-            </motion.div>
+          <div className="grid gap-12 lg:grid-cols-[1.05fr_.95fr] lg:items-end">
             <div>
-              <h1 className="text-silver-gradient font-display text-6xl font-semibold leading-[0.86] tracking-[-0.06em] md:text-8xl lg:text-9xl">
-                Vertex
+              <div className="flex items-center gap-5">
+                <motion.div
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <VertexLogo className="h-14 w-auto text-foreground drop-shadow-[0_0_45px_rgba(255,255,255,.24)] md:h-20" />
+                </motion.div>
+                <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-silver">
+                  V / 01
+                </span>
+              </div>
+              <h1 className="text-silver-gradient mt-8 max-w-3xl font-display text-5xl font-semibold leading-[0.88] tracking-[-0.065em] sm:text-7xl lg:text-8xl">
+                Build what campus
+                <br />
+                will remember.
               </h1>
-              <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
-                A home for people who build, organise, experiment, and leave campus better than they
-                found it.
+              <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
+                Vertex is the technical club for students who want to move from curiosity to working
+                systems—together.
               </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  to="/join"
+                  className="btn-primary rounded-lg px-5 py-3 font-mono text-[11px] uppercase tracking-widest"
+                >
+                  Join the first cohort <ArrowUpRight size={15} />
+                </Link>
+                <Link
+                  to="/events"
+                  className="btn-ghost rounded-lg px-5 py-3 font-mono text-[11px] uppercase tracking-widest"
+                >
+                  Enter the event desk
+                </Link>
+              </div>
             </div>
-          </div>
 
-          <div className="mt-10 max-w-2xl">
-            <DirectoryExplorer directory={directory} />
-          </div>
-
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              to="/join"
-              className="btn-primary rounded-lg px-5 py-3 font-mono text-[11px] uppercase tracking-widest"
-            >
-              Apply to a team →
-            </Link>
-            <Link
-              to="/events"
-              className="btn-ghost rounded-lg px-5 py-3 font-mono text-[11px] uppercase tracking-widest"
-            >
-              See events
-            </Link>
+            <SignalField />
           </div>
 
           <div className="mt-16 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -112,11 +117,68 @@ function Home() {
         </div>
       </section>
 
+      {/* Work */}
+      <section className="relative border-t border-white/10 bg-white/[0.012]">
+        <div className="mx-auto max-w-6xl px-6 py-24">
+          <Reveal>
+            <SectionHeader index="01" label="Founder work" title="Proof before promises." />
+          </Reveal>
+          <p className="mt-6 max-w-2xl text-sm leading-7 text-muted-foreground">
+            Vertex is at day one. These are real projects built by our founder—shared as the
+            technical standard we intend to grow from, not presented as club work.
+          </p>
+          <div className="mt-12 grid gap-4 lg:grid-cols-3">
+            {founderWork.map((project, index) => (
+              <Reveal key={project.title} delay={index * 0.08}>
+                <a
+                  href={project.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="surface-card group relative flex min-h-[310px] flex-col overflow-hidden rounded-2xl p-6"
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${project.tone}`} />
+                  <div className="relative flex items-center justify-between gap-4">
+                    <span className="chip rounded-full px-3 py-1 font-mono text-[9px] uppercase tracking-[0.18em] text-silver">
+                      {project.label}
+                    </span>
+                    <ArrowUpRight
+                      className="text-muted-foreground transition-transform duration-300 group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-foreground"
+                      size={18}
+                    />
+                  </div>
+                  <div className="relative mt-auto">
+                    <div className="flex items-end justify-between gap-4">
+                      <h3 className="font-display text-3xl tracking-tight">{project.title}</h3>
+                      <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                        {project.status}
+                      </span>
+                    </div>
+                    <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                      {project.description}
+                    </p>
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      {project.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="font-mono text-[9px] uppercase tracking-widest text-silver"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </a>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Leadership */}
       <section id="leadership" className="relative border-t border-white/10">
         <div className="mx-auto max-w-6xl px-6 py-24">
           <Reveal>
-            <SectionHeader index="01" label="Leadership" title="The people who set the pace." />
+            <SectionHeader index="02" label="Leadership" title="The people who set the pace." />
           </Reveal>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {leadership.map((m, index) => (
@@ -152,7 +214,7 @@ function Home() {
       <section id="teams" className="relative border-t border-white/10">
         <div className="mx-auto max-w-6xl px-6 py-24">
           <Reveal>
-            <SectionHeader index="02" label="Teams" title="Five teams. One shared signal." />
+            <SectionHeader index="03" label="Teams" title="Five teams. One shared signal." />
           </Reveal>
 
           <div className="mt-16 flex flex-col gap-24">
@@ -191,7 +253,7 @@ function Home() {
       <section id="events" className="relative border-t border-white/10">
         <div className="mx-auto max-w-6xl px-6 py-24">
           <Reveal>
-            <SectionHeader index="03" label="Events" title="Something worth showing up for." />
+            <SectionHeader index="04" label="Events" title="Something worth showing up for." />
           </Reveal>
           <div className="mt-12 grid gap-4 md:grid-cols-2">
             {events.map((e) => {
@@ -243,7 +305,7 @@ function Home() {
       <section id="contact" className="relative border-t border-white/10">
         <div className="mx-auto max-w-6xl px-6 py-24">
           <Reveal>
-            <SectionHeader index="04" label="Contact" title="Start a conversation." />
+            <SectionHeader index="05" label="Contact" title="Start a conversation." />
           </Reveal>
           <div className="mt-12 grid gap-4 md:grid-cols-3">
             <ContactCard label="Email" value="hello@vertex.club" href="mailto:hello@vertex.club" />
@@ -324,6 +386,45 @@ function Stat({ label, value }: { label: string; value: string }) {
       </div>
       <div className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
         {label}
+      </div>
+    </div>
+  );
+}
+
+function SignalField() {
+  return (
+    <div className="relative min-h-[380px] overflow-hidden rounded-3xl border border-white/10 bg-white/[0.025] p-5 shadow-[0_30px_100px_-40px_rgba(255,255,255,.35)]">
+      <div className="grid-backdrop absolute inset-0 opacity-50" />
+      <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+      <div className="absolute bottom-16 left-[18%] h-40 w-40 rounded-full border border-white/15" />
+      <div className="absolute bottom-[26%] left-[26%] h-2 w-2 rounded-full bg-white shadow-[0_0_18px_white]" />
+      <div className="absolute right-[19%] top-[24%] h-2.5 w-2.5 rounded-full bg-silver shadow-[0_0_22px_white]" />
+      <div className="absolute bottom-[27%] left-[27%] right-[20%] h-px origin-left rotate-[-25deg] bg-gradient-to-r from-white/70 to-transparent" />
+      <div className="absolute left-5 right-5 top-5 flex items-center justify-between font-mono text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+        <span>Vertex field</span>
+        <span className="flex items-center gap-2 text-silver">
+          <i className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> live
+        </span>
+      </div>
+      <div className="absolute bottom-5 left-5 right-5 grid grid-cols-2 gap-3">
+        <div className="glass-panel rounded-xl p-4">
+          <ShieldCheck size={17} className="text-silver" />
+          <p className="mt-4 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+            Build with intent
+          </p>
+        </div>
+        <div className="glass-panel rounded-xl p-4">
+          <Code2 size={17} className="text-silver" />
+          <p className="mt-4 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+            Learn in public
+          </p>
+        </div>
+      </div>
+      <div className="absolute left-[48%] top-[37%] flex -translate-x-1/2 flex-col items-center text-center">
+        <Sparkles size={25} className="text-white drop-shadow-[0_0_16px_white]" />
+        <span className="mt-3 font-mono text-[9px] uppercase tracking-[0.2em] text-silver">
+          First signal
+        </span>
       </div>
     </div>
   );
