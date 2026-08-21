@@ -103,8 +103,7 @@ function MemberProfile() {
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-[420px]"
           style={{
-            background:
-              "radial-gradient(ellipse at 50% 0%, oklch(0.18 0 0) 0%, transparent 60%)",
+            background: "radial-gradient(ellipse at 50% 0%, oklch(0.18 0 0) 0%, transparent 60%)",
           }}
         />
         <div className="relative mx-auto max-w-5xl px-6 py-16 md:py-24">
@@ -180,13 +179,7 @@ function MemberProfile() {
               </div>
               <div className="bg-white p-4">
                 {url && (
-                  <QRCodeSVG
-                    value={url}
-                    size={192}
-                    bgColor="#ffffff"
-                    fgColor="#000000"
-                    level="M"
-                  />
+                  <QRCodeSVG value={url} size={192} bgColor="#ffffff" fgColor="#000000" level="M" />
                 )}
               </div>
               <div className="mt-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">

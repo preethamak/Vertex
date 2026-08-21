@@ -17,7 +17,9 @@ export const myDashboard = createServerFn({ method: "GET" })
             .from("member_badges")
             .select("badge_id, note, awarded_on")
             .eq("member_id", viewer.member.id)
-        : Promise.resolve({ data: [] as { badge_id: string; note: string | null; awarded_on: string }[] }),
+        : Promise.resolve({
+            data: [] as { badge_id: string; note: string | null; awarded_on: string }[],
+          }),
       context.supabase.from("badges").select("id, name, description, icon"),
     ]);
 

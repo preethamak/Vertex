@@ -5,7 +5,12 @@ import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { SiteHeader, SiteFooter } from "@/components/SiteChrome";
 import { PhotoUpload } from "@/components/PhotoUpload";
-import { myDashboard, updateMyProfile, myMentorships, respondMentorship } from "@/lib/member.functions";
+import {
+  myDashboard,
+  updateMyProfile,
+  myMentorships,
+  respondMentorship,
+} from "@/lib/member.functions";
 
 export const Route = createFileRoute("/_authenticated/me")({
   loader: async () => {
@@ -74,8 +79,8 @@ function MePage() {
 
         {!member && (
           <p className="mt-8 border border-hairline bg-card/40 p-5 text-sm text-muted-foreground">
-            Your account isn't linked to a roster entry yet. Ask an admin to link it from the admin console, then
-            reload this page.
+            Your account isn't linked to a roster entry yet. Ask an admin to link it from the admin
+            console, then reload this page.
           </p>
         )}
 
@@ -178,8 +183,8 @@ function MePage() {
               <div>
                 <h2 className="font-display text-2xl font-semibold">Your profile QR</h2>
                 <p className="mt-2 max-w-md text-sm text-muted-foreground">
-                  Any phone camera opens your public profile directly from this code. Print it, stick it on a
-                  laptop, drop it in a slide.
+                  Any phone camera opens your public profile directly from this code. Print it,
+                  stick it on a laptop, drop it in a slide.
                 </p>
                 <Link
                   to="/member/$slug"
@@ -200,7 +205,10 @@ function MePage() {
               </div>
               <div className="mt-4 flex flex-col gap-px border border-hairline bg-hairline">
                 {dashboard.attendance.map((a) => (
-                  <div key={a.code} className="flex items-center justify-between gap-4 bg-background p-4">
+                  <div
+                    key={a.code}
+                    className="flex items-center justify-between gap-4 bg-background p-4"
+                  >
                     <div>
                       <div className="font-display text-base">{a.event}</div>
                       <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -252,7 +260,9 @@ function MePage() {
                         <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                           {incoming ? "Incoming request" : "You requested"} · {r.status}
                         </div>
-                        {r.message && <p className="mt-2 text-sm text-muted-foreground">{r.message}</p>}
+                        {r.message && (
+                          <p className="mt-2 text-sm text-muted-foreground">{r.message}</p>
+                        )}
                       </div>
                       {incoming && r.status === "pending" && (
                         <div className="flex gap-2">
@@ -276,7 +286,10 @@ function MePage() {
                 })}
                 {mentorships.length === 0 && (
                   <div className="bg-background p-4 font-mono text-xs text-muted-foreground">
-                    No mentorship requests yet. <Link to="/mentors" className="text-silver">Find a mentor →</Link>
+                    No mentorship requests yet.{" "}
+                    <Link to="/mentors" className="text-silver">
+                      Find a mentor →
+                    </Link>
                   </div>
                 )}
               </div>

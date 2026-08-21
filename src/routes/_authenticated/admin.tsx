@@ -1,5 +1,5 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { SiteHeader, SiteFooter } from "@/components/SiteChrome";
@@ -28,7 +28,10 @@ export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
       { title: "Admin console — Vertex" },
-      { name: "description", content: "Manage the Vertex roster, events, projects, and door check-in." },
+      {
+        name: "description",
+        content: "Manage the Vertex roster, events, projects, and door check-in.",
+      },
       { property: "og:title", content: "Admin console — Vertex" },
       { property: "og:description", content: "Vertex staff tools." },
       { property: "og:type", content: "website" },
@@ -46,11 +49,23 @@ export const Route = createFileRoute("/_authenticated/admin")({
   ),
 });
 
-const TABS = ["Check-in", "SIH", "Applications", "Members", "Events", "Projects", "Announcements"] as const;
+const TABS = [
+  "Check-in",
+  "SIH",
+  "Applications",
+  "Members",
+  "Events",
+  "Projects",
+  "Announcements",
+] as const;
 type Tab = (typeof TABS)[number];
 
 const slugify = (s: string) =>
-  s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 70);
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 70);
 
 function AdminPage() {
   const data = Route.useLoaderData();
@@ -65,7 +80,9 @@ function AdminPage() {
           <span className="inline-block h-px w-8 bg-silver" />
           {isAdmin ? "Admin" : "Team head"} console
         </div>
-        <h1 className="mt-5 font-display text-4xl font-semibold tracking-tight md:text-6xl">Control room.</h1>
+        <h1 className="mt-5 font-display text-4xl font-semibold tracking-tight md:text-6xl">
+          Control room.
+        </h1>
 
         <div className="mt-6 grid grid-cols-2 gap-px border border-hairline bg-hairline sm:grid-cols-4">
           <Stat label="Applications" value={String(data.applications.length)} />
@@ -78,30 +95,44 @@ function AdminPage() {
         </div>
 
         <div className="mt-8 flex flex-wrap gap-2">
-          {TABS.filter((t) => isAdmin || t === "Check-in" || t === "SIH" || t === "Applications" || t === "Announcements").map(
-            (t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`border px-3 py-2 font-mono text-[10px] uppercase tracking-widest ${
-                  tab === t ? "border-silver text-foreground" : "border-hairline text-muted-foreground hover:border-silver"
-                }`}
-              >
-                {t}
-              </button>
-            ),
-          )}
+          {TABS.filter(
+            (t) =>
+              isAdmin ||
+              t === "Check-in" ||
+              t === "SIH" ||
+              t === "Applications" ||
+              t === "Announcements",
+          ).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`border px-3 py-2 font-mono text-[10px] uppercase tracking-widest ${
+                tab === t
+                  ? "border-silver text-foreground"
+                  : "border-hairline text-muted-foreground hover:border-silver"
+              }`}
+            >
+              {t}
+            </button>
+          ))}
         </div>
 
         <div className="mt-8">
-          {tab === "Check-in" && <CheckIn registrations={data.registrations} events={data.events} />}
+          {tab === "Check-in" && (
+            <CheckIn registrations={data.registrations} events={data.events} />
+          )}
           {tab === "SIH" && <SihOperations isAdmin={isAdmin} />}
           {tab === "Applications" && <Applications rows={data.applications} />}
           {tab === "Members" && <Members members={data.members} teams={data.teams} />}
           {tab === "Events" && <Events events={data.events} />}
           {tab === "Projects" && <Projects projects={data.projects} members={data.members} />}
           {tab === "Announcements" && (
-            <Announcements rows={data.announcements} teams={data.teams} isAdmin={isAdmin} headTeams={data.viewer.headTeams} />
+            <Announcements
+              rows={data.announcements}
+              teams={data.teams}
+              isAdmin={isAdmin}
+              headTeams={data.viewer.headTeams}
+            />
           )}
         </div>
       </div>
@@ -114,20 +145,26 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-background p-5">
       <div className="font-display text-3xl font-semibold tracking-tight">{value}</div>
-      <div className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        {label}
+      </div>
     </div>
   );
 }
 
 const field =
   "border border-hairline bg-background px-3 py-2 font-mono text-sm focus:border-silver focus:outline-none";
-const btn = "border border-silver bg-foreground px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-background disabled:opacity-50";
-const ghost = "border border-hairline px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest hover:border-silver";
+const btn =
+  "border border-silver bg-foreground px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-background disabled:opacity-50";
+const ghost =
+  "border border-hairline px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest hover:border-silver";
 
 function Label({ text, children }: { text: string; children: React.ReactNode }) {
   return (
     <label className="flex flex-col gap-2">
-      <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{text}</span>
+      <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        {text}
+      </span>
       {children}
     </label>
   );
@@ -143,17 +180,17 @@ function SihOperations({ isAdmin }: { isAdmin: boolean }) {
   const [data, setData] = useState<Awaited<ReturnType<typeof hackathonAdmin>> | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     try {
       setData(await load());
     } catch {
       toast.error("Could not load SIH operations.");
     }
-  };
+  }, [load]);
 
   useEffect(() => {
     void refresh();
-  }, []);
+  }, [refresh]);
 
   if (!data) {
     return <p className="font-mono text-xs text-muted-foreground">Loading SIH operations…</p>;
@@ -165,7 +202,10 @@ function SihOperations({ isAdmin }: { isAdmin: boolean }) {
       <div className="grid grid-cols-2 gap-px border border-hairline bg-hairline sm:grid-cols-4">
         <Stat label="Teams" value={String(data.teams.length)} />
         <Stat label="Students" value={String(data.members.length)} />
-        <Stat label="Final submissions" value={String(data.submissions.filter((entry) => entry.status === "final").length)} />
+        <Stat
+          label="Final submissions"
+          value={String(data.submissions.filter((entry) => entry.status === "final").length)}
+        />
         <Stat label="Checked in" value={String(checkedIn.size)} />
       </div>
 
@@ -181,80 +221,146 @@ function SihOperations({ isAdmin }: { isAdmin: boolean }) {
                   <div>
                     <div className="font-display text-lg">{team.name}</div>
                     <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                      {roster.length}/6 students · {team.college || "College not supplied"} · {checkedIn.has(team.id) ? "checked in" : "not checked in"}
+                      {roster.length}/6 students · {team.college || "College not supplied"} ·{" "}
+                      {checkedIn.has(team.id) ? "checked in" : "not checked in"}
                     </p>
                     <p className="mt-2 text-xs text-muted-foreground">
-                      {roster.map((member) => `${member.name}${member.is_lead ? " (lead)" : ""}`).join(", ")}
+                      {roster
+                        .map((member) => `${member.name}${member.is_lead ? " (lead)" : ""}`)
+                        .join(", ")}
                     </p>
-                    {submission?.solution_title && <p className="mt-1 text-xs text-silver">{submission.solution_title} · {submission.status}</p>}
+                    {submission?.solution_title && (
+                      <p className="mt-1 text-xs text-silver">
+                        {submission.solution_title} · {submission.status}
+                      </p>
+                    )}
                   </div>
                   <select
                     value={team.status}
                     onChange={async (event) => {
                       try {
-                        await setStatus({ data: { id: team.id, status: event.target.value as "registered" } });
+                        await setStatus({
+                          data: { id: team.id, status: event.target.value as "registered" },
+                        });
                         toast.success("Team status updated.");
                         await refresh();
                         await router.invalidate();
                       } catch (error) {
-                        toast.error(error instanceof Error ? error.message : "Could not update team status.");
+                        toast.error(
+                          error instanceof Error ? error.message : "Could not update team status.",
+                        );
                       }
                     }}
                     className={field}
                   >
-                    {["registered", "in_review", "shortlisted", "selected", "waitlisted", "rejected", "withdrawn"].map((status) => (
-                      <option key={status} value={status} className="bg-background">{status.replaceAll("_", " ")}</option>
+                    {[
+                      "registered",
+                      "in_review",
+                      "shortlisted",
+                      "selected",
+                      "waitlisted",
+                      "rejected",
+                      "withdrawn",
+                    ].map((status) => (
+                      <option key={status} value={status} className="bg-background">
+                        {status.replaceAll("_", " ")}
+                      </option>
                     ))}
                   </select>
                 </div>
               </div>
             );
           })}
-          {data.teams.length === 0 && <div className="bg-background p-4 text-sm text-muted-foreground">No SIH teams registered yet.</div>}
+          {data.teams.length === 0 && (
+            <div className="bg-background p-4 text-sm text-muted-foreground">
+              No SIH teams registered yet.
+            </div>
+          )}
         </div>
       </section>
 
-      {isAdmin && <section className="grid gap-5 border border-hairline bg-card/40 p-6">
-        <div>
-          <div className="font-display text-xl">Official problem statements</div>
-          <p className="mt-1 text-sm text-muted-foreground">Paste only statements verified against the official SIH release. Publishing makes a statement available to teams.</p>
-        </div>
-        <form
-          className="grid gap-3 md:grid-cols-2"
-          onSubmit={async (event) => {
-            event.preventDefault();
-            const form = event.currentTarget;
-            const values = new FormData(form);
-            setBusy(true);
-            try {
-              await saveStatement({ data: {
-                statementCode: String(values.get("code") ?? ""), title: String(values.get("title") ?? ""),
-                organization: String(values.get("organization") ?? "") || null, category: String(values.get("category") ?? "") || null,
-                theme: String(values.get("theme") ?? "") || null, description: String(values.get("description") ?? "") || null,
-                sourceUrl: String(values.get("sourceUrl") ?? "") || null, sourceVersion: String(values.get("sourceVersion") ?? "") || null,
-                published: values.get("published") === "on", sortOrder: Number(values.get("sortOrder") ?? 0),
-              } });
-              toast.success("Problem statement saved."); form.reset(); await refresh();
-            } catch (error) { toast.error(error instanceof Error ? error.message : "Could not save statement."); }
-            finally { setBusy(false); }
-          }}
-        >
-          <input name="code" required placeholder="Problem statement code" className={field} />
-          <input name="title" required placeholder="Official title" className={field} />
-          <input name="organization" placeholder="Organisation" className={field} />
-          <input name="theme" placeholder="Official theme" className={field} />
-          <input name="category" placeholder="Category" className={field} />
-          <input name="sourceUrl" type="url" placeholder="Official source URL" className={field} />
-          <input name="sourceVersion" placeholder="Source version / release" className={field} />
-          <input name="sortOrder" type="number" min="0" defaultValue="0" className={field} />
-          <textarea name="description" placeholder="Official description" rows={4} className={`${field} resize-none md:col-span-2`} />
-          <label className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground"><input type="checkbox" name="published" /> Publish to teams</label>
-          <button className={`${btn} w-fit`} disabled={busy}>{busy ? "Saving…" : "Save statement"}</button>
-        </form>
-        <div className="flex flex-col gap-px border border-hairline bg-hairline">
-          {data.statements.map((statement) => <div key={statement.id} className="bg-background p-3 text-sm"><span className="font-mono text-[10px] text-silver">{statement.statement_code}</span> <span className="ml-2">{statement.title}</span> <span className="ml-2 text-muted-foreground">{statement.published ? "Published" : "Draft"}</span></div>)}
-        </div>
-      </section>}
+      {isAdmin && (
+        <section className="grid gap-5 border border-hairline bg-card/40 p-6">
+          <div>
+            <div className="font-display text-xl">Official problem statements</div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Paste only statements verified against the official SIH release. Publishing makes a
+              statement available to teams.
+            </p>
+          </div>
+          <form
+            className="grid gap-3 md:grid-cols-2"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              const form = event.currentTarget;
+              const values = new FormData(form);
+              setBusy(true);
+              try {
+                await saveStatement({
+                  data: {
+                    statementCode: String(values.get("code") ?? ""),
+                    title: String(values.get("title") ?? ""),
+                    organization: String(values.get("organization") ?? "") || null,
+                    category: String(values.get("category") ?? "") || null,
+                    theme: String(values.get("theme") ?? "") || null,
+                    description: String(values.get("description") ?? "") || null,
+                    sourceUrl: String(values.get("sourceUrl") ?? "") || null,
+                    sourceVersion: String(values.get("sourceVersion") ?? "") || null,
+                    published: values.get("published") === "on",
+                    sortOrder: Number(values.get("sortOrder") ?? 0),
+                  },
+                });
+                toast.success("Problem statement saved.");
+                form.reset();
+                await refresh();
+              } catch (error) {
+                toast.error(error instanceof Error ? error.message : "Could not save statement.");
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            <input name="code" required placeholder="Problem statement code" className={field} />
+            <input name="title" required placeholder="Official title" className={field} />
+            <input name="organization" placeholder="Organisation" className={field} />
+            <input name="theme" placeholder="Official theme" className={field} />
+            <input name="category" placeholder="Category" className={field} />
+            <input
+              name="sourceUrl"
+              type="url"
+              placeholder="Official source URL"
+              className={field}
+            />
+            <input name="sourceVersion" placeholder="Source version / release" className={field} />
+            <input name="sortOrder" type="number" min="0" defaultValue="0" className={field} />
+            <textarea
+              name="description"
+              placeholder="Official description"
+              rows={4}
+              className={`${field} resize-none md:col-span-2`}
+            />
+            <label className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <input type="checkbox" name="published" /> Publish to teams
+            </label>
+            <button className={`${btn} w-fit`} disabled={busy}>
+              {busy ? "Saving…" : "Save statement"}
+            </button>
+          </form>
+          <div className="flex flex-col gap-px border border-hairline bg-hairline">
+            {data.statements.map((statement) => (
+              <div key={statement.id} className="bg-background p-3 text-sm">
+                <span className="font-mono text-[10px] text-silver">
+                  {statement.statement_code}
+                </span>{" "}
+                <span className="ml-2">{statement.title}</span>{" "}
+                <span className="ml-2 text-muted-foreground">
+                  {statement.published ? "Published" : "Draft"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
@@ -265,7 +371,13 @@ function CheckIn({
   registrations,
   events,
 }: {
-  registrations: { id: string; event_id: string; name: string; email: string; checked_in_at: string | null }[];
+  registrations: {
+    id: string;
+    event_id: string;
+    name: string;
+    email: string;
+    checked_in_at: string | null;
+  }[];
   events: { id: string; title: string }[];
 }) {
   const router = useRouter();
@@ -290,9 +402,13 @@ function CheckIn({
             if (code.toUpperCase().includes("VTX-SIH:")) {
               const res = await scanSih({ data: { code } });
               if (res.status === "ok") {
-                setResult(`✓ ${res.team} checked in · ${res.members.map((m) => m.name).join(", ")}`);
+                setResult(
+                  `✓ ${res.team} checked in · ${res.members.map((m) => m.name).join(", ")}`,
+                );
               } else if (res.status === "already") {
-                setResult(`! ${res.team} already checked in · ${res.members.map((m) => m.name).join(", ")}`);
+                setResult(
+                  `! ${res.team} already checked in · ${res.members.map((m) => m.name).join(", ")}`,
+                );
               } else setResult("✗ Unknown SIH team code");
             } else {
               const res = await scan({ data: { code } });
@@ -308,7 +424,13 @@ function CheckIn({
         }}
       >
         <Label text="Pass code or scanned URL">
-          <input name="code" required autoFocus className={`${field} w-80`} placeholder="Paste or scan…" />
+          <input
+            name="code"
+            required
+            autoFocus
+            className={`${field} w-80`}
+            placeholder="Paste or scan…"
+          />
         </Label>
         <button className={btn}>Check in</button>
         {result && <span className="font-mono text-xs text-silver">{result}</span>}
@@ -401,7 +523,9 @@ function Applications({
         </div>
       ))}
       {rows.length === 0 && (
-        <div className="bg-background p-6 font-mono text-xs text-muted-foreground">No applications yet.</div>
+        <div className="bg-background p-6 font-mono text-xs text-muted-foreground">
+          No applications yet.
+        </div>
       )}
     </div>
   );
@@ -424,7 +548,13 @@ type MemberRow = {
   sort_order: number;
 };
 
-function Members({ members, teams }: { members: MemberRow[]; teams: { id: string; name: string }[] }) {
+function Members({
+  members,
+  teams,
+}: {
+  members: MemberRow[];
+  teams: { id: string; name: string }[];
+}) {
   const router = useRouter();
   const save = useServerFn(saveMember);
   const remove = useServerFn(deleteMember);
@@ -434,7 +564,23 @@ function Members({ members, teams }: { members: MemberRow[]; teams: { id: string
   const [busy, setBusy] = useState(false);
 
   const open = (m: MemberRow | null) => {
-    setEditing(m ?? ({ id: "", slug: "", name: "", role: "Member", team_id: teams[0]?.id ?? null, is_head: false, is_leadership: false, photo_url: null, bio: null, skills: [], links: {}, sort_order: 0 } as MemberRow));
+    setEditing(
+      m ??
+        ({
+          id: "",
+          slug: "",
+          name: "",
+          role: "Member",
+          team_id: teams[0]?.id ?? null,
+          is_head: false,
+          is_leadership: false,
+          photo_url: null,
+          bio: null,
+          skills: [],
+          links: {},
+          sort_order: 0,
+        } as MemberRow),
+    );
     setPhoto(m?.photo_url ?? null);
   };
 
@@ -489,7 +635,12 @@ function Members({ members, teams }: { members: MemberRow[]; teams: { id: string
             <input name="name" required defaultValue={editing.name} className={field} />
           </Label>
           <Label text="Profile link name (slug)">
-            <input name="slug" defaultValue={editing.slug} placeholder="auto from name" className={field} />
+            <input
+              name="slug"
+              defaultValue={editing.slug}
+              placeholder="auto from name"
+              className={field}
+            />
           </Label>
           <Label text="Role">
             <input name="role" required defaultValue={editing.role} className={field} />
@@ -507,20 +658,35 @@ function Members({ members, teams }: { members: MemberRow[]; teams: { id: string
             </select>
           </Label>
           <Label text="Skills (comma separated)">
-            <input name="skills" defaultValue={(editing.skills ?? []).join(", ")} className={field} />
+            <input
+              name="skills"
+              defaultValue={(editing.skills ?? []).join(", ")}
+              className={field}
+            />
           </Label>
           <Label text="Sort order">
-            <input name="sortOrder" type="number" defaultValue={editing.sort_order} className={field} />
+            <input
+              name="sortOrder"
+              type="number"
+              defaultValue={editing.sort_order}
+              className={field}
+            />
           </Label>
           <Label text="Bio">
-            <textarea name="bio" rows={3} defaultValue={editing.bio ?? ""} className={`${field} md:col-span-2 resize-none`} />
+            <textarea
+              name="bio"
+              rows={3}
+              defaultValue={editing.bio ?? ""}
+              className={`${field} md:col-span-2 resize-none`}
+            />
           </Label>
           <div className="flex items-center gap-6 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             <label className="flex items-center gap-2">
               <input type="checkbox" name="isHead" defaultChecked={editing.is_head} /> Team head
             </label>
             <label className="flex items-center gap-2">
-              <input type="checkbox" name="isLeadership" defaultChecked={editing.is_leadership} /> Leadership
+              <input type="checkbox" name="isLeadership" defaultChecked={editing.is_leadership} />{" "}
+              Leadership
             </label>
           </div>
           <div className="flex gap-2 md:col-span-2">
@@ -549,7 +715,9 @@ function Members({ members, teams }: { members: MemberRow[]; teams: { id: string
             <button
               className={ghost}
               onClick={async () => {
-                const badgeId = window.prompt("Badge id (founder, team-head, hackathon-win, shipper, regular, mentor)");
+                const badgeId = window.prompt(
+                  "Badge id (founder, team-head, hackathon-win, shipper, regular, mentor)",
+                );
                 if (!badgeId) return;
                 try {
                   await award({ data: { memberId: m.id, badgeId, note: null } });
@@ -673,10 +841,21 @@ function Events({ events }: { events: EventRow[] }) {
             <input name="title" required defaultValue={editing.title} className={field} />
           </Label>
           <Label text="Link name (slug)">
-            <input name="slug" defaultValue={editing.slug} placeholder="auto from title" className={field} />
+            <input
+              name="slug"
+              defaultValue={editing.slug}
+              placeholder="auto from title"
+              className={field}
+            />
           </Label>
           <Label text="Date">
-            <input name="date" type="date" required defaultValue={editing.event_date ?? ""} className={field} />
+            <input
+              name="date"
+              type="date"
+              required
+              defaultValue={editing.event_date ?? ""}
+              className={field}
+            />
           </Label>
           <Label text="Start time">
             <input name="time" defaultValue={editing.start_time ?? ""} className={field} />
@@ -688,13 +867,23 @@ function Events({ events }: { events: EventRow[] }) {
             <input name="tag" required defaultValue={editing.tag} className={field} />
           </Label>
           <Label text="Capacity">
-            <input name="capacity" type="number" defaultValue={editing.capacity ?? ""} className={field} />
+            <input
+              name="capacity"
+              type="number"
+              defaultValue={editing.capacity ?? ""}
+              className={field}
+            />
           </Label>
           <label className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             <input type="checkbox" name="published" defaultChecked={editing.published} /> Published
           </label>
           <Label text="Description">
-            <textarea name="description" rows={3} defaultValue={editing.description ?? ""} className={`${field} resize-none md:col-span-2`} />
+            <textarea
+              name="description"
+              rows={3}
+              defaultValue={editing.description ?? ""}
+              className={`${field} resize-none md:col-span-2`}
+            />
           </Label>
           <div className="flex gap-2 md:col-span-2">
             <button className={btn} disabled={busy}>
@@ -713,7 +902,8 @@ function Events({ events }: { events: EventRow[] }) {
             <div>
               <div className="font-display text-base">{e.title}</div>
               <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                {e.event_date ? new Date(e.event_date).toDateString() : "Date TBA"} · {e.location} · {e.published ? "live" : "draft"}
+                {e.event_date ? new Date(e.event_date).toDateString() : "Date TBA"} · {e.location} ·{" "}
+                {e.published ? "live" : "draft"}
               </div>
             </div>
             <button className={ghost} onClick={() => open(e)}>
@@ -816,7 +1006,12 @@ function Projects({ projects, members }: { projects: ProjectRow[]; members: Memb
             <input name="title" required defaultValue={editing.title} className={field} />
           </Label>
           <Label text="Link name (slug)">
-            <input name="slug" defaultValue={editing.slug} placeholder="auto from title" className={field} />
+            <input
+              name="slug"
+              defaultValue={editing.slug}
+              placeholder="auto from title"
+              className={field}
+            />
           </Label>
           <Label text="Tech (comma separated)">
             <input name="tech" defaultValue={editing.tech.join(", ")} className={field} />
@@ -831,7 +1026,12 @@ function Projects({ projects, members }: { projects: ProjectRow[]; members: Memb
             <input type="checkbox" name="published" defaultChecked={editing.published} /> Published
           </label>
           <Label text="Description">
-            <textarea name="description" rows={3} defaultValue={editing.description ?? ""} className={`${field} resize-none md:col-span-2`} />
+            <textarea
+              name="description"
+              rows={3}
+              defaultValue={editing.description ?? ""}
+              className={`${field} resize-none md:col-span-2`}
+            />
           </Label>
           <div className="md:col-span-2">
             <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -843,10 +1043,14 @@ function Projects({ projects, members }: { projects: ProjectRow[]; members: Memb
                   type="button"
                   key={m.id}
                   onClick={() =>
-                    setPeople(people.includes(m.id) ? people.filter((p) => p !== m.id) : [...people, m.id])
+                    setPeople(
+                      people.includes(m.id) ? people.filter((p) => p !== m.id) : [...people, m.id],
+                    )
                   }
                   className={`border px-2 py-1 font-mono text-[10px] uppercase tracking-widest ${
-                    people.includes(m.id) ? "border-silver text-foreground" : "border-hairline text-muted-foreground"
+                    people.includes(m.id)
+                      ? "border-silver text-foreground"
+                      : "border-hairline text-muted-foreground"
                   }`}
                 >
                   {m.name}
@@ -892,7 +1096,15 @@ function Announcements({
   isAdmin,
   headTeams,
 }: {
-  rows: { id: string; title: string; body: string; team_id: string | null; pinned: boolean; published: boolean; created_at: string }[];
+  rows: {
+    id: string;
+    title: string;
+    body: string;
+    team_id: string | null;
+    pinned: boolean;
+    published: boolean;
+    created_at: string;
+  }[];
   teams: { id: string; name: string }[];
   isAdmin: boolean;
   headTeams: string[];
@@ -940,7 +1152,11 @@ function Announcements({
         </Label>
         <div className="flex flex-wrap items-center gap-4">
           <Label text="Audience">
-            <select name="team" className={field} defaultValue={isAdmin ? "" : (allowed[0]?.id ?? "")}>
+            <select
+              name="team"
+              className={field}
+              defaultValue={isAdmin ? "" : (allowed[0]?.id ?? "")}
+            >
               {isAdmin && (
                 <option value="" className="bg-background">
                   Club-wide
@@ -968,8 +1184,10 @@ function Announcements({
             <div className="min-w-0">
               <div className="font-display text-base">{a.title}</div>
               <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                {a.team_id ? (teams.find((t) => t.id === a.team_id)?.name ?? a.team_id) : "Club-wide"} ·{" "}
-                {new Date(a.created_at).toDateString()}
+                {a.team_id
+                  ? (teams.find((t) => t.id === a.team_id)?.name ?? a.team_id)
+                  : "Club-wide"}{" "}
+                · {new Date(a.created_at).toDateString()}
               </div>
               <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{a.body}</p>
             </div>

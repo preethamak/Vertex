@@ -10,8 +10,7 @@ export const Route = createFileRoute("/projects")({
       { title: "Projects — Vertex Technical Club" },
       {
         name: "description",
-        content:
-          "Selected work and Vertex projects.",
+        content: "Selected work and Vertex projects.",
       },
       { property: "og:title", content: "Projects — Vertex Technical Club" },
       {
@@ -50,7 +49,7 @@ function ProjectsPage() {
           .map((c) => memberById.get(c.member_id))
           .filter(Boolean) as (typeof members)[number][],
       })),
-    [projects, contributors, memberById, members],
+    [projects, contributors, memberById],
   );
 
   const filtered = withPeople.filter((p) => {
@@ -74,34 +73,43 @@ function ProjectsPage() {
           </h1>
 
           <p className="mt-5 max-w-xl text-sm leading-6 text-muted-foreground">
-            A small, honest record of projects we can stand behind. Team credit appears only when it has been recorded.
+            A small, honest record of projects we can stand behind. Team credit appears only when it
+            has been recorded.
           </p>
 
-          {(teams.length > 0 || roles.length > 0) && <div className="mt-10 flex flex-wrap items-center gap-2">
-            <Filter
-              label="Team"
-              value={team}
-              onChange={setTeam}
-              options={[{ value: "all", label: "All teams" }, ...teams.map((t) => ({ value: t.id, label: t.name }))]}
-            />
-            <Filter
-              label="Role"
-              value={role}
-              onChange={setRole}
-              options={[{ value: "all", label: "All roles" }, ...roles.map((r) => ({ value: r, label: r }))]}
-            />
-            {(team !== "all" || role !== "all") && (
-              <button
-                onClick={() => {
-                  setTeam("all");
-                  setRole("all");
-                }}
-                className="border border-hairline px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:border-silver hover:text-foreground"
-              >
-                Reset
-              </button>
-            )}
-          </div>}
+          {(teams.length > 0 || roles.length > 0) && (
+            <div className="mt-10 flex flex-wrap items-center gap-2">
+              <Filter
+                label="Team"
+                value={team}
+                onChange={setTeam}
+                options={[
+                  { value: "all", label: "All teams" },
+                  ...teams.map((t) => ({ value: t.id, label: t.name })),
+                ]}
+              />
+              <Filter
+                label="Role"
+                value={role}
+                onChange={setRole}
+                options={[
+                  { value: "all", label: "All roles" },
+                  ...roles.map((r) => ({ value: r, label: r })),
+                ]}
+              />
+              {(team !== "all" || role !== "all") && (
+                <button
+                  onClick={() => {
+                    setTeam("all");
+                    setRole("all");
+                  }}
+                  className="border border-hairline px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:border-silver hover:text-foreground"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          )}
 
           <div className="mt-10 grid gap-px border border-hairline bg-hairline md:grid-cols-2">
             {filtered.map((p) => (
@@ -116,7 +124,9 @@ function ProjectsPage() {
                 )}
                 <div className="flex items-baseline justify-between gap-4">
                   <h2 className="font-display text-2xl font-semibold leading-tight">{p.title}</h2>
-                  <span className="font-mono text-[10px] text-muted-foreground">{p.year ?? ""}</span>
+                  <span className="font-mono text-[10px] text-muted-foreground">
+                    {p.year ?? ""}
+                  </span>
                 </div>
                 {p.description && <p className="text-sm text-muted-foreground">{p.description}</p>}
                 {p.tech.length > 0 && (

@@ -41,7 +41,6 @@
   --color-glass-border: var(--glass-border);
 }
 
-
 :root {
   --radius: 0.5rem;
 
@@ -80,7 +79,8 @@
   --glass-border: color-mix(in oklab, white 12%, transparent);
   --glass-blur: 18px;
 
-  --shadow-glow: 0 0 0 1px color-mix(in oklab, white 8%, transparent),
+  --shadow-glow:
+    0 0 0 1px color-mix(in oklab, white 8%, transparent),
     0 24px 60px -24px color-mix(in oklab, white 22%, transparent);
   --shadow-soft: 0 18px 50px -30px color-mix(in oklab, black 90%, transparent);
 
@@ -93,7 +93,6 @@
 
   --grid-line: color-mix(in oklab, white 5%, transparent);
 }
-
 
 .dark {
   --background: oklch(0 0 0);
@@ -168,9 +167,7 @@
 @utility surface-card {
   position: relative;
   isolation: isolate;
-  background:
-    linear-gradient(180deg, var(--glass-fill) 0%, transparent 60%),
-    var(--surface-1);
+  background: linear-gradient(180deg, var(--glass-fill) 0%, transparent 60%), var(--surface-1);
   border: 1px solid var(--color-hairline);
   transition:
     transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
@@ -235,11 +232,7 @@
 }
 
 @utility vignette {
-  background: radial-gradient(
-    ellipse at 50% 30%,
-    transparent 35%,
-    oklch(0 0 0 / 0.85) 100%
-  );
+  background: radial-gradient(ellipse at 50% 30%, transparent 35%, oklch(0 0 0 / 0.85) 100%);
 }
 
 @utility aura {

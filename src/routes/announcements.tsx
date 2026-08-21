@@ -10,10 +10,14 @@ export const Route = createFileRoute("/announcements")({
       { title: "Announcements — Vertex Technical Club" },
       {
         name: "description",
-        content: "Club-wide and per-team announcements from Vertex heads: deadlines, meets, calls for help.",
+        content:
+          "Club-wide and per-team announcements from Vertex heads: deadlines, meets, calls for help.",
       },
       { property: "og:title", content: "Announcements — Vertex Technical Club" },
-      { property: "og:description", content: "The Vertex announcement feed, straight from the team heads." },
+      {
+        property: "og:description",
+        content: "The Vertex announcement feed, straight from the team heads.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -47,19 +51,21 @@ function AnnouncementsPage() {
           </h1>
 
           <div className="mt-10 flex flex-wrap gap-2">
-            {[{ id: "all", name: "Everything" }, { id: "club", name: "Club-wide" }, ...teams].map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setTeam(t.id)}
-                className={`border px-3 py-2 font-mono text-[10px] uppercase tracking-widest ${
-                  team === t.id
-                    ? "border-silver text-foreground"
-                    : "border-hairline text-muted-foreground hover:border-silver"
-                }`}
-              >
-                {t.name}
-              </button>
-            ))}
+            {[{ id: "all", name: "Everything" }, { id: "club", name: "Club-wide" }, ...teams].map(
+              (t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTeam(t.id)}
+                  className={`border px-3 py-2 font-mono text-[10px] uppercase tracking-widest ${
+                    team === t.id
+                      ? "border-silver text-foreground"
+                      : "border-hairline text-muted-foreground hover:border-silver"
+                  }`}
+                >
+                  {t.name}
+                </button>
+              ),
+            )}
           </div>
 
           <div className="mt-10 flex flex-col gap-px border border-hairline bg-hairline">
@@ -72,7 +78,9 @@ function AnnouncementsPage() {
                   <span>{new Date(a.created_at).toDateString()}</span>
                   {a.pinned && <span className="text-silver">· Pinned</span>}
                 </div>
-                <h2 className="mt-3 font-display text-2xl font-semibold leading-tight">{a.title}</h2>
+                <h2 className="mt-3 font-display text-2xl font-semibold leading-tight">
+                  {a.title}
+                </h2>
                 <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
                   {a.body}
                 </p>

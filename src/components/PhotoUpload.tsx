@@ -31,9 +31,7 @@ export function PhotoUpload({
       const ctx = canvas.getContext("2d");
       if (!ctx) return file;
       ctx.drawImage(bitmap, 0, 0, w, h);
-      const blob = await new Promise<Blob | null>((res) =>
-        canvas.toBlob(res, "image/jpeg", 0.86),
-      );
+      const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/jpeg", 0.86));
       return blob && blob.size < file.size ? blob : file;
     } catch {
       return file;
@@ -66,7 +64,6 @@ export function PhotoUpload({
       setBusy(false);
     }
   };
-
 
   return (
     <div className="flex items-center gap-4">

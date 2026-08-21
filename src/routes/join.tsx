@@ -52,8 +52,8 @@ function JoinPage() {
             You're in the pile.
           </h1>
           <p className="mt-4 text-muted-foreground">
-            A team head will review your application and reach out over email. Keep an eye
-            on your inbox.
+            A team head will review your application and reach out over email. Keep an eye on your
+            inbox.
           </p>
           <Link
             to="/"
@@ -81,8 +81,8 @@ function JoinPage() {
             Apply to Vertex.
           </h1>
           <p className="mt-5 max-w-xl text-muted-foreground">
-            Five teams, one club. Tell us where you fit and what you want to work on. No
-            prior experience required — just show up and build.
+            Five teams, one club. Tell us where you fit and what you want to work on. No prior
+            experience required — just show up and build.
           </p>
 
           <form

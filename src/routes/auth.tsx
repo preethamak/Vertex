@@ -11,7 +11,8 @@ export const Route = createFileRoute("/auth")({
       { title: "Sign in — Vertex" },
       {
         name: "description",
-        content: "Vertex members sign in to manage their profile, applications, and event check-ins.",
+        content:
+          "Vertex members sign in to manage their profile, applications, and event check-ins.",
       },
       { property: "og:title", content: "Sign in — Vertex" },
       { property: "og:description", content: "Member access for the Vertex technical club." },
@@ -62,7 +63,8 @@ function AuthPage() {
         </button>
 
         <div className="my-6 flex items-center gap-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-          <span className="h-px flex-1 bg-hairline" /> or email <span className="h-px flex-1 bg-hairline" />
+          <span className="h-px flex-1 bg-hairline" /> or email{" "}
+          <span className="h-px flex-1 bg-hairline" />
         </div>
 
         <form

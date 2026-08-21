@@ -464,8 +464,8 @@ function Registration({
               <div>
                 <h3 className="font-display text-xl">Team members</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Total team size must be exactly {workspace.min_team_size} members, including
-                  the lead.
+                  Total team size must be exactly {workspace.min_team_size} members, including the
+                  lead.
                 </p>
               </div>
               {members.length < workspace.max_team_size - 1 && (

@@ -363,7 +363,11 @@ export async function updateTeam(data: HackathonTeamUpdateInput) {
   return { ok: true };
 }
 
-export async function storeSubmissionDeck(data: { token: string; contentType: "application/pdf"; base64: string }) {
+export async function storeSubmissionDeck(data: {
+  token: string;
+  contentType: "application/pdf";
+  base64: string;
+}) {
   const team = await teamFromToken(data.token);
   const binary = Uint8Array.from(atob(data.base64), (char) => char.charCodeAt(0));
   if (binary.byteLength > 8 * 1024 * 1024) throw new Error("Keep the presentation PDF under 8 MB.");
@@ -413,7 +417,8 @@ export async function saveSubmission(data: HackathonSubmissionInput) {
       .eq("event_id", team.event_id)
       .eq("published", true)
       .maybeSingle();
-    if (statementError || !found) throw new Error("Choose a current published SIH problem statement.");
+    if (statementError || !found)
+      throw new Error("Choose a current published SIH problem statement.");
     statement = found;
   }
 
@@ -449,41 +454,44 @@ export async function saveSubmission(data: HackathonSubmissionInput) {
 
 export async function adminOverviewData() {
   const { eventId } = await resolveEvent();
-  const [teams, members, submissions, milestones, announcements, statements, checkins, ws] = await Promise.all([
-    supabaseAdmin
-      .from("hackathon_teams")
-      .select(
-        "id, name, status, college, lead_name, lead_email, lead_phone, mentor_name, created_at",
-      )
-      .eq("event_id", eventId)
-      .order("created_at"),
-    supabaseAdmin
-      .from("hackathon_team_members")
-      .select("id, team_id, name, email, phone, usn, branch, year, is_lead"),
-    supabaseAdmin
-      .from("hackathon_submissions")
-      .select("team_id, solution_title, status, repository_url, demo_url, submitted_at"),
-    supabaseAdmin
-      .from("event_milestones")
-      .select("id, title, description, starts_at, ends_at, sort_order, published")
-      .eq("event_id", eventId)
-      .order("sort_order"),
-    supabaseAdmin
-      .from("event_announcements")
-      .select("id, title, body, pinned, published, created_at")
-      .eq("event_id", eventId)
-      .order("created_at", { ascending: false }),
-    supabaseAdmin
-      .from("hackathon_problem_statements")
-      .select("id, statement_code, title, organization, category, theme, description, source_url, source_version, published, sort_order")
-      .eq("event_id", eventId)
-      .order("sort_order"),
-    supabaseAdmin
-      .from("hackathon_checkins")
-      .select("team_id, checked_in_at")
-      .eq("event_id", eventId),
-    loadWorkspace(eventId),
-  ]);
+  const [teams, members, submissions, milestones, announcements, statements, checkins, ws] =
+    await Promise.all([
+      supabaseAdmin
+        .from("hackathon_teams")
+        .select(
+          "id, name, status, college, lead_name, lead_email, lead_phone, mentor_name, created_at",
+        )
+        .eq("event_id", eventId)
+        .order("created_at"),
+      supabaseAdmin
+        .from("hackathon_team_members")
+        .select("id, team_id, name, email, phone, usn, branch, year, is_lead"),
+      supabaseAdmin
+        .from("hackathon_submissions")
+        .select("team_id, solution_title, status, repository_url, demo_url, submitted_at"),
+      supabaseAdmin
+        .from("event_milestones")
+        .select("id, title, description, starts_at, ends_at, sort_order, published")
+        .eq("event_id", eventId)
+        .order("sort_order"),
+      supabaseAdmin
+        .from("event_announcements")
+        .select("id, title, body, pinned, published, created_at")
+        .eq("event_id", eventId)
+        .order("created_at", { ascending: false }),
+      supabaseAdmin
+        .from("hackathon_problem_statements")
+        .select(
+          "id, statement_code, title, organization, category, theme, description, source_url, source_version, published, sort_order",
+        )
+        .eq("event_id", eventId)
+        .order("sort_order"),
+      supabaseAdmin
+        .from("hackathon_checkins")
+        .select("team_id, checked_in_at")
+        .eq("event_id", eventId),
+      loadWorkspace(eventId),
+    ]);
 
   return {
     teams: teams.data ?? [],

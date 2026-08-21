@@ -39,7 +39,9 @@ function MentorsPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const mentors = members.filter((m) => m.is_head || m.is_leadership || (m.skills ?? []).length > 0);
+  const mentors = members.filter(
+    (m) => m.is_head || m.is_leadership || (m.skills ?? []).length > 0,
+  );
   const skills = useMemo(
     () => Array.from(new Set(mentors.flatMap((m) => m.skills ?? []))).sort(),
     [mentors],
@@ -65,8 +67,8 @@ function MentorsPage() {
             Find a mentor.
           </h1>
           <p className="mt-5 max-w-xl text-sm text-muted-foreground">
-            Pick a team and a skill. Send a request — the mentor sees it on their member dashboard and can accept
-            or decline.
+            Pick a team and a skill. Send a request — the mentor sees it on their member dashboard
+            and can accept or decline.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-2">
@@ -74,13 +76,19 @@ function MentorsPage() {
               label="Team"
               value={team}
               onChange={setTeam}
-              options={[{ value: "all", label: "All teams" }, ...teams.map((t) => ({ value: t.id, label: t.name }))]}
+              options={[
+                { value: "all", label: "All teams" },
+                ...teams.map((t) => ({ value: t.id, label: t.name })),
+              ]}
             />
             <Pick
               label="Skill"
               value={skill}
               onChange={setSkill}
-              options={[{ value: "all", label: "Any skill" }, ...skills.map((s) => ({ value: s, label: s }))]}
+              options={[
+                { value: "all", label: "Any skill" },
+                ...skills.map((s) => ({ value: s, label: s })),
+              ]}
             />
             {(team !== "all" || skill !== "all") && (
               <button

@@ -29,8 +29,7 @@ export function Avatar({
       <div
         className="absolute inset-0 opacity-40"
         style={{
-          background:
-            "radial-gradient(circle at 30% 25%, oklch(0.35 0 0) 0%, transparent 55%)",
+          background: "radial-gradient(circle at 30% 25%, oklch(0.35 0 0) 0%, transparent 55%)",
         }}
       />
       <div className="absolute inset-0 flex items-center justify-center font-mono text-sm tracking-widest text-silver">
@@ -53,7 +52,6 @@ export function Avatar({
     </div>
   );
 }
-
 
 export function MemberCard({
   member,
@@ -82,9 +80,7 @@ export function MemberCard({
             </span>
           )}
         </div>
-        <div className="font-display text-lg leading-tight text-foreground">
-          {member.name}
-        </div>
+        <div className="font-display text-lg leading-tight text-foreground">{member.name}</div>
         {member.role && (
           <div className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
             {member.role}

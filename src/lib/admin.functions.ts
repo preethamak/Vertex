@@ -93,7 +93,9 @@ export const saveMember = createServerFn({ method: "POST" })
     const { error } = await query;
     if (error) {
       throw new Error(
-        error.code === "23505" ? "A member with that link name already exists." : "Could not save the member.",
+        error.code === "23505"
+          ? "A member with that link name already exists."
+          : "Could not save the member.",
       );
     }
     return { ok: true };
@@ -173,7 +175,9 @@ export const saveProject = createServerFn({ method: "POST" })
     if (data.contributorIds.length > 0) {
       await context.supabase
         .from("project_contributors")
-        .insert(data.contributorIds.map((memberId) => ({ project_id: projectId, member_id: memberId })));
+        .insert(
+          data.contributorIds.map((memberId) => ({ project_id: projectId, member_id: memberId })),
+        );
     }
     return { ok: true };
   });
@@ -296,9 +300,18 @@ export const uploadMedia = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        folder: z.string().trim().regex(/^[a-z0-9-]{2,40}$/),
-        ext: z.string().trim().regex(/^[a-z0-9]{2,5}$/),
-        contentType: z.string().trim().regex(/^image\/[a-z0-9.+-]{2,20}$/),
+        folder: z
+          .string()
+          .trim()
+          .regex(/^[a-z0-9-]{2,40}$/),
+        ext: z
+          .string()
+          .trim()
+          .regex(/^[a-z0-9]{2,5}$/),
+        contentType: z
+          .string()
+          .trim()
+          .regex(/^image\/[a-z0-9.+-]{2,20}$/),
         base64: z.string().min(16).max(14_000_000),
       })
       .parse(input),

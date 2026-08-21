@@ -360,13 +360,18 @@ function SubmissionEditor({
     try {
       const buffer = new Uint8Array(await file.arrayBuffer());
       let binary = "";
-      for (let index = 0; index < buffer.length; index += 0x8000) binary += String.fromCharCode(...buffer.subarray(index, index + 0x8000));
-      const result = await uploadDeck({ data: { token, contentType: "application/pdf", base64: btoa(binary) } });
+      for (let index = 0; index < buffer.length; index += 0x8000)
+        binary += String.fromCharCode(...buffer.subarray(index, index + 0x8000));
+      const result = await uploadDeck({
+        data: { token, contentType: "application/pdf", base64: btoa(binary) },
+      });
       setDeckPath(result.path);
       toast.success("Presentation PDF attached.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not upload the presentation.");
-    } finally { setDeckBusy(false); }
+    } finally {
+      setDeckBusy(false);
+    }
   };
 
   return (
@@ -426,13 +431,39 @@ function SubmissionEditor({
             <Field label="Demo URL (optional)" value={demoUrl} type="url" onChange={setDemoUrl} />
           </div>
           <div className="flex flex-wrap items-center gap-3 rounded-lg border border-hairline p-3">
-            <input ref={deckInput} type="file" accept="application/pdf" className="hidden" onChange={(event) => {
-              const file = event.target.files?.[0]; event.target.value = ""; if (file) void chooseDeck(file);
-            }} />
-            <button type="button" disabled={deckBusy || saving} onClick={() => deckInput.current?.click()} className="btn-ghost rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest disabled:opacity-50">
-              {deckBusy ? "Uploading PDF…" : deckPath ? "Replace presentation PDF" : "Attach presentation PDF"}
+            <input
+              ref={deckInput}
+              type="file"
+              accept="application/pdf"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
+                if (file) void chooseDeck(file);
+              }}
+            />
+            <button
+              type="button"
+              disabled={deckBusy || saving}
+              onClick={() => deckInput.current?.click()}
+              className="btn-ghost rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest disabled:opacity-50"
+            >
+              {deckBusy
+                ? "Uploading PDF…"
+                : deckPath
+                  ? "Replace presentation PDF"
+                  : "Attach presentation PDF"}
             </button>
-            {deckPath && <a href={`/api/public/media/${deckPath}`} target="_blank" rel="noreferrer" className="font-mono text-[10px] uppercase tracking-widest text-silver hover:text-foreground">View attached PDF</a>}
+            {deckPath && (
+              <a
+                href={`/api/public/media/${deckPath}`}
+                target="_blank"
+                rel="noreferrer"
+                className="font-mono text-[10px] uppercase tracking-widest text-silver hover:text-foreground"
+              >
+                View attached PDF
+              </a>
+            )}
           </div>
           <div className="flex flex-wrap gap-3">
             <button

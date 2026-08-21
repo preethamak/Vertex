@@ -9,7 +9,8 @@ const SELECTED_INDEPENDENT_WORK = [
     id: "selected-guardrails",
     slug: "guardrails",
     title: "GuardRails",
-    description: "A security-first developer environment that brings code scanning into the editing loop.",
+    description:
+      "A security-first developer environment that brings code scanning into the editing loop.",
     tech: ["TypeScript", "VS Code", "Security"],
     cover_url: null,
     link: "https://github.com/preethamak/GuardRails-IDE",
@@ -29,7 +30,8 @@ const SELECTED_INDEPENDENT_WORK = [
     id: "selected-codelab",
     slug: "codelab",
     title: "CodeLab",
-    description: "A browser-based coding evaluation platform with isolated execution and assessment workflows.",
+    description:
+      "A browser-based coding evaluation platform with isolated execution and assessment workflows.",
     tech: ["React", "FastAPI", "Docker"],
     cover_url: null,
     link: "https://github.com/preethamak/CodeLab1",
@@ -79,17 +81,27 @@ export const getMemberExtras = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const { serverPublicClient } = await import("@/lib/supabase-public.server");
     const sb = serverPublicClient();
-    const { data: member } = await sb.from("members").select("id").eq("slug", data.slug).maybeSingle();
+    const { data: member } = await sb
+      .from("members")
+      .select("id")
+      .eq("slug", data.slug)
+      .maybeSingle();
     if (!member) return { badges: [], achievements: [], projects: [] };
 
     const [badgeRows, achievements, contributions] = await Promise.all([
-      sb.from("member_badges").select("badge_id, note, awarded_on, badges(name, description, icon)").eq("member_id", member.id),
+      sb
+        .from("member_badges")
+        .select("badge_id, note, awarded_on, badges(name, description, icon)")
+        .eq("member_id", member.id),
       sb
         .from("achievements")
         .select("id, title, description, happened_on")
         .eq("member_id", member.id)
         .order("happened_on", { ascending: false }),
-      sb.from("project_contributors").select("projects(id, slug, title, year, published)").eq("member_id", member.id),
+      sb
+        .from("project_contributors")
+        .select("projects(id, slug, title, year, published)")
+        .eq("member_id", member.id),
     ]);
 
     return {
@@ -104,8 +116,16 @@ export const getMemberExtras = createServerFn({ method: "GET" })
       achievements: achievements.data ?? [],
       projects: (contributions.data ?? [])
         .map((c) => c.projects)
-        .filter((p): p is { id: string; slug: string; title: string; year: number | null; published: boolean } =>
-          Boolean(p && p.published),
+        .filter(
+          (
+            p,
+          ): p is {
+            id: string;
+            slug: string;
+            title: string;
+            year: number | null;
+            published: boolean;
+          } => Boolean(p && p.published),
         ),
     };
   });

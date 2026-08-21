@@ -32,9 +32,13 @@ export function DirectoryExplorer({ directory }: { directory: Directory }) {
     });
     const byName = (a: Member, b: Member) => a.name.localeCompare(b.name);
     if (sort === "name") return [...list].sort(byName);
-    if (sort === "role") return [...list].sort((a, b) => a.role.localeCompare(b.role) || byName(a, b));
+    if (sort === "role")
+      return [...list].sort((a, b) => a.role.localeCompare(b.role) || byName(a, b));
     return [...list].sort(
-      (a, b) => (a.team ?? "").localeCompare(b.team ?? "") || Number(b.isHead) - Number(a.isHead) || byName(a, b),
+      (a, b) =>
+        (a.team ?? "").localeCompare(b.team ?? "") ||
+        Number(b.isHead) - Number(a.isHead) ||
+        byName(a, b),
     );
   }, [all, q, team, role, sort]);
 
@@ -70,7 +74,10 @@ export function DirectoryExplorer({ directory }: { directory: Directory }) {
           label="Role"
           value={role}
           onChange={setRole}
-          options={[{ value: "all", label: "All roles" }, ...roles.map((r) => ({ value: r, label: r }))]}
+          options={[
+            { value: "all", label: "All roles" },
+            ...roles.map((r) => ({ value: r, label: r })),
+          ]}
         />
         <Select
           label="Sort"
