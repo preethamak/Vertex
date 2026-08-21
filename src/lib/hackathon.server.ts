@@ -266,10 +266,10 @@ async function teamFromToken(token: string) {
 
 export async function loadTeamByToken(token: string) {
   const team = await teamFromToken(token);
-  const [members, submission, activities, ws] = await Promise.all([
+  const [members, submission, activities, ws, statements] = await Promise.all([
     supabaseAdmin
       .from("hackathon_team_members")
-      .select("id, name, email, phone, usn, branch, year, is_lead")
+      .select("id, name, email, gender, phone, usn, branch, year, is_lead")
       .eq("team_id", team.id)
       .order("is_lead", { ascending: false })
       .order("created_at"),
@@ -281,6 +281,12 @@ export async function loadTeamByToken(token: string) {
       .order("created_at", { ascending: false })
       .limit(30),
     loadWorkspace(team.event_id),
+    supabaseAdmin
+      .from("hackathon_problem_statements")
+      .select("id, statement_code, title, theme")
+      .eq("event_id", team.event_id)
+      .eq("published", true)
+      .order("sort_order"),
   ]);
 
   return {
@@ -299,6 +305,7 @@ export async function loadTeamByToken(token: string) {
     submission: submission.data ?? null,
     activities: activities.data ?? [],
     workspace: ws,
+    problemStatements: statements.data ?? [],
   };
 }
 
