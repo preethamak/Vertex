@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   hackathonRegisterInput,
+  hackathonDeckUploadInput,
   hackathonSubmissionInput,
   hackathonTeamUpdateInput,
   hackathonWorkspaceInput,
@@ -123,6 +124,13 @@ export const saveHackathonSubmission = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { saveSubmission } = await import("@/lib/hackathon.server");
     return saveSubmission(data);
+  });
+
+export const uploadHackathonDeck = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => hackathonDeckUploadInput.parse(input))
+  .handler(async ({ data }) => {
+    const { storeSubmissionDeck } = await import("@/lib/hackathon.server");
+    return storeSubmissionDeck(data);
   });
 
 export const checkInHackathonTeam = createServerFn({ method: "POST" })

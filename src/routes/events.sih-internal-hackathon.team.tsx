@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Check, KeyRound, Save, Send, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -7,6 +7,7 @@ import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import {
   getHackathonTeam,
   saveHackathonSubmission,
+  uploadHackathonDeck,
   updateHackathonTeam,
 } from "@/lib/hackathon.functions";
 
@@ -311,12 +312,16 @@ function SubmissionEditor({
   onSaved: () => Promise<unknown>;
 }) {
   const save = useServerFn(saveHackathonSubmission);
+  const uploadDeck = useServerFn(uploadHackathonDeck);
+  const deckInput = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
   const [statementId, setStatementId] = useState(data.submission?.problem_statement_id ?? "");
   const [title, setTitle] = useState(data.submission?.solution_title ?? "");
   const [summary, setSummary] = useState(data.submission?.solution_summary ?? "");
   const [repositoryUrl, setRepositoryUrl] = useState(data.submission?.repository_url ?? "");
   const [demoUrl, setDemoUrl] = useState(data.submission?.demo_url ?? "");
+  const [deckPath, setDeckPath] = useState(data.submission?.deck_path ?? "");
+  const [deckBusy, setDeckBusy] = useState(false);
   const finalized = Boolean(data.submission?.finalized_at);
   const selected = data.problemStatements.find((statement) => statement.id === statementId);
 
@@ -335,7 +340,7 @@ function SubmissionEditor({
           repositoryUrl,
           demoUrl,
           videoUrl: "",
-          deckPath: "",
+          deckPath,
           submit: final,
         },
       });
@@ -346,6 +351,22 @@ function SubmissionEditor({
     } finally {
       setSaving(false);
     }
+  };
+
+  const chooseDeck = async (file: File) => {
+    if (file.type !== "application/pdf") return toast.error("Upload the presentation as a PDF.");
+    if (file.size > 8 * 1024 * 1024) return toast.error("Keep the presentation PDF under 8 MB.");
+    setDeckBusy(true);
+    try {
+      const buffer = new Uint8Array(await file.arrayBuffer());
+      let binary = "";
+      for (let index = 0; index < buffer.length; index += 0x8000) binary += String.fromCharCode(...buffer.subarray(index, index + 0x8000));
+      const result = await uploadDeck({ data: { token, contentType: "application/pdf", base64: btoa(binary) } });
+      setDeckPath(result.path);
+      toast.success("Presentation PDF attached.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not upload the presentation.");
+    } finally { setDeckBusy(false); }
   };
 
   return (
@@ -403,6 +424,15 @@ function SubmissionEditor({
               onChange={setRepositoryUrl}
             />
             <Field label="Demo URL (optional)" value={demoUrl} type="url" onChange={setDemoUrl} />
+          </div>
+          <div className="flex flex-wrap items-center gap-3 rounded-lg border border-hairline p-3">
+            <input ref={deckInput} type="file" accept="application/pdf" className="hidden" onChange={(event) => {
+              const file = event.target.files?.[0]; event.target.value = ""; if (file) void chooseDeck(file);
+            }} />
+            <button type="button" disabled={deckBusy || saving} onClick={() => deckInput.current?.click()} className="btn-ghost rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest disabled:opacity-50">
+              {deckBusy ? "Uploading PDF…" : deckPath ? "Replace presentation PDF" : "Attach presentation PDF"}
+            </button>
+            {deckPath && <a href={`/api/public/media/${deckPath}`} target="_blank" rel="noreferrer" className="font-mono text-[10px] uppercase tracking-widest text-silver hover:text-foreground">View attached PDF</a>}
           </div>
           <div className="flex flex-wrap gap-3">
             <button

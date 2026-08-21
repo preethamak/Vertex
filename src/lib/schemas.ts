@@ -134,6 +134,12 @@ export const hackathonSubmissionInput = z.object({
   submit: z.boolean().default(false),
 });
 
+export const hackathonDeckUploadInput = z.object({
+  token: z.string().trim().min(10).max(120),
+  contentType: z.literal("application/pdf"),
+  base64: z.string().min(16).max(14_000_000),
+});
+
 export const hackathonWorkspaceInput = z.object({
   registrationOpen: z.boolean(),
   submissionsOpen: z.boolean(),

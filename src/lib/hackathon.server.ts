@@ -363,6 +363,22 @@ export async function updateTeam(data: HackathonTeamUpdateInput) {
   return { ok: true };
 }
 
+export async function storeSubmissionDeck(data: { token: string; contentType: "application/pdf"; base64: string }) {
+  const team = await teamFromToken(data.token);
+  const binary = Uint8Array.from(atob(data.base64), (char) => char.charCodeAt(0));
+  if (binary.byteLength > 8 * 1024 * 1024) throw new Error("Keep the presentation PDF under 8 MB.");
+  const signature = new TextDecoder().decode(binary.slice(0, 5));
+  if (signature !== "%PDF-") throw new Error("Upload an actual PDF presentation.");
+  const path = `sih-submissions/${team.id}/${crypto.randomUUID()}.pdf`;
+  const { error } = await supabaseAdmin.storage.from("media").upload(path, binary, {
+    contentType: data.contentType,
+    cacheControl: "31536000",
+    upsert: false,
+  });
+  if (error) throw new Error("Could not store the presentation PDF.");
+  return { path, url: `/api/public/media/${path}` };
+}
+
 export async function saveSubmission(data: HackathonSubmissionInput) {
   const team = await teamFromToken(data.token);
   const ws = await loadWorkspace(team.event_id);
