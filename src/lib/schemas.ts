@@ -90,7 +90,7 @@ const hackathonPerson = z.object({
   email: z.string().trim().email().max(160),
   gender: z.enum(["female", "male", "prefer_not_to_say"]),
   phone: z.string().trim().max(30).optional().default(""),
-  usn: z.string().trim().max(40).optional().default(""),
+  srn: z.string().trim().max(40).optional().default(""),
   branch: z.string().trim().max(80).optional().default(""),
   year: z.string().trim().max(20).optional().default(""),
 });
@@ -101,17 +101,15 @@ export const hackathonRegisterInput = z.object({
   leadEmail: z.string().trim().email().max(160),
   leadGender: z.enum(["female", "male", "prefer_not_to_say"]),
   leadPhone: z.string().trim().max(30).optional().default(""),
-  leadUsn: z.string().trim().max(40).optional().default(""),
+  leadSrn: z.string().trim().max(40).optional().default(""),
   leadBranch: z.string().trim().max(80).optional().default(""),
   leadYear: z.string().trim().max(20).optional().default(""),
-  college: z.string().trim().max(140).optional().default(""),
   members: z.array(hackathonPerson).max(10).default([]),
 });
 
 export const hackathonTeamUpdateInput = z.object({
   token: z.string().trim().min(10).max(120),
   name: z.string().trim().min(2).max(100),
-  college: z.string().trim().max(140).optional().default(""),
   mentorName: z.string().trim().max(100).optional().default(""),
   mentorEmail: z.string().trim().max(160).optional().default(""),
   members: z

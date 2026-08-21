@@ -221,7 +221,7 @@ function SihOperations({ isAdmin }: { isAdmin: boolean }) {
                   <div>
                     <div className="font-display text-lg">{team.name}</div>
                     <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                      {roster.length}/6 students · {team.college || "College not supplied"} ·{" "}
+                      {roster.length}/6 students ·{" "}
                       {checkedIn.has(team.id) ? "checked in" : "not checked in"}
                     </p>
                     <p className="mt-2 text-xs text-muted-foreground">

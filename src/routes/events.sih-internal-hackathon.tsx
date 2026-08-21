@@ -34,7 +34,7 @@ type Person = {
   name: string;
   email: string;
   gender: "female" | "male" | "prefer_not_to_say";
-  usn: string;
+  srn: string;
   branch: string;
   year: string;
   phone: string;
@@ -43,7 +43,7 @@ const blankPerson = (): Person => ({
   name: "",
   email: "",
   gender: "prefer_not_to_say",
-  usn: "",
+  srn: "",
   branch: "",
   year: "",
   phone: "",
@@ -430,10 +430,9 @@ function Registration({
                   leadGender: String(form.get("leadGender")) as
                     "female" | "male" | "prefer_not_to_say",
                   leadPhone: String(form.get("leadPhone")),
-                  leadUsn: String(form.get("leadUsn")),
+                  leadSrn: String(form.get("leadSrn")),
                   leadBranch: String(form.get("leadBranch")),
                   leadYear: String(form.get("leadYear")),
-                  college: String(form.get("college")),
                   members,
                 },
               });
@@ -450,11 +449,10 @@ function Registration({
         >
           <div className="grid gap-4 md:grid-cols-2">
             <Field name="teamName" label="Team name" required />
-            <Field name="college" label="College" />
             <Field name="leadName" label="Team lead name" required />
             <Field name="leadEmail" label="Team lead email" type="email" required />
             <GenderField name="leadGender" label="Lead gender (SIH eligibility)" />
-            <Field name="leadUsn" label="Lead USN" />
+            <Field name="leadSrn" label="Lead SRN" />
             <Field name="leadPhone" label="Lead phone" />
             <Field name="leadBranch" label="Lead branch" />
             <Field name="leadYear" label="Lead year" />
@@ -516,10 +514,10 @@ function Registration({
                         <option value="male">Male</option>
                       </select>
                     </label>
-                    {(["name", "email", "usn", "branch", "year", "phone"] as const).map((key) => (
+                    {(["name", "email", "srn", "branch", "year", "phone"] as const).map((key) => (
                       <label key={key} className="flex flex-col gap-1">
                         <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-                          {key === "usn" ? "USN" : key}
+                          {key === "srn" ? "SRN" : key}
                         </span>
                         <input
                           required={key === "name" || key === "email"}

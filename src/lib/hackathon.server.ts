@@ -14,15 +14,10 @@ function normalized(value: string) {
 
 function validateTeamEligibility(input: {
   name: string;
-  college: string;
   people: { gender: "female" | "male" | "prefer_not_to_say" }[];
 }) {
   if (!input.people.some((person) => person.gender === "female")) {
     throw new Error("SIH 2026 requires each team to include at least one female student.");
-  }
-  const college = normalized(input.college);
-  if (college.length >= 5 && normalized(input.name).includes(college)) {
-    throw new Error("SIH 2026 team names cannot include the institute name.");
   }
 }
 
@@ -64,7 +59,7 @@ async function loadWorkspace(eventId: string) {
 export async function getPublicRoster(eventId: string) {
   const { data: teams } = await supabaseAdmin
     .from("hackathon_teams")
-    .select("id, name, college, status, created_at")
+    .select("id, name, status, created_at")
     .eq("event_id", eventId)
     .neq("status", "withdrawn")
     .order("created_at");
@@ -87,7 +82,6 @@ export async function getPublicRoster(eventId: string) {
   return (teams ?? []).map((t) => ({
     id: t.id,
     name: t.name,
-    college: t.college,
     status: t.status,
     members: (members ?? [])
       .filter((m) => m.team_id === t.id)
@@ -161,7 +155,6 @@ export async function createTeam(data: HackathonRegisterInput) {
   validateTeamSize(total);
   validateTeamEligibility({
     name: data.name,
-    college: data.college,
     people: [{ gender: data.leadGender }, ...members],
   });
 
@@ -171,11 +164,11 @@ export async function createTeam(data: HackathonRegisterInput) {
   if (new Set(identities).size !== identities.length) {
     throw new Error("Each team member must use a different email address.");
   }
-  const usns = [data.leadUsn, ...members.map((member) => member.usn)]
-    .map((usn) => usn.trim().toLowerCase())
+  const srns = [data.leadSrn, ...members.map((member) => member.srn)]
+    .map((srn) => srn.trim().toLowerCase())
     .filter(Boolean);
-  if (new Set(usns).size !== usns.length) {
-    throw new Error("A USN can only appear once in a team.");
+  if (new Set(srns).size !== srns.length) {
+    throw new Error("An SRN can only appear once in a team.");
   }
 
   const token = crypto.randomUUID().replace(/-/g, "");
@@ -188,7 +181,6 @@ export async function createTeam(data: HackathonRegisterInput) {
       lead_name: data.leadName,
       lead_email: data.leadEmail.toLowerCase(),
       lead_phone: data.leadPhone || null,
-      college: data.college || null,
       management_token_hash: await hashToken(token),
       checkin_token_hash: await hashToken(`checkin:${checkinToken}`),
     })
@@ -209,7 +201,7 @@ export async function createTeam(data: HackathonRegisterInput) {
       email: data.leadEmail.toLowerCase(),
       gender: data.leadGender,
       phone: data.leadPhone || null,
-      usn: data.leadUsn || null,
+      usn: data.leadSrn || null,
       branch: data.leadBranch || null,
       year: data.leadYear || null,
       is_lead: true,
@@ -220,7 +212,7 @@ export async function createTeam(data: HackathonRegisterInput) {
       email: m.email.toLowerCase(),
       gender: m.gender,
       phone: m.phone || null,
-      usn: m.usn || null,
+      usn: m.srn || null,
       branch: m.branch || null,
       year: m.year || null,
       is_lead: false,
@@ -294,14 +286,13 @@ export async function loadTeamByToken(token: string) {
       id: team.id,
       name: team.name,
       status: team.status,
-      college: team.college,
       leadName: team.lead_name,
       leadEmail: team.lead_email,
       leadPhone: team.lead_phone,
       mentorName: team.mentor_name,
       mentorEmail: team.mentor_email,
     },
-    members: members.data ?? [],
+    members: (members.data ?? []).map((member) => ({ ...member, srn: member.usn })),
     submission: submission.data ?? null,
     activities: activities.data ?? [],
     workspace: ws,
@@ -314,12 +305,12 @@ export async function updateTeam(data: HackathonTeamUpdateInput) {
   const people = data.members.filter((m) => m.name.trim() && m.email.trim());
   validateTeamSize(people.length);
   if (!people.some((m) => m.isLead)) throw new Error("Mark one person as the team lead.");
-  validateTeamEligibility({ name: data.name, college: data.college, people });
+  validateTeamEligibility({ name: data.name, people });
   const emails = people.map((member) => member.email.toLowerCase());
   if (new Set(emails).size !== emails.length)
     throw new Error("Each team member must use a different email address.");
-  const usns = people.map((member) => member.usn.trim().toLowerCase()).filter(Boolean);
-  if (new Set(usns).size !== usns.length) throw new Error("A USN can only appear once in a team.");
+  const srns = people.map((member) => member.srn.trim().toLowerCase()).filter(Boolean);
+  if (new Set(srns).size !== srns.length) throw new Error("An SRN can only appear once in a team.");
 
   const { data: submission } = await supabaseAdmin
     .from("hackathon_submissions")
@@ -336,7 +327,6 @@ export async function updateTeam(data: HackathonTeamUpdateInput) {
   const { error: rosterError } = await supabaseAdmin.rpc("update_sih_team_and_roster", {
     p_team_id: team.id,
     p_name: data.name.trim(),
-    p_college: data.college.trim(),
     p_mentor_name: data.mentorName.trim(),
     p_mentor_email: data.mentorEmail.trim(),
     p_lead_name: lead.name.trim(),
@@ -346,7 +336,7 @@ export async function updateTeam(data: HackathonTeamUpdateInput) {
       email: member.email.trim(),
       gender: member.gender,
       phone: member.phone.trim(),
-      usn: member.usn.trim(),
+      srn: member.srn.trim(),
       branch: member.branch.trim(),
       year: member.year.trim(),
       is_lead: member.isLead,
@@ -458,9 +448,7 @@ export async function adminOverviewData() {
     await Promise.all([
       supabaseAdmin
         .from("hackathon_teams")
-        .select(
-          "id, name, status, college, lead_name, lead_email, lead_phone, mentor_name, created_at",
-        )
+        .select("id, name, status, lead_name, lead_email, lead_phone, mentor_name, created_at")
         .eq("event_id", eventId)
         .order("created_at"),
       supabaseAdmin

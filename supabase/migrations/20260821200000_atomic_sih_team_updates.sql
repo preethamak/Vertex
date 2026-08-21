@@ -4,7 +4,6 @@
 create or replace function public.update_sih_team_and_roster(
   p_team_id uuid,
   p_name text,
-  p_college text,
   p_mentor_name text,
   p_mentor_email text,
   p_lead_name text,
@@ -19,7 +18,6 @@ as $$
 begin
   update public.hackathon_teams
   set name = p_name,
-      college = nullif(p_college, ''),
       mentor_name = nullif(p_mentor_name, ''),
       mentor_email = nullif(p_mentor_email, ''),
       lead_name = p_lead_name,
@@ -40,7 +38,7 @@ begin
     lower(trim(member.email)),
     member.gender,
     nullif(trim(member.phone), ''),
-    nullif(trim(member.usn), ''),
+    nullif(trim(member.srn), ''),
     nullif(trim(member.branch), ''),
     nullif(trim(member.year), ''),
     member.is_lead
@@ -49,7 +47,7 @@ begin
     email text,
     gender text,
     phone text,
-    usn text,
+    srn text,
     branch text,
     year text,
     is_lead boolean
@@ -57,5 +55,5 @@ begin
 end;
 $$;
 
-revoke all on function public.update_sih_team_and_roster(uuid, text, text, text, text, text, text, jsonb) from public, anon, authenticated;
-grant execute on function public.update_sih_team_and_roster(uuid, text, text, text, text, text, text, jsonb) to service_role;
+revoke all on function public.update_sih_team_and_roster(uuid, text, text, text, text, text, jsonb) from public, anon, authenticated;
+grant execute on function public.update_sih_team_and_roster(uuid, text, text, text, text, text, jsonb) to service_role;

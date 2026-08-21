@@ -21,7 +21,7 @@ type MemberDraft = {
   email: string;
   gender: "female" | "male" | "prefer_not_to_say";
   phone: string;
-  usn: string;
+  srn: string;
   branch: string;
   year: string;
   isLead: boolean;
@@ -121,9 +121,7 @@ function TeamWorkspace({
           {data.team.status}
         </span>
         <h2 className="mt-3 font-display text-4xl">{data.team.name}</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {data.team.college || "College not added"}
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground"></p>
       </div>
       <RosterEditor data={data} token={token} onSaved={onRefresh} />
       <SubmissionEditor data={data} token={token} onSaved={onRefresh} />
@@ -145,7 +143,6 @@ function RosterEditor({
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState(data.team.name);
-  const [college, setCollege] = useState(data.team.college ?? "");
   const [mentorName, setMentorName] = useState(data.team.mentorName ?? "");
   const [mentorEmail, setMentorEmail] = useState(data.team.mentorEmail ?? "");
   const [members, setMembers] = useState<MemberDraft[]>(() =>
@@ -157,7 +154,7 @@ function RosterEditor({
           ? member.gender
           : "prefer_not_to_say",
       phone: member.phone ?? "",
-      usn: member.usn ?? "",
+      srn: member.srn ?? "",
       branch: member.branch ?? "",
       year: member.year ?? "",
       isLead: member.is_lead,
@@ -174,7 +171,7 @@ function RosterEditor({
     if (members.length !== 6) return toast.error("SIH teams must have exactly six students.");
     setSaving(true);
     try {
-      await update({ data: { token, name, college, mentorName, mentorEmail, members } });
+      await update({ data: { token, name, mentorName, mentorEmail, members } });
       toast.success("Roster saved.");
       setEditing(false);
       await onSaved();
@@ -207,7 +204,7 @@ function RosterEditor({
               <div className="font-display text-lg">{member.name}</div>
               <div className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                 {member.is_lead ? "Team lead" : "Member"}
-                {member.usn ? ` · ${member.usn}` : ""}
+                {member.srn ? ` · ${member.srn}` : ""}
               </div>
             </div>
           ))}
@@ -216,7 +213,6 @@ function RosterEditor({
         <div className="mt-6 space-y-4">
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Team name" value={name} onChange={setName} />
-            <Field label="College" value={college} onChange={setCollege} />
             <Field label="Mentor name (optional)" value={mentorName} onChange={setMentorName} />
             <Field
               label="Mentor email (optional)"
@@ -271,9 +267,9 @@ function RosterEditor({
                   </select>
                 </label>
                 <Field
-                  label="USN"
-                  value={member.usn}
-                  onChange={(value) => change(index, "usn", value)}
+                  label="SRN"
+                  value={member.srn}
+                  onChange={(value) => change(index, "srn", value)}
                 />
                 <Field
                   label="Branch"

@@ -1120,7 +1120,6 @@ export type Database = {
       };
       update_sih_team_and_roster: {
         Args: {
-          p_college: string;
           p_lead_email: string;
           p_lead_name: string;
           p_members: Json;
