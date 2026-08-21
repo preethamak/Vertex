@@ -1118,6 +1118,19 @@ export type Database = {
         Args: { _team_id: string; _user_id: string };
         Returns: boolean;
       };
+      update_sih_team_and_roster: {
+        Args: {
+          p_college: string;
+          p_lead_email: string;
+          p_lead_name: string;
+          p_members: Json;
+          p_mentor_email: string;
+          p_mentor_name: string;
+          p_name: string;
+          p_team_id: string;
+        };
+        Returns: undefined;
+      };
     };
     Enums: {
       app_role: "admin" | "head" | "member";

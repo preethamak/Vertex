@@ -332,37 +332,34 @@ export async function updateTeam(data: HackathonTeamUpdateInput) {
     );
   }
 
-  await supabaseAdmin
-    .from("hackathon_teams")
-    .update({
-      name: data.name,
-      college: data.college || null,
-      mentor_name: data.mentorName || null,
-      mentor_email: data.mentorEmail || null,
-      lead_name: people.find((m) => m.isLead)?.name ?? team.lead_name,
-      lead_email: (people.find((m) => m.isLead)?.email ?? team.lead_email).toLowerCase(),
-    })
-    .eq("id", team.id);
-
-  await supabaseAdmin.from("hackathon_team_members").delete().eq("team_id", team.id);
-  await supabaseAdmin.from("hackathon_team_members").insert(
-    people.map((m) => ({
-      team_id: team.id,
-      name: m.name,
-      email: m.email.toLowerCase(),
-      gender: m.gender,
-      phone: m.phone || null,
-      usn: m.usn || null,
-      branch: m.branch || null,
-      year: m.year || null,
-      is_lead: m.isLead,
+  const lead = people.find((member) => member.isLead)!;
+  const { error: rosterError } = await supabaseAdmin.rpc("update_sih_team_and_roster", {
+    p_team_id: team.id,
+    p_name: data.name.trim(),
+    p_college: data.college.trim(),
+    p_mentor_name: data.mentorName.trim(),
+    p_mentor_email: data.mentorEmail.trim(),
+    p_lead_name: lead.name.trim(),
+    p_lead_email: lead.email.trim(),
+    p_members: people.map((member) => ({
+      name: member.name.trim(),
+      email: member.email.trim(),
+      gender: member.gender,
+      phone: member.phone.trim(),
+      usn: member.usn.trim(),
+      branch: member.branch.trim(),
+      year: member.year.trim(),
+      is_lead: member.isLead,
     })),
-  );
-  await supabaseAdmin.from("hackathon_activities").insert({
+  });
+  if (rosterError) throw new Error("Could not save the team roster. No changes were made.");
+
+  const { error: activityError } = await supabaseAdmin.from("hackathon_activities").insert({
     team_id: team.id,
     activity_type: "team_updated",
     summary: `Roster updated — ${people.length} members.`,
   });
+  if (activityError) console.error("SIH team update activity was not recorded", activityError);
   return { ok: true };
 }
 
@@ -391,11 +388,24 @@ export async function saveSubmission(data: HackathonSubmissionInput) {
     );
   }
 
+  let statement: { id: string; title: string; theme: string | null } | null = null;
+  if (data.problemStatementId) {
+    const { data: found, error: statementError } = await supabaseAdmin
+      .from("hackathon_problem_statements")
+      .select("id, title, theme")
+      .eq("id", data.problemStatementId)
+      .eq("event_id", team.event_id)
+      .eq("published", true)
+      .maybeSingle();
+    if (statementError || !found) throw new Error("Choose a current published SIH problem statement.");
+    statement = found;
+  }
+
   const row = {
     team_id: team.id,
-    problem_statement_id: data.problemStatementId || null,
-    problem_statement_title: data.problemStatementTitle || null,
-    theme: data.theme || null,
+    problem_statement_id: statement?.id ?? null,
+    problem_statement_title: statement?.title ?? null,
+    theme: statement?.theme ?? null,
     solution_title: data.solutionTitle || null,
     solution_summary: data.solutionSummary || null,
     repository_url: data.repositoryUrl || null,

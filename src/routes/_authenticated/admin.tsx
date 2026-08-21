@@ -16,6 +16,7 @@ import {
   saveProject,
   setApplicationStatus,
 } from "@/lib/admin.functions";
+import { checkInHackathonTeam } from "@/lib/hackathon.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   loader: () => adminOverview(),
@@ -137,6 +138,7 @@ function CheckIn({
 }) {
   const router = useRouter();
   const scan = useServerFn(checkInByCode);
+  const scanSih = useServerFn(checkInHackathonTeam);
   const [result, setResult] = useState<string | null>(null);
   const [eventId, setEventId] = useState(events[0]?.id ?? "");
 
@@ -152,10 +154,20 @@ function CheckIn({
           const f = new FormData(e.currentTarget);
           const form = e.currentTarget;
           try {
-            const res = await scan({ data: { code: String(f.get("code") ?? "") } });
-            if (res.status === "ok") setResult(`✓ ${res.name} checked in · ${res.event}`);
-            else if (res.status === "already") setResult(`! ${res.name} already checked in`);
-            else setResult("✗ Unknown pass code");
+            const code = String(f.get("code") ?? "").trim();
+            if (code.toUpperCase().includes("VTX-SIH:")) {
+              const res = await scanSih({ data: { code } });
+              if (res.status === "ok") {
+                setResult(`✓ ${res.team} checked in · ${res.members.map((m) => m.name).join(", ")}`);
+              } else if (res.status === "already") {
+                setResult(`! ${res.team} already checked in · ${res.members.map((m) => m.name).join(", ")}`);
+              } else setResult("✗ Unknown SIH team code");
+            } else {
+              const res = await scan({ data: { code } });
+              if (res.status === "ok") setResult(`✓ ${res.name} checked in · ${res.event}`);
+              else if (res.status === "already") setResult(`! ${res.name} already checked in`);
+              else setResult("✗ Unknown pass code");
+            }
           } catch {
             setResult("✗ Check-in failed");
           }

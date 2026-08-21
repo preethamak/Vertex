@@ -157,8 +157,10 @@ export const saveHackathonWorkspace = createServerFn({ method: "POST" })
       .update({
         registration_open: data.registrationOpen,
         submissions_open: data.submissionsOpen,
-        min_team_size: data.minTeamSize,
-        max_team_size: data.maxTeamSize,
+        // SIH 2026 has a fixed, official team size. Do not let an admin control
+        // accidentally reopen the old 2–6 team-size setting from seeded data.
+        min_team_size: OFFICIAL_SIH_TEAM_SIZE,
+        max_team_size: OFFICIAL_SIH_TEAM_SIZE,
         rules: data.rules,
       })
       .eq("event_id", eventId);
