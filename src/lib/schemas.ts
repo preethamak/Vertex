@@ -159,12 +159,27 @@ export const eventAnnouncementInput = z.object({
   published: z.boolean(),
 });
 
+export const hackathonProblemStatementInput = z.object({
+  id: z.string().uuid().optional(),
+  statementCode: z.string().trim().min(2).max(80),
+  title: z.string().trim().min(5).max(500),
+  organization: z.string().trim().max(200).nullable(),
+  category: z.string().trim().max(120).nullable(),
+  theme: z.string().trim().max(160).nullable(),
+  description: z.string().trim().max(12000).nullable(),
+  sourceUrl: z.string().trim().url().max(500).nullable(),
+  sourceVersion: z.string().trim().max(120).nullable(),
+  published: z.boolean(),
+  sortOrder: z.number().int().min(0).max(9999),
+});
+
 export type HackathonRegisterInput = z.infer<typeof hackathonRegisterInput>;
 export type HackathonTeamUpdateInput = z.infer<typeof hackathonTeamUpdateInput>;
 export type HackathonSubmissionInput = z.infer<typeof hackathonSubmissionInput>;
 export type HackathonWorkspaceInput = z.infer<typeof hackathonWorkspaceInput>;
 export type MilestoneInput = z.infer<typeof milestoneInput>;
 export type EventAnnouncementInput = z.infer<typeof eventAnnouncementInput>;
+export type HackathonProblemStatementInput = z.infer<typeof hackathonProblemStatementInput>;
 
 export type MemberInput = z.infer<typeof memberInput>;
 export type EventInput = z.infer<typeof eventInput>;

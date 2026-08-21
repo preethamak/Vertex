@@ -433,7 +433,7 @@ export async function saveSubmission(data: HackathonSubmissionInput) {
 
 export async function adminOverviewData() {
   const { eventId } = await resolveEvent();
-  const [teams, members, submissions, milestones, announcements, ws] = await Promise.all([
+  const [teams, members, submissions, milestones, announcements, statements, checkins, ws] = await Promise.all([
     supabaseAdmin
       .from("hackathon_teams")
       .select(
@@ -457,6 +457,15 @@ export async function adminOverviewData() {
       .select("id, title, body, pinned, published, created_at")
       .eq("event_id", eventId)
       .order("created_at", { ascending: false }),
+    supabaseAdmin
+      .from("hackathon_problem_statements")
+      .select("id, statement_code, title, organization, category, theme, description, source_url, source_version, published, sort_order")
+      .eq("event_id", eventId)
+      .order("sort_order"),
+    supabaseAdmin
+      .from("hackathon_checkins")
+      .select("team_id, checked_in_at")
+      .eq("event_id", eventId),
     loadWorkspace(eventId),
   ]);
 
@@ -466,6 +475,8 @@ export async function adminOverviewData() {
     submissions: submissions.data ?? [],
     milestones: milestones.data ?? [],
     announcements: announcements.data ?? [],
+    statements: statements.data ?? [],
+    checkins: checkins.data ?? [],
     workspace: ws,
   };
 }

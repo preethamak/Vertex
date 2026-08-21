@@ -8,6 +8,7 @@ import {
   hackathonWorkspaceInput,
   milestoneInput,
   eventAnnouncementInput,
+  hackathonProblemStatementInput,
 } from "@/lib/schemas";
 
 export const EVENT_SLUG = "sih-internal-hackathon";
@@ -217,6 +218,33 @@ export const saveEventAnnouncement = createServerFn({ method: "POST" })
       published: data.published,
     });
     if (error) throw new Error("Could not post that update.");
+    return { ok: true };
+  });
+
+export const saveHackathonProblemStatement = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => hackathonProblemStatementInput.parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("@/lib/roles.server");
+    await assertAdmin(context.supabase, context.userId);
+    const { eventId } = await import("@/lib/hackathon.server").then((m) => m.resolveEvent());
+    const row = {
+      event_id: eventId,
+      statement_code: data.statementCode,
+      title: data.title,
+      organization: data.organization,
+      category: data.category,
+      theme: data.theme,
+      description: data.description,
+      source_url: data.sourceUrl,
+      source_version: data.sourceVersion,
+      published: data.published,
+      sort_order: data.sortOrder,
+    };
+    const { error } = data.id
+      ? await context.supabase.from("hackathon_problem_statements").update(row).eq("id", data.id)
+      : await context.supabase.from("hackathon_problem_statements").insert(row);
+    if (error) throw new Error("Could not save that problem statement.");
     return { ok: true };
   });
 
