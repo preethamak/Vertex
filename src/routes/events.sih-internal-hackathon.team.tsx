@@ -200,7 +200,7 @@ function RosterEditor({
       {!editing ? (
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           {data.members.map((member) => (
-            <div key={member.id} className="rounded-xl border border-white/10 bg-black/20 p-4">
+            <div key={member.id} className="rounded-xl border border-hairline bg-surface-2 p-4">
               <div className="font-display text-lg">{member.name}</div>
               <div className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                 {member.is_lead ? "Team lead" : "Member"}
@@ -222,7 +222,7 @@ function RosterEditor({
             />
           </div>
           {members.map((member, index) => (
-            <div key={index} className="rounded-xl border border-white/10 p-4">
+            <div key={index} className="rounded-xl border border-hairline p-4">
               <div className="mb-3 flex items-center justify-between">
                 <span className="font-mono text-[10px] uppercase tracking-widest text-silver">
                   Member {index + 1}

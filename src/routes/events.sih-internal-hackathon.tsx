@@ -75,7 +75,7 @@ function HackathonPage() {
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
       <SiteHeader />
       <main>
-        <section className="relative overflow-hidden border-b border-white/10">
+        <section className="relative overflow-hidden border-b border-hairline">
           <Atmosphere />
           <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-20 md:pb-28 md:pt-28">
             <div className="chip rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-silver">
@@ -209,7 +209,7 @@ function HackathonPage() {
               </div>
               <div>
                 <h2 className="font-display text-2xl">Timeline</h2>
-                <ol className="mt-4 border-l border-white/15 pl-5">
+                <ol className="mt-4 border-l border-hairline pl-5">
                   {milestones.map((item) => (
                     <li
                       key={item.id}
@@ -232,7 +232,7 @@ function HackathonPage() {
           )}
         </section>
 
-        <section id="statements" className="border-y border-white/10 bg-white/[0.018]">
+        <section id="statements" className="border-y border-hairline bg-surface-2">
           <div className="mx-auto max-w-6xl px-6 py-20">
             <Reveal>
               <Eyebrow
@@ -354,7 +354,7 @@ function Registration({
 
   if (success)
     return (
-      <section className="relative border-y border-white/10 bg-white/[0.03]">
+      <section className="relative border-y border-hairline bg-surface-2">
         <div className="mx-auto max-w-3xl px-6 py-16">
           <div className="glass-strong rounded-2xl p-7 text-center">
             <Check className="mx-auto h-9 w-9 rounded-full bg-emerald-300 p-2 text-black" />
@@ -399,7 +399,7 @@ function Registration({
     );
 
   return (
-    <section id="register" className="border-y border-white/10 bg-white/[0.025]">
+    <section id="register" className="border-y border-hairline bg-surface-2">
       <div className="mx-auto max-w-4xl px-6 py-16">
         <div className="flex items-end justify-between gap-6">
           <div>
@@ -457,7 +457,7 @@ function Registration({
             <Field name="leadBranch" label="Lead branch" />
             <Field name="leadYear" label="Lead year" />
           </div>
-          <div className="mt-8 border-t border-white/10 pt-6">
+          <div className="mt-8 border-t border-hairline pt-6">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h3 className="font-display text-xl">Team members</h3>

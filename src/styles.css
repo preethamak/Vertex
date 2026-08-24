@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --font-sans: "Inter", system-ui, sans-serif;
 
@@ -44,59 +44,60 @@
 :root {
   --radius: 0.5rem;
 
-  /* Pure black canvas, silver/white ink — matches the Vertex mark */
-  --background: oklch(0 0 0);
-  --foreground: oklch(0.98 0 0);
-  --card: oklch(0.06 0 0);
-  --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.06 0 0);
-  --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.98 0 0);
-  --primary-foreground: oklch(0 0 0);
-  --secondary: oklch(0.14 0 0);
-  --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.12 0 0);
-  --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.18 0 0);
-  --accent-foreground: oklch(0.98 0 0);
-  --destructive: oklch(0.62 0.22 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.2 0 0);
-  --input: oklch(0.2 0 0);
-  --ring: oklch(0.75 0 0);
+  /* Editorial Light — warm paper canvas, ink type, vermilion accent */
+  --background: oklch(0.973 0.007 85);
+  --foreground: oklch(0.235 0.014 60);
+  --card: oklch(0.995 0.002 85);
+  --card-foreground: oklch(0.235 0.014 60);
+  --popover: oklch(0.995 0.002 85);
+  --popover-foreground: oklch(0.235 0.014 60);
+  --primary: oklch(0.235 0.014 60);
+  --primary-foreground: oklch(0.973 0.007 85);
+  --secondary: oklch(0.93 0.01 82);
+  --secondary-foreground: oklch(0.235 0.014 60);
+  --muted: oklch(0.94 0.008 84);
+  --muted-foreground: oklch(0.47 0.022 68);
+  --accent: oklch(0.55 0.185 33);
+  --accent-foreground: oklch(0.98 0.005 85);
+  --destructive: oklch(0.58 0.21 27);
+  --destructive-foreground: oklch(0.98 0.005 85);
+  --border: oklch(0.885 0.011 80);
+  --input: oklch(0.885 0.011 80);
+  --ring: oklch(0.42 0.03 60);
 
-  --hairline: oklch(0.22 0 0);
-  --silver: oklch(0.85 0 0);
+  --hairline: oklch(0.885 0.011 80);
+  /* Emphasis ink used by text-silver / icons / micro-labels — reads as editorial red */
+  --silver: oklch(0.52 0.17 34);
 
-  /* Elevated surfaces on pure black */
-  --surface-1: oklch(0.07 0 0);
-  --surface-2: oklch(0.11 0 0);
-  --surface-3: oklch(0.15 0 0);
+  /* Elevated surfaces on paper */
+  --surface-1: oklch(0.995 0.002 85);
+  --surface-2: oklch(0.955 0.008 84);
+  --surface-3: oklch(0.925 0.01 82);
 
-  /* Glass */
-  --glass-fill: color-mix(in oklab, white 5%, transparent);
-  --glass-fill-strong: color-mix(in oklab, white 8%, transparent);
-  --glass-border: color-mix(in oklab, white 12%, transparent);
-  --glass-blur: 18px;
+  /* Glass — frosted paper whites */
+  --glass-fill: color-mix(in oklab, white 62%, transparent);
+  --glass-fill-strong: color-mix(in oklab, white 86%, transparent);
+  --glass-border: color-mix(in oklab, black 8%, transparent);
+  --glass-blur: 14px;
 
   --shadow-glow:
-    0 0 0 1px color-mix(in oklab, white 8%, transparent),
-    0 24px 60px -24px color-mix(in oklab, white 22%, transparent);
-  --shadow-soft: 0 18px 50px -30px color-mix(in oklab, black 90%, transparent);
+    0 0 0 1px color-mix(in oklab, black 5%, transparent),
+    0 24px 60px -28px color-mix(in oklab, oklch(0.3 0.06 45) 35%, transparent);
+  --shadow-soft: 0 16px 44px -26px color-mix(in oklab, black 28%, transparent);
 
   --gradient-silver: linear-gradient(
     180deg,
-    oklch(1 0 0) 0%,
-    oklch(0.82 0 0) 55%,
-    oklch(0.6 0 0) 100%
+    oklch(0.3 0.02 60) 0%,
+    oklch(0.22 0.015 60) 60%,
+    oklch(0.16 0.012 60) 100%
   );
 
-  --grid-line: color-mix(in oklab, white 5%, transparent);
+  --grid-line: color-mix(in oklab, black 6%, transparent);
 }
 
 .dark {
-  --background: oklch(0 0 0);
-  --foreground: oklch(0.98 0 0);
+  --background: oklch(0.973 0.007 85);
+  --foreground: oklch(0.235 0.014 60);
 }
 
 @layer base {
@@ -117,9 +118,16 @@
     font-feature-settings: "ss01", "cv11";
   }
 
+  .font-display,
+  h1,
+  h2,
+  h3 {
+    font-optical-sizing: auto;
+  }
+
   ::selection {
-    background: var(--color-silver);
-    color: var(--color-background);
+    background: var(--accent);
+    color: var(--accent-foreground);
   }
 }
 
@@ -152,7 +160,7 @@
   position: relative;
   background: var(--glass-fill);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(130%);
   box-shadow: var(--shadow-soft);
 }
 
@@ -160,14 +168,15 @@
   position: relative;
   background: var(--glass-fill-strong);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(calc(var(--glass-blur) * 1.4)) saturate(160%);
+  backdrop-filter: blur(calc(var(--glass-blur) * 1.4)) saturate(150%);
   box-shadow: var(--shadow-soft);
 }
 
 @utility surface-card {
   position: relative;
   isolation: isolate;
-  background: linear-gradient(180deg, var(--glass-fill) 0%, transparent 60%), var(--surface-1);
+  background: linear-gradient(180deg, color-mix(in oklab, white 55%, transparent) 0%, transparent 60%),
+    var(--surface-1);
   border: 1px solid var(--color-hairline);
   transition:
     transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
@@ -183,7 +192,7 @@
     background: linear-gradient(
       90deg,
       transparent 0%,
-      color-mix(in oklab, white 8%, transparent) 50%,
+      color-mix(in oklab, var(--accent) 4%, transparent) 50%,
       transparent 100%
     );
     opacity: 0;
@@ -192,7 +201,7 @@
 
   &:hover {
     transform: translateY(-3px);
-    border-color: color-mix(in oklab, var(--color-silver) 45%, transparent);
+    border-color: color-mix(in oklab, var(--silver) 40%, transparent);
     box-shadow: var(--shadow-glow);
   }
 
@@ -211,7 +220,7 @@
     background: linear-gradient(
       90deg,
       transparent,
-      color-mix(in oklab, white 45%, transparent),
+      color-mix(in oklab, black 18%, transparent),
       transparent
     );
     pointer-events: none;
@@ -227,18 +236,22 @@
 
 @utility noise-overlay {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
-  opacity: 0.045;
-  mix-blend-mode: screen;
+  opacity: 0.03;
+  mix-blend-mode: multiply;
 }
 
 @utility vignette {
-  background: radial-gradient(ellipse at 50% 30%, transparent 35%, oklch(0 0 0 / 0.85) 100%);
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    transparent 40%,
+    oklch(0.91 0.015 78 / 0.75) 100%
+  );
 }
 
 @utility aura {
   background: radial-gradient(
     ellipse 60% 50% at 50% 0%,
-    color-mix(in oklab, white 10%, transparent) 0%,
+    color-mix(in oklab, var(--accent) 7%, transparent) 0%,
     transparent 70%
   );
 }
@@ -249,14 +262,14 @@
   gap: 0.5rem;
   background: var(--gradient-silver);
   color: var(--color-background);
-  border: 1px solid color-mix(in oklab, white 60%, transparent);
+  border: 1px solid color-mix(in oklab, black 30%, transparent);
   transition:
     transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 0.25s ease;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 14px 40px -14px color-mix(in oklab, white 60%, transparent);
+    box-shadow: 0 14px 36px -14px color-mix(in oklab, var(--accent) 55%, transparent);
   }
 }
 
@@ -264,7 +277,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--glass-fill);
+  background: color-mix(in oklab, white 55%, transparent);
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(10px);
   color: var(--color-foreground);
@@ -275,8 +288,8 @@
 
   &:hover {
     transform: translateY(-2px);
-    border-color: color-mix(in oklab, var(--color-silver) 60%, transparent);
-    background: var(--glass-fill-strong);
+    border-color: color-mix(in oklab, var(--silver) 55%, transparent);
+    background: color-mix(in oklab, white 80%, transparent);
   }
 }
 
@@ -285,7 +298,7 @@
   align-items: center;
   gap: 0.375rem;
   border: 1px solid var(--glass-border);
-  background: var(--glass-fill);
+  background: color-mix(in oklab, white 55%, transparent);
   transition:
     border-color 0.2s ease,
     color 0.2s ease,
@@ -301,8 +314,8 @@
 
   &:focus {
     outline: none;
-    border-color: color-mix(in oklab, var(--color-silver) 70%, transparent);
-    box-shadow: 0 0 0 3px color-mix(in oklab, white 8%, transparent);
+    border-color: color-mix(in oklab, var(--silver) 60%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 14%, transparent);
   }
 }
 

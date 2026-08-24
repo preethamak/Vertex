@@ -73,7 +73,7 @@ function MembersPage() {
                 <button
                   key={team.id}
                   onClick={() => setActiveTeamId(team.id)}
-                  className={`shrink-0 rounded-full border px-4 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors ${activeTeam?.id === team.id ? "border-silver bg-white/10 text-foreground" : "border-hairline text-muted-foreground hover:border-silver"}`}
+                  className={`shrink-0 rounded-full border px-4 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors ${activeTeam?.id === team.id ? "border-silver bg-black/[0.04] text-foreground" : "border-hairline text-muted-foreground hover:border-silver"}`}
                 >
                   {team.name}
                 </button>

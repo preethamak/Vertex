@@ -30,7 +30,7 @@ function Home() {
     <div className="min-h-screen overflow-hidden bg-background text-foreground">
       <SiteHeader />
       <main>
-        <section className="relative min-h-[min(760px,calc(100svh-72px))] overflow-hidden border-b border-white/10">
+        <section className="relative min-h-[min(760px,calc(100svh-72px))] overflow-hidden border-b border-hairline">
           <Atmosphere />
           <div className="relative mx-auto flex min-h-[min(760px,calc(100svh-72px))] max-w-6xl flex-col justify-center px-6 py-20">
             <motion.div
@@ -44,12 +44,12 @@ function Home() {
                   Technical Club
                 </span>
               </div>
-              <h1 className="text-silver-gradient mt-10 max-w-4xl font-display text-6xl font-semibold leading-[0.84] tracking-[-0.075em] sm:text-8xl lg:text-[8.5rem]">
-                Vertex.
+              <h1 className="mt-10 max-w-4xl font-display text-6xl font-semibold leading-[0.95] tracking-[-0.035em] sm:text-8xl lg:text-[8rem]">
+                Vertex<span className="text-accent">.</span>
               </h1>
               <p className="mt-7 max-w-lg text-lg leading-relaxed text-muted-foreground">
-                A place to learn seriously, make useful things, and find people who care about the
-                work.
+                A place to learn seriously, make useful things, and find people who care about the{" "}
+                <span className="font-display italic">work</span>.
               </p>
               <div className="mt-9 flex flex-wrap gap-3">
                 <Link
@@ -67,7 +67,7 @@ function Home() {
               </div>
             </motion.div>
 
-            <div className="mt-16 grid max-w-4xl gap-px border border-white/10 bg-white/10 sm:grid-cols-3">
+            <div className="mt-16 grid max-w-4xl gap-px border border-hairline bg-hairline sm:grid-cols-3">
               <HomeLink
                 to="/join"
                 icon={<UsersRound size={17} />}
@@ -95,9 +95,9 @@ function Home() {
             <Reveal>
               <Link
                 to="/events/sih-internal-hackathon"
-                className="group grid overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025] md:grid-cols-[.75fr_1.25fr]"
+                className="group grid overflow-hidden rounded-2xl border border-hairline bg-card shadow-[var(--shadow-soft)] md:grid-cols-[.75fr_1.25fr]"
               >
-                <div className="relative min-h-52 overflow-hidden border-b border-white/10 p-6 md:border-b-0 md:border-r">
+                <div className="relative min-h-52 overflow-hidden border-b border-hairline p-6 md:border-b-0 md:border-r">
                   <div className="grid-backdrop absolute inset-0 opacity-60" />
                   <div className="relative flex h-full flex-col justify-between">
                     <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-silver">
@@ -153,7 +153,7 @@ function HomeLink({
   return (
     <Link
       to={to}
-      className="group flex items-center gap-4 bg-background p-5 transition-colors hover:bg-white/[0.045]"
+      className="group flex items-center gap-4 bg-background p-5 transition-colors hover:bg-black/[0.03]"
     >
       <span className="text-silver">{icon}</span>
       <span>

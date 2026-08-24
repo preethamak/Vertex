@@ -69,7 +69,7 @@ export function SiteHeader() {
                   key={item.label}
                   to={item.to}
                   onClick={() => setOpen(false)}
-                  className="rounded-xl px-4 py-3 hover:bg-white/10"
+                  className="rounded-xl px-4 py-3 hover:bg-black/[0.04]"
                 >
                   {item.label}
                 </Link>
@@ -91,7 +91,7 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className="relative border-t border-white/10">
+    <footer className="relative border-t border-hairline">
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-16 md:flex-row md:items-end md:justify-between">
         <div className="flex items-center gap-3">
           <VertexLogo className="h-8 w-auto" />
