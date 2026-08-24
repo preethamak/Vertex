@@ -127,6 +127,15 @@ export const joinHackathonTeam = createServerFn({ method: "POST" })
     return joinTeam(data);
   });
 
+export const previewJoinCode = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ code: z.string().trim().min(4).max(20) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { getJoinPreview } = await import("@/lib/hackathon.server");
+    return getJoinPreview(data.code);
+  });
+
 export const getMyTeamMembership = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z.object({ token: z.string().trim().min(10).max(120) }).parse(input),

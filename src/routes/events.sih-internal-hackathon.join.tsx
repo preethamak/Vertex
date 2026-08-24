@@ -1,11 +1,12 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Check, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Atmosphere } from "@/components/Atmosphere";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
-import { joinHackathonTeam } from "@/lib/hackathon.functions";
+import { joinHackathonTeam, previewJoinCode } from "@/lib/hackathon.functions";
+import { loadPass, mergePass, setMemberKey, type ParticipantPass } from "@/lib/participant";
 
 export const Route = createFileRoute("/events/sih-internal-hackathon/join")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -21,37 +22,50 @@ export const Route = createFileRoute("/events/sih-internal-hackathon/join")({
 });
 
 type Gender = "female" | "male" | "prefer_not_to_say";
+type Preview = Awaited<ReturnType<typeof previewJoinCode>>;
 
 function JoinPage() {
-  const navigate = useNavigate();
   const invite = Route.useSearch();
   const join = useServerFn(joinHackathonTeam);
+  const preview = useServerFn(previewJoinCode);
   const [code, setCode] = useState(invite.code);
+  const [teamPreview, setTeamPreview] = useState<Preview>(null);
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState<{
-    teamName: string;
-    memberCount: number;
-    memberToken: string;
-  } | null>(null);
+  const [done, setDone] = useState<{ teamName: string; memberCount: number } | null>(null);
+  const [pass, setPass] = useState<ParticipantPass | null>(null);
+
+  useEffect(() => setPass(loadPass()), []);
+
+  useEffect(() => {
+    if (code.trim().length < 4) {
+      setTeamPreview(null);
+      return;
+    }
+    const handle = setTimeout(() => {
+      preview({ data: { code: code.trim() } })
+        .then(setTeamPreview)
+        .catch(() => setTeamPreview(null));
+    }, 350);
+    return () => clearTimeout(handle);
+  }, [code, preview]);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const values = {
+      name: String(form.get("name")),
+      email: String(form.get("email")),
+      gender: String(form.get("gender")) as Gender,
+      phone: String(form.get("phone")),
+      srn: String(form.get("srn")),
+      branch: String(form.get("branch")),
+      year: String(form.get("year")),
+    };
     setBusy(true);
     try {
-      const result = await join({
-        data: {
-          code: code.trim(),
-          name: String(form.get("name")),
-          email: String(form.get("email")),
-          gender: String(form.get("gender")) as Gender,
-          phone: String(form.get("phone")),
-          srn: String(form.get("srn")),
-          branch: String(form.get("branch")),
-          year: String(form.get("year")),
-        },
-      });
-      sessionStorage.setItem("vertex-sih-member-key", result.memberToken);
+      const result = await join({ data: { code: code.trim(), ...values } });
+      setMemberKey(result.memberToken);
+      setPass(mergePass(values));
       setDone(result);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not join. Please try again.");
@@ -59,6 +73,8 @@ function JoinPage() {
       setBusy(false);
     }
   };
+
+  const full = teamPreview && teamPreview.memberCount >= 6;
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
@@ -75,8 +91,8 @@ function JoinPage() {
                 </p>
                 <h1 className="mt-3 font-display text-4xl">{done.teamName}</h1>
                 <p className="mt-4 text-sm text-muted-foreground">
-                  {done.memberCount} of 6 members confirmed. You can update your own details or
-                  leave the team anytime from the team console.
+                  {done.memberCount} of 6 members confirmed. Update your details or leave anytime
+                  from the team console — this browser remembers you.
                 </p>
                 <div className="mt-6 flex flex-wrap justify-center gap-3">
                   <Link
@@ -99,12 +115,8 @@ function JoinPage() {
                   Team invite
                 </p>
                 <h1 className="mt-3 font-display text-5xl tracking-tight">Join your team.</h1>
-                <p className="mt-4 max-w-lg text-sm leading-6 text-muted-foreground">
-                  Enter the join code your team lead shared, then your own details. Your lead's
-                  dashboard updates the moment you submit.
-                </p>
 
-                <form onSubmit={submit} className="glass-panel mt-8 rounded-2xl p-6">
+                <div className="glass-panel mt-8 rounded-2xl p-6">
                   <label className="flex flex-col gap-2">
                     <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                       Join code
@@ -119,16 +131,57 @@ function JoinPage() {
                     />
                   </label>
 
-                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                    <JoinField name="name" label="Full name" required />
-                    <JoinField name="email" label="Email" type="email" required />
+                  {teamPreview && (
+                    <div className="mt-4 rounded-xl border border-hairline bg-surface-2 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="font-display text-lg">{teamPreview.name}</span>
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-silver">
+                          {teamPreview.memberCount}/6 confirmed
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {teamPreview.roster
+                          .map((m) => `${m.name}${m.isLead ? " (lead)" : ""}`)
+                          .join(" · ")}
+                      </p>
+                      {teamPreview.locked ? (
+                        <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-amber-300">
+                          This team already submitted — roster locked.
+                        </p>
+                      ) : full ? (
+                        <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-amber-300">
+                          Team is full.
+                        </p>
+                      ) : teamPreview.needsFemale ? (
+                        <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-silver">
+                          SIH rule: this team must include at least one female member to lock.
+                        </p>
+                      ) : null}
+                    </div>
+                  )}
+
+                  {pass && !full && !teamPreview?.locked && (
+                    <p className="mt-4 rounded-lg border border-hairline px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      Your details are saved in this browser — just confirm below.
+                    </p>
+                  )}
+
+                  <form onSubmit={submit} className="mt-6 grid gap-4 sm:grid-cols-2">
+                    <JoinField name="name" label="Full name" required defaultValue={pass?.name} />
+                    <JoinField
+                      name="email"
+                      label="Email"
+                      type="email"
+                      required
+                      defaultValue={pass?.email}
+                    />
                     <label className="flex flex-col gap-2">
                       <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                         Gender (SIH eligibility)
                       </span>
                       <select
                         name="gender"
-                        defaultValue="prefer_not_to_say"
+                        defaultValue={pass?.gender ?? "prefer_not_to_say"}
                         className="field-input rounded-lg px-3 py-2.5 text-sm"
                       >
                         <option value="prefer_not_to_say">Prefer not to say</option>
@@ -136,21 +189,22 @@ function JoinPage() {
                         <option value="male">Male</option>
                       </select>
                     </label>
-                    <JoinField name="srn" label="SRN" />
-                    <JoinField name="branch" label="Branch" />
-                    <JoinField name="year" label="Year" />
-                    <JoinField name="phone" label="Phone" />
-                  </div>
+                    <JoinField name="srn" label="SRN" defaultValue={pass?.srn} />
+                    <JoinField name="branch" label="Branch" defaultValue={pass?.branch} />
+                    <JoinField name="year" label="Year" defaultValue={pass?.year} />
+                    <JoinField name="phone" label="Phone" defaultValue={pass?.phone} />
 
-                  <button
-                    disabled={busy}
-                    className="btn-primary mt-8 w-full rounded-lg px-5 py-3 font-mono text-[11px] uppercase tracking-widest disabled:opacity-50 sm:w-auto"
-                  >
-                    <Users size={14} /> {busy ? "Joining…" : "Confirm my spot"}
-                  </button>
-                </form>
+                    <button
+                      disabled={busy || full || teamPreview?.locked}
+                      className="btn-primary mt-2 w-full rounded-lg px-5 py-3 font-mono text-[11px] uppercase tracking-widest disabled:opacity-50 sm:col-span-2 sm:w-auto"
+                    >
+                      <Users size={14} />{" "}
+                      {busy ? "Joining…" : pass ? "Confirm my spot" : "Join the team"}
+                    </button>
+                  </form>
+                </div>
                 <p className="mt-4 text-center font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-                  No account needed · details go only to your team roster
+                  No account needed · your details go only to this team's roster
                 </p>
               </>
             )}
@@ -167,11 +221,13 @@ function JoinField({
   label,
   type = "text",
   required = false,
+  defaultValue,
 }: {
   name: string;
   label: string;
   type?: string;
   required?: boolean;
+  defaultValue?: string;
 }) {
   return (
     <label className="flex flex-col gap-2">
@@ -182,6 +238,7 @@ function JoinField({
         name={name}
         type={type}
         required={required}
+        defaultValue={defaultValue}
         className="field-input rounded-lg px-3 py-2.5 text-sm"
       />
     </label>

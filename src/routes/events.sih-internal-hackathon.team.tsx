@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
+import { clearMemberKey, getMemberKey, getTeamKey, setTeamKey } from "@/lib/participant";
 import {
   getHackathonTeam,
   getMyTeamMembership,
@@ -50,14 +51,14 @@ function TeamConsole() {
   const [memberData, setMemberData] = useState<MemberData | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => setToken(sessionStorage.getItem("vertex-sih-team-key") ?? ""), []);
+  useEffect(() => setToken(getTeamKey()), []);
 
   const openLead = async () => {
     if (!token.trim()) return toast.error("Enter the private team key from registration.");
     setLoading(true);
     try {
       const data = await loadTeam({ data: { token: token.trim() } });
-      sessionStorage.setItem("vertex-sih-team-key", token.trim());
+      setTeamKey(token.trim());
       setMemberData(null);
       setTeamData(data);
     } catch (error) {
@@ -68,7 +69,7 @@ function TeamConsole() {
   };
 
   const openMember = async () => {
-    const memberToken = sessionStorage.getItem("vertex-sih-member-key") ?? "";
+    const memberToken = getMemberKey();
     if (!memberToken) return toast.error("No member key saved — join a team first.");
     setLoading(true);
     try {
@@ -176,7 +177,7 @@ function MemberWorkspace({
     setSaving(true);
     try {
       await updateSelf({
-        data: { token: sessionStorage.getItem("vertex-sih-member-key") ?? "", member: form },
+        data: { token: getMemberKey(), member: form },
       });
       toast.success("Your details were updated.");
       await onRefresh();
@@ -190,8 +191,8 @@ function MemberWorkspace({
   const leaveTeam = async () => {
     setSaving(true);
     try {
-      await leave({ data: { token: sessionStorage.getItem("vertex-sih-member-key") ?? "" } });
-      sessionStorage.removeItem("vertex-sih-member-key");
+      await leave({ data: { token: getMemberKey() } });
+      clearMemberKey();
       toast.success("You left the team.");
       window.location.href = "/events/sih-internal-hackathon";
     } catch (error) {

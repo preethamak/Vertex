@@ -466,7 +466,7 @@ export async function adminOverviewData() {
         .order("created_at"),
       supabaseAdmin
         .from("hackathon_team_members")
-        .select("id, team_id, name, email, phone, usn, branch, year, is_lead"),
+        .select("id, team_id, name, email, phone, usn, branch, year, gender, is_lead"),
       supabaseAdmin
         .from("hackathon_submissions")
         .select(
@@ -730,4 +730,40 @@ export async function saveJudgeScore(input: {
     );
   }
   return { ok: true };
+}
+
+export async function getJoinPreview(code: string) {
+  const { eventId } = await resolveEvent();
+  const { data: team } = await supabaseAdmin
+    .from("hackathon_teams")
+    .select("id, name, join_code, status")
+    .eq("event_id", eventId)
+    .eq("join_code", code.trim().toUpperCase())
+    .maybeSingle();
+  if (!team) return null;
+  const [members, submission] = await Promise.all([
+    supabaseAdmin
+      .from("hackathon_team_members")
+      .select("name, is_lead, branch, year, gender")
+      .eq("team_id", team.id),
+    supabaseAdmin
+      .from("hackathon_submissions")
+      .select("finalized_at")
+      .eq("team_id", team.id)
+      .maybeSingle(),
+  ]);
+  const roster = members.data ?? [];
+  return {
+    name: team.name,
+    status: team.status,
+    memberCount: roster.length,
+    needsFemale: !roster.some((m) => m.gender === "female"),
+    locked: Boolean(submission.data?.finalized_at),
+    roster: roster.map((m) => ({
+      name: m.name,
+      isLead: m.is_lead,
+      branch: m.branch,
+      year: m.year,
+    })),
+  };
 }

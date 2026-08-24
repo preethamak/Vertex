@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { QRCodeSVG } from "qrcode.react";
 import { ArrowRight, Check, Copy, FileText, Users } from "lucide-react";
@@ -8,6 +8,7 @@ import { Atmosphere } from "@/components/Atmosphere";
 import { Reveal } from "@/components/Reveal";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import { getHackathon, registerHackathonTeam } from "@/lib/hackathon.functions";
+import { loadPass, mergePass, setTeamKey, type ParticipantPass } from "@/lib/participant";
 import {
   SIH_2026_GUIDELINES_URL,
   SIH_2026_RULES,
@@ -59,12 +60,18 @@ function HackathonPage() {
         <section className="relative overflow-hidden border-b border-hairline">
           <Atmosphere />
           <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-20 md:pb-28 md:pt-28">
-            <div className="chip rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-silver">
+            <div className="chip w-fit rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-silver">
               <span
                 className={`h-1.5 w-1.5 rounded-full ${registrationOpen ? "bg-emerald-300 shadow-[0_0_12px_rgb(110,231,183)]" : "bg-amber-300"}`}
               />
               {registrationOpen ? "Registration open" : "Registration status pending"}
             </div>
+            <img
+              src="/sih-2026-logo.png"
+              alt="Smart India Hackathon 2026 — Ministry of Education, AICTE, MoE's Innovation Cell"
+              className="mt-8 w-full max-w-md"
+              loading="eager"
+            />
             <div className="mt-8 grid gap-10 lg:grid-cols-[1.35fr_.65fr] lg:items-end">
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.28em] text-muted-foreground">
@@ -146,6 +153,7 @@ function HackathonPage() {
 function Registration({ onClose }: { onClose: () => void }) {
   const register = useServerFn(registerHackathonTeam);
   const [submitting, setSubmitting] = useState(false);
+  const [pass, setPass] = useState<ParticipantPass | null>(null);
   const [success, setSuccess] = useState<{
     teamName: string;
     token: string;
@@ -153,8 +161,13 @@ function Registration({ onClose }: { onClose: () => void }) {
     checkinCode: string;
   } | null>(null);
 
+  useEffect(() => setPass(loadPass()), []);
+
   const joinLink = success
     ? `${window.location.origin}/events/sih-internal-hackathon/join?code=${success.joinCode}`
+    : "";
+  const whatsappLink = success
+    ? `https://wa.me/?text=${encodeURIComponent(`Join my SIH team "${success.teamName}" — open this link and enter your details: ${joinLink}`)}`
     : "";
 
   if (success)
@@ -179,15 +192,23 @@ function Registration({ onClose }: { onClose: () => void }) {
                   until the roster reaches 6.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
+                  <a
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-primary rounded-lg px-3 py-2 font-mono text-[9px] uppercase tracking-widest"
+                  >
+                    Share on WhatsApp
+                  </a>
                   <button
                     onClick={() =>
                       navigator.clipboard
                         .writeText(joinLink)
                         .then(() => toast.success("Invite link copied."))
                     }
-                    className="btn-primary rounded-lg px-3 py-2 font-mono text-[9px] uppercase tracking-widest"
+                    className="btn-ghost rounded-lg px-3 py-2 font-mono text-[9px] uppercase tracking-widest"
                   >
-                    <Copy size={12} /> Copy invite link
+                    <Copy size={12} /> Copy link
                   </button>
                   <button
                     onClick={() =>
@@ -297,7 +318,17 @@ function Registration({ onClose }: { onClose: () => void }) {
                   leadYear: String(form.get("leadYear")),
                 },
               });
-              sessionStorage.setItem("vertex-sih-team-key", result.token);
+              sessionStorage.removeItem("vertex-sih-team-key");
+              setTeamKey(result.token);
+              mergePass({
+                name: String(form.get("leadName")),
+                email: String(form.get("leadEmail")),
+                gender: String(form.get("leadGender")) as ParticipantPass["gender"],
+                phone: String(form.get("leadPhone")),
+                srn: String(form.get("leadSrn")),
+                branch: String(form.get("leadBranch")),
+                year: String(form.get("leadYear")),
+              });
               setSuccess(result);
             } catch (error) {
               toast.error(
@@ -310,13 +341,32 @@ function Registration({ onClose }: { onClose: () => void }) {
         >
           <div className="grid gap-4 md:grid-cols-2">
             <Field name="teamName" label="Team name" required />
-            <Field name="leadName" label="Your full name" required />
-            <Field name="leadEmail" label="Your email" type="email" required />
-            <GenderField name="leadGender" label="Gender (SIH eligibility)" />
-            <Field name="leadSrn" label="SRN" />
-            <Field name="leadPhone" label="Phone" />
-            <Field name="leadBranch" label="Branch" />
-            <Field name="leadYear" label="Year" />
+            <Field name="leadName" label="Your full name" required defaultValue={pass?.name} />
+            <Field
+              name="leadEmail"
+              label="Your email"
+              type="email"
+              required
+              defaultValue={pass?.email}
+            />
+            <label className="flex flex-col gap-2">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Gender (SIH eligibility)
+              </span>
+              <select
+                name="leadGender"
+                defaultValue={pass?.gender ?? "prefer_not_to_say"}
+                className="field-input rounded-lg px-3 py-2.5 text-sm"
+              >
+                <option value="prefer_not_to_say">Prefer not to say</option>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+              </select>
+            </label>
+            <Field name="leadSrn" label="SRN" defaultValue={pass?.srn} />
+            <Field name="leadPhone" label="Phone" defaultValue={pass?.phone} />
+            <Field name="leadBranch" label="Branch" defaultValue={pass?.branch} />
+            <Field name="leadYear" label="Year" defaultValue={pass?.year} />
           </div>
           <button
             disabled={submitting}
@@ -329,35 +379,18 @@ function Registration({ onClose }: { onClose: () => void }) {
     </section>
   );
 }
-function GenderField({ name, label }: { name: string; label: string }) {
-  return (
-    <label className="flex flex-col gap-2">
-      <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-        {label}
-      </span>
-      <select
-        name={name}
-        defaultValue="prefer_not_to_say"
-        className="field-input rounded-lg px-3 py-2.5 text-sm"
-      >
-        <option value="prefer_not_to_say">Prefer not to say</option>
-        <option value="female">Female</option>
-        <option value="male">Male</option>
-      </select>
-    </label>
-  );
-}
-
 function Field({
   name,
   label,
   type = "text",
   required = false,
+  defaultValue,
 }: {
   name: string;
   label: string;
   type?: string;
   required?: boolean;
+  defaultValue?: string;
 }) {
   return (
     <label className="flex flex-col gap-2">
@@ -368,6 +401,7 @@ function Field({
         name={name}
         type={type}
         required={required}
+        defaultValue={defaultValue}
         className="field-input rounded-lg px-3 py-2.5 text-sm"
       />
     </label>
@@ -579,89 +613,270 @@ function StatementsTab({
 }) {
   const [query, setQuery] = useState("");
   const [theme, setTheme] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState<"" | "Software" | "Hardware">("");
+  const [organization, setOrganization] = useState("");
+  const [active, setActive] = useState<{
+    code: string;
+    title: string;
+    org: string | null;
+    theme: string | null;
+    category: string | null;
+    description: string | null;
+  } | null>(null);
+
+  const organizations = [
+    ...new Set(statements.map((s) => s.organization).filter((o): o is string => Boolean(o))),
+  ].sort();
+  const themeCounts = new Map<string, number>();
+  for (const s of statements)
+    if (s.theme) themeCounts.set(s.theme, (themeCounts.get(s.theme) ?? 0) + 1);
+  const hwCount = statements.filter((s) => s.category === "Hardware").length;
 
   const filtered = statements.filter((statement) => {
-    if (theme && statement.theme !== theme) return false;
     if (category && statement.category !== category) return false;
+    if (theme && statement.theme !== theme) return false;
+    if (organization && statement.organization !== organization) return false;
     if (query) {
       const haystack =
-        `${statement.statement_code} ${statement.title} ${statement.organization ?? ""}`.toLowerCase();
+        `${statement.statement_code} ${statement.title} ${statement.organization ?? ""} ${statement.theme ?? ""}`.toLowerCase();
       if (!haystack.includes(query.toLowerCase())) return false;
     }
     return true;
   });
 
+  const clearAll = () => {
+    setQuery("");
+    setTheme("");
+    setCategory("");
+    setOrganization("");
+  };
+  const filtersOn = Boolean(query || theme || category || organization);
+
   return (
     <div>
-      <div className="glass-panel flex flex-wrap items-center gap-3 rounded-2xl p-4">
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search code, title, organization…"
-          className="field-input min-w-[220px] flex-1 rounded-lg px-3 py-2 text-sm"
-        />
-        <select
-          value={theme}
-          onChange={(event) => setTheme(event.target.value)}
-          className="field-input rounded-lg px-3 py-2 text-sm"
-        >
-          <option value="">All themes</option>
+      {/* Filter rail */}
+      <div className="glass-panel sticky top-[110px] z-20 space-y-3 rounded-2xl p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search code, title, ministry…"
+            className="field-input min-w-[200px] flex-1 rounded-lg px-3 py-2 text-sm"
+          />
+          <div className="flex overflow-hidden rounded-lg border border-hairline">
+            {(
+              [
+                ["", "All"],
+                ["Software", "Software"],
+                ["Hardware", "Hardware"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value || "all"}
+                onClick={() => setCategory(value)}
+                className={`px-3 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                  category === value
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {label}
+                {value === "Hardware" && ` ${hwCount}`}
+              </button>
+            ))}
+          </div>
+          <select
+            value={organization}
+            onChange={(event) => setOrganization(event.target.value)}
+            className="field-input max-w-[220px] rounded-lg px-3 py-2 text-sm"
+          >
+            <option value="">All ministries</option>
+            {organizations.map((org) => (
+              <option key={org} value={org}>
+                {org.length > 44 ? `${org.slice(0, 44)}…` : org}
+              </option>
+            ))}
+          </select>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            {filtered.length} / {statements.length}
+          </span>
+          {filtersOn && (
+            <button
+              onClick={clearAll}
+              className="font-mono text-[10px] uppercase tracking-widest text-silver hover:text-foreground"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+          <button
+            onClick={() => setTheme("")}
+            className={`shrink-0 rounded-full border px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+              theme === ""
+                ? "border-silver text-foreground"
+                : "border-hairline text-muted-foreground hover:border-silver"
+            }`}
+          >
+            All tracks
+          </button>
           {themes.map((item) => (
-            <option key={item} value={item}>
+            <button
+              key={item}
+              onClick={() => setTheme(theme === item ? "" : item)}
+              className={`shrink-0 rounded-full border px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                theme === item
+                  ? "border-silver text-foreground"
+                  : "border-hairline text-muted-foreground hover:border-silver"
+              }`}
+            >
               {item}
-            </option>
+              <span className="ml-1.5 opacity-60">{themeCounts.get(item) ?? 0}</span>
+            </button>
           ))}
-        </select>
-        <select
-          value={category}
-          onChange={(event) => setCategory(event.target.value)}
-          className="field-input rounded-lg px-3 py-2 text-sm"
-        >
-          <option value="">Software + Hardware</option>
-          <option value="Software">Software</option>
-          <option value="Hardware">Hardware</option>
-        </select>
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-          {filtered.length} / {statements.length}
-        </span>
+        </div>
       </div>
 
+      {/* Results */}
       {filtered.length > 0 ? (
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
+        <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((item) => (
-            <article key={item.id} className="surface-card rounded-2xl p-6">
-              <div className="flex items-start justify-between gap-4">
-                <span className="chip rounded-md px-2 py-1 font-mono text-[10px] text-silver">
+            <button
+              key={item.id}
+              onClick={() =>
+                setActive({
+                  code: item.statement_code,
+                  title: item.title,
+                  org: item.organization,
+                  theme: item.theme,
+                  category: item.category,
+                  description: item.description,
+                })
+              }
+              className="surface-card rounded-xl p-4 text-left"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="chip rounded-md px-2 py-0.5 font-mono text-[10px] text-silver">
                   {item.statement_code}
                 </span>
-                {item.category && (
-                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                    {item.category}
-                  </span>
-                )}
+                <span
+                  className={`rounded px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest ${
+                    item.category === "Hardware"
+                      ? "bg-amber-300/15 text-amber-300"
+                      : "bg-emerald-300/10 text-emerald-300"
+                  }`}
+                >
+                  {item.category === "Hardware" ? "HW" : "SW"}
+                </span>
               </div>
-              <h3 className="mt-5 font-display text-xl leading-tight">{item.title}</h3>
-              <p className="mt-3 text-sm text-muted-foreground">
-                {[item.organization, item.theme].filter(Boolean).join(" · ")}
-              </p>
-              {item.description && (
-                <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">
-                  {item.description}
+              <h3 className="mt-3 line-clamp-2 font-display text-[15px] leading-snug">
+                {item.title}
+              </h3>
+              <p className="mt-2 line-clamp-1 text-xs text-muted-foreground">{item.organization}</p>
+              {item.theme && (
+                <p className="mt-1 font-mono text-[9px] uppercase tracking-widest text-silver">
+                  {item.theme}
                 </p>
               )}
-            </article>
+            </button>
           ))}
         </div>
       ) : (
         <div className="glass-panel mt-6 rounded-2xl p-8 text-center">
-          <p className="font-display text-2xl">No statements match those filters.</p>
+          <p className="font-display text-2xl">Nothing matches those filters.</p>
+          <button
+            onClick={clearAll}
+            className="btn-ghost mt-4 rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest"
+          >
+            Clear filters
+          </button>
         </div>
       )}
+
+      {active && <StatementModal statement={active} onClose={() => setActive(null)} />}
     </div>
   );
 }
 
+function StatementModal({
+  statement,
+  onClose,
+}: {
+  statement: {
+    code: string;
+    title: string;
+    org: string | null;
+    theme: string | null;
+    category: string | null;
+    description: string | null;
+  };
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => event.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-6"
+      onClick={onClose}
+    >
+      <div
+        className="glass-strong max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-t-2xl p-6 sm:rounded-2xl sm:p-8"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="chip rounded-md px-2 py-1 font-mono text-[10px] text-silver">
+              {statement.code}
+            </span>
+            {statement.category && (
+              <span className="rounded px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                {statement.category}
+              </span>
+            )}
+            {statement.theme && (
+              <span className="font-mono text-[10px] uppercase tracking-widest text-silver">
+                {statement.theme}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+          >
+            Close
+          </button>
+        </div>
+        <h2 className="mt-4 font-display text-2xl leading-tight">{statement.title}</h2>
+        {statement.org && <p className="mt-2 text-sm text-muted-foreground">{statement.org}</p>}
+        {statement.description ? (
+          <p className="mt-5 whitespace-pre-line text-sm leading-7 text-muted-foreground">
+            {statement.description}
+          </p>
+        ) : (
+          <p className="mt-5 text-sm text-muted-foreground">
+            Full description available on the official SIH portal.
+          </p>
+        )}
+        <a
+          href={`https://sih.gov.in/sih2026PS`}
+          target="_blank"
+          rel="noreferrer"
+          className="btn-ghost mt-6 inline-block rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest"
+        >
+          Verify on sih.gov.in
+        </a>
+      </div>
+    </div>
+  );
+}
 function ThemesTab({ counts }: { counts: Map<string, number> }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

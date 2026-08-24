@@ -403,6 +403,12 @@ function SihOperations({ isAdmin }: { isAdmin: boolean }) {
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <button
                     className={ghost}
+                    onClick={() => exportTeamsCsv(data.teams, data.members, data.submissions)}
+                  >
+                    Export CSV
+                  </button>
+                  <button
+                    className={ghost}
                     onClick={async () => {
                       const name = window.prompt(
                         `Mentor name for ${team.name}`,
@@ -1684,4 +1690,102 @@ function Roles() {
       </div>
     </div>
   );
+}
+
+function exportTeamsCsv(
+  teams: {
+    id: string;
+    name: string;
+    status: string;
+    lead_name: string;
+    lead_email: string;
+    lead_phone: string | null;
+    mentor_name: string | null;
+    mentor_email: string | null;
+  }[],
+  members: {
+    team_id: string;
+    name: string;
+    email: string;
+    phone: string | null;
+    usn: string | null;
+    branch: string | null;
+    year: string | null;
+    gender: string | null;
+    is_lead: boolean;
+  }[],
+  submissions: {
+    team_id: string;
+    solution_title: string | null;
+    status: string;
+    problem_statement_title?: string | null;
+    theme?: string | null;
+  }[],
+) {
+  const rows = [
+    [
+      "team",
+      "status",
+      "member",
+      "is_lead",
+      "email",
+      "phone",
+      "srn",
+      "branch",
+      "year",
+      "gender",
+      "mentor",
+      "submission",
+      "submission_status",
+    ],
+  ];
+  for (const team of teams) {
+    const submission = submissions.find((s) => s.team_id === team.id);
+    const mentor = [team.mentor_name, team.mentor_email].filter(Boolean).join(" ");
+    const roster = members.filter((m) => m.team_id === team.id);
+    if (roster.length === 0) {
+      rows.push([
+        team.name,
+        team.status,
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        mentor,
+        submission?.solution_title ?? "",
+        submission?.status ?? "",
+      ]);
+    }
+    for (const m of roster) {
+      rows.push([
+        team.name,
+        team.status,
+        m.name,
+        m.is_lead ? "yes" : "no",
+        m.email,
+        m.phone ?? "",
+        m.usn ?? "",
+        m.branch ?? "",
+        m.year ?? "",
+        m.gender ?? "",
+        mentor,
+        submission?.solution_title ?? "",
+        submission?.status ?? "",
+      ]);
+    }
+  }
+  const csv = rows
+    .map((row) => row.map((cell) => `"${(cell ?? "").replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `vertex-sih-teams-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
 }
