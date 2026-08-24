@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-BkSabwWG.js";var t=e(),n=()=>(0,t.jsx)(`div`,{className:`flex min-h-screen items-center justify-center bg-background`,children:(0,t.jsx)(`p`,{className:`font-mono text-sm text-muted-foreground`,children:`Your dashboard couldn't load.`})});export{n as errorComponent};

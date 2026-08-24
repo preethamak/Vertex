@@ -1,26 +1,31 @@
-# Vertex Member Hub
+# Vertex
 
-I want to build a club website. Our college club. It's a technical club with members divided according to teams and roles. So I want to build website about members. Their photos and etc.. I want website in white or pure black background. Don't use ai buzz words and generic ai colours and texts. Club name is Vertex.
+Vertex technical club website — events, member directory, teams, and the internal
+Smart India Hackathon (SIH) workspace.
 
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://vertex-club.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/538aa698-e99c-49c2-b27a-fa52d38f3ddf).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+Built with TanStack Start (React 19, Vite, Tailwind CSS v4) and Supabase
+(Postgres, auth, storage). Deployed on Vercel.
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+```bash
+npm install
 npm run dev
 ```
+
+Copy `.env.example` to `.env` and fill in the Supabase credentials.
+
+## Database
+
+Schema lives in `supabase/migrations/`. Apply to a project:
+
+```bash
+psql "$DATABASE_URL" -f supabase/migrations/<migration>.sql
+```
+
+## Deploy
+
+Vercel picks up pushes to `main`. Required environment variables:
+
+- `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+- `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`

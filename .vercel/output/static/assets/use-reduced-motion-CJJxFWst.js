@@ -1,0 +1,1 @@
+import{r as e}from"./jsx-runtime-BkSabwWG.js";import{o as t}from"./useStore-D0ZA7xG-.js";import{c as n,o as r,s as i}from"./VertexLogo-Ch2pIeH2.js";var a=e(t(),1);function o(){!i.current&&r();let[e]=(0,a.useState)(n.current);return e}export{o as t};
