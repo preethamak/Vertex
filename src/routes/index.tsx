@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { ArrowUpRight, CalendarDays, UsersRound, Wrench } from "lucide-react";
-import { motion, useScroll, useTransform } from "motion/react";
+import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import { Atmosphere } from "@/components/Atmosphere";
 import { Reveal } from "@/components/Reveal";
@@ -38,6 +38,7 @@ function Home() {
 
   return (
     <div className="min-h-screen overflow-x-clip bg-background text-foreground">
+      <SihBanner />
       <SiteHeader />
       <main>
         <section
@@ -186,6 +187,35 @@ function Home() {
       </main>
       <SiteFooter />
     </div>
+  );
+}
+
+function SihBanner() {
+  const reduceMotion = useReducedMotion();
+  const row = Array.from({ length: 8 });
+  return (
+    <Link
+      to="/events/sih-internal-hackathon"
+      aria-label="SIH 2026 registration is open — register now"
+      className="block overflow-hidden border-b border-hairline bg-accent text-accent-foreground"
+    >
+      <div
+        className={`flex w-max items-center gap-10 py-2 font-mono text-[10px] uppercase tracking-[0.3em] ${
+          reduceMotion ? "" : "marquee-track"
+        }`}
+      >
+        {row.map((_, index) => (
+          <span key={index} className="flex items-center gap-10 whitespace-nowrap">
+            <span className="font-semibold">SIH Registration opens for 2026</span>
+            <span className="opacity-60">◆</span>
+            <span className="inline-flex items-center gap-1.5 underline underline-offset-4">
+              Register now <ArrowUpRight size={12} />
+            </span>
+            <span className="opacity-60">◆</span>
+          </span>
+        ))}
+      </div>
+    </Link>
   );
 }
 
