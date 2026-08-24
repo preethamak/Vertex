@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-BkSabwWG.js";var t=e(),n=()=>(0,t.jsx)(`div`,{className:`flex min-h-screen items-center justify-center bg-background px-6`,children:(0,t.jsx)(`p`,{className:`max-w-sm text-center font-mono text-sm text-muted-foreground`,children:`This console is for team heads and admins only.`})});export{n as errorComponent};
