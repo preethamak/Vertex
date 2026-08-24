@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion, useScroll } from "motion/react";
-import { Menu, X } from "lucide-react";
+import { Github, Instagram, Linkedin, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { VertexLogo } from "@/components/VertexLogo";
 import { ScrollProgress } from "@/components/motion-kit";
@@ -91,6 +91,12 @@ export function SiteHeader() {
   );
 }
 
+const socials = [
+  { label: "LinkedIn", href: "https://www.linkedin.com/company/vertex-technical-club", Icon: Linkedin },
+  { label: "GitHub", href: "https://github.com/vertex-technical-club", Icon: Github },
+  { label: "Instagram", href: "https://www.instagram.com/vertex.technical.club", Icon: Instagram },
+];
+
 export function SiteFooter() {
   return (
     <footer className="relative border-t border-hairline">
@@ -103,6 +109,20 @@ export function SiteFooter() {
               Technical Club · Est. 2026
             </div>
           </div>
+        </div>
+        <div className="flex items-center gap-5">
+          {socials.map(({ label, href, Icon }) => (
+            <a
+              key={label}
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={label}
+              className="text-muted-foreground transition-colors hover:text-silver"
+            >
+              <Icon size={18} />
+            </a>
+          ))}
         </div>
         <div className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
           © {new Date().getFullYear()} Vertex
