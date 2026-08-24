@@ -46,18 +46,18 @@
 
   /* Editorial Light — warm paper canvas, ink type, vermilion accent */
   --background: oklch(0.973 0.007 85);
-  --foreground: oklch(0.235 0.014 60);
+  --foreground: oklch(0.42 0.055 145);
   --card: oklch(0.995 0.002 85);
-  --card-foreground: oklch(0.235 0.014 60);
+  --card-foreground: oklch(0.42 0.055 145);
   --popover: oklch(0.995 0.002 85);
-  --popover-foreground: oklch(0.235 0.014 60);
-  --primary: oklch(0.235 0.014 60);
+  --popover-foreground: oklch(0.42 0.055 145);
+  --primary: oklch(0.42 0.055 145);
   --primary-foreground: oklch(0.973 0.007 85);
   --secondary: oklch(0.93 0.01 82);
-  --secondary-foreground: oklch(0.235 0.014 60);
+  --secondary-foreground: oklch(0.42 0.055 145);
   --muted: oklch(0.94 0.008 84);
   --muted-foreground: oklch(0.47 0.022 68);
-  --accent: oklch(0.55 0.185 33);
+  --accent: oklch(0.48 0.1 150);
   --accent-foreground: oklch(0.98 0.005 85);
   --destructive: oklch(0.58 0.21 27);
   --destructive-foreground: oklch(0.98 0.005 85);
@@ -67,7 +67,7 @@
 
   --hairline: oklch(0.885 0.011 80);
   /* Emphasis ink used by text-silver / icons / micro-labels — reads as editorial red */
-  --silver: oklch(0.52 0.17 34);
+  --silver: oklch(0.44 0.09 152);
 
   /* Elevated surfaces on paper */
   --surface-1: oklch(0.995 0.002 85);
@@ -82,7 +82,7 @@
 
   --shadow-glow:
     0 0 0 1px color-mix(in oklab, black 5%, transparent),
-    0 24px 60px -28px color-mix(in oklab, oklch(0.3 0.06 45) 35%, transparent);
+    0 24px 60px -28px color-mix(in oklab, oklch(0.3 0.05 150) 35%, transparent);
   --shadow-soft: 0 16px 44px -26px color-mix(in oklab, black 28%, transparent);
 
   --gradient-silver: linear-gradient(
@@ -97,7 +97,7 @@
 
 .dark {
   --background: oklch(0.973 0.007 85);
-  --foreground: oklch(0.235 0.014 60);
+  --foreground: oklch(0.42 0.055 145);
 }
 
 @layer base {
