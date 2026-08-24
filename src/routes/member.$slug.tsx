@@ -106,12 +106,6 @@ function MemberProfile() {
 
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 grid-backdrop opacity-40" />
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-[420px]"
-          style={{
-            background: "radial-gradient(ellipse at 50% 0%, oklch(0.18 0 0) 0%, transparent 60%)",
-          }}
-        />
         <div className="relative mx-auto max-w-5xl px-6 py-16 md:py-24">
           <div className="mb-8 flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
             <span className="inline-block h-px w-8 bg-silver" />
