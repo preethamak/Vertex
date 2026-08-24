@@ -346,6 +346,18 @@
   animation: float-slow 9s ease-in-out infinite;
 }
 
+@keyframes scanner-sweep {
+  0%,
+  100% {
+    top: 18%;
+    opacity: 0.4;
+  }
+  50% {
+    top: 82%;
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

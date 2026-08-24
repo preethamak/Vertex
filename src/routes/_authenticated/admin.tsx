@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { SiteHeader, SiteFooter } from "@/components/SiteChrome";
 import { PhotoUpload } from "@/components/PhotoUpload";
+import { QRScanner } from "@/components/QRScanner";
 import {
   adminOverview,
   awardBadge,
@@ -384,57 +385,93 @@ function CheckIn({
   const scan = useServerFn(checkInByCode);
   const scanSih = useServerFn(checkInHackathonTeam);
   const [result, setResult] = useState<string | null>(null);
+  const [tone, setTone] = useState<"ok" | "warn" | "bad">("ok");
   const [eventId, setEventId] = useState(events[0]?.id ?? "");
 
   const rows = registrations.filter((r) => r.event_id === eventId);
   const done = rows.filter((r) => r.checked_in_at).length;
 
+  const processCode = async (rawCode: string) => {
+    const code = rawCode.trim();
+    if (!code) return;
+    try {
+      if (code.toUpperCase().includes("VTX-SIH:")) {
+        const res = await scanSih({ data: { code } });
+        if (res.status === "ok") {
+          setTone("ok");
+          setResult(`✓ ${res.team} checked in · ${res.members.map((m) => m.name).join(", ")}`);
+        } else if (res.status === "already") {
+          setTone("warn");
+          setResult(
+            `! ${res.team} already checked in · ${res.members.map((m) => m.name).join(", ")}`,
+          );
+        } else {
+          setTone("bad");
+          setResult("✗ Unknown SIH team code");
+        }
+      } else {
+        const res = await scan({ data: { code } });
+        if (res.status === "ok") {
+          setTone("ok");
+          setResult(`✓ ${res.name} checked in · ${res.event}`);
+        } else if (res.status === "already") {
+          setTone("warn");
+          setResult(`! ${res.name} already checked in`);
+        } else {
+          setTone("bad");
+          setResult("✗ Unknown pass code");
+        }
+      }
+    } catch {
+      setTone("bad");
+      setResult("✗ Check-in failed");
+    }
+    await router.invalidate();
+  };
+
   return (
     <div className="grid gap-8">
-      <form
-        className="flex flex-wrap items-end gap-3 border border-hairline bg-card/40 p-5"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const f = new FormData(e.currentTarget);
-          const form = e.currentTarget;
-          try {
-            const code = String(f.get("code") ?? "").trim();
-            if (code.toUpperCase().includes("VTX-SIH:")) {
-              const res = await scanSih({ data: { code } });
-              if (res.status === "ok") {
-                setResult(
-                  `✓ ${res.team} checked in · ${res.members.map((m) => m.name).join(", ")}`,
-                );
-              } else if (res.status === "already") {
-                setResult(
-                  `! ${res.team} already checked in · ${res.members.map((m) => m.name).join(", ")}`,
-                );
-              } else setResult("✗ Unknown SIH team code");
-            } else {
-              const res = await scan({ data: { code } });
-              if (res.status === "ok") setResult(`✓ ${res.name} checked in · ${res.event}`);
-              else if (res.status === "already") setResult(`! ${res.name} already checked in`);
-              else setResult("✗ Unknown pass code");
-            }
-          } catch {
-            setResult("✗ Check-in failed");
-          }
-          form.reset();
-          await router.invalidate();
-        }}
-      >
-        <Label text="Pass code or scanned URL">
-          <input
-            name="code"
-            required
-            autoFocus
-            className={`${field} w-80`}
-            placeholder="Paste or scan…"
-          />
-        </Label>
-        <button className={btn}>Check in</button>
-        {result && <span className="font-mono text-xs text-silver">{result}</span>}
-      </form>
+      <div className="grid gap-6 lg:grid-cols-[auto_1fr] lg:items-start">
+        <QRScanner onResult={(text) => void processCode(text)} />
+        <div className="space-y-4">
+          <form
+            className="flex flex-wrap items-end gap-3 border border-hairline bg-card/40 p-5"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const form = e.currentTarget;
+              const code = String(new FormData(form).get("code") ?? "");
+              void processCode(code).then(() => form.reset());
+            }}
+          >
+            <Label text="Pass code or scanned URL">
+              <input
+                name="code"
+                required
+                className={`${field} w-80`}
+                placeholder="Type or paste…"
+              />
+            </Label>
+            <button className={btn}>Check in</button>
+          </form>
+          {result && (
+            <div
+              className={`rounded-xl border p-4 font-mono text-sm leading-6 ${
+                tone === "ok"
+                  ? "border-emerald-300/40 bg-emerald-300/10 text-emerald-200"
+                  : tone === "warn"
+                    ? "border-amber-300/40 bg-amber-300/10 text-amber-200"
+                    : "border-red-400/40 bg-red-400/10 text-red-300"
+              }`}
+            >
+              {result}
+            </div>
+          )}
+          <p className="max-w-md font-mono text-[10px] uppercase leading-5 tracking-widest text-muted-foreground">
+            Point the camera at a team's check-in QR. The same scan is ignored for a few seconds;
+            duplicates show as a warning instead of an error.
+          </p>
+        </div>
+      </div>
 
       <div>
         <div className="flex flex-wrap items-center gap-3">
