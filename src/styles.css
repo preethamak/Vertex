@@ -346,6 +346,56 @@
   animation: float-slow 9s ease-in-out infinite;
 }
 
+/* --- morphism kit ------------------------------------------------------- */
+
+@keyframes blob-morph {
+  0%,
+  100% {
+    border-radius: 58% 42% 55% 45% / 52% 60% 40% 48%;
+  }
+  33% {
+    border-radius: 44% 56% 40% 60% / 62% 42% 58% 38%;
+  }
+  66% {
+    border-radius: 56% 44% 62% 38% / 42% 56% 44% 58%;
+  }
+}
+
+@utility morph-blob {
+  animation: blob-morph 16s ease-in-out infinite;
+  will-change: border-radius;
+}
+
+@property --ring-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes ring-angle {
+  to {
+    --ring-angle: 360deg;
+  }
+}
+
+/* Glass card wrapped in a slowly rotating gradient edge. */
+@utility ring-card {
+  position: relative;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--color-card), var(--color-card)) padding-box,
+    conic-gradient(
+        from var(--ring-angle),
+        color-mix(in oklab, var(--accent) 55%, transparent),
+        color-mix(in oklab, oklch(0.82 0.06 50) 45%, transparent),
+        color-mix(in oklab, oklch(0.88 0.04 120) 40%, transparent),
+        color-mix(in oklab, var(--accent) 55%, transparent)
+      )
+      border-box;
+  box-shadow: var(--shadow-soft);
+  animation: ring-angle 9s linear infinite;
+}
+
 @keyframes scanner-sweep {
   0%,
   100% {

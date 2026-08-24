@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useScroll } from "motion/react";
 import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { VertexLogo } from "@/components/VertexLogo";
+import { ScrollProgress } from "@/components/motion-kit";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -27,6 +28,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 px-3 pt-3 sm:px-5">
+      <ScrollProgress />
       <div
         className={`mx-auto flex max-w-6xl items-center justify-between rounded-2xl px-4 py-3 transition-all duration-300 sm:px-5 ${scrolled ? "glass-strong shadow-[var(--shadow-glow)]" : "border border-transparent"}`}
       >
