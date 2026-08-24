@@ -787,6 +787,7 @@ export type Database = {
           lead_email: string;
           lead_name: string;
           lead_phone: string | null;
+          join_code: string;
           management_token_hash: string;
           mentor_email: string | null;
           mentor_name: string | null;
@@ -803,6 +804,7 @@ export type Database = {
           lead_email: string;
           lead_name: string;
           lead_phone?: string | null;
+          join_code: string;
           management_token_hash: string;
           mentor_email?: string | null;
           mentor_name?: string | null;
@@ -1129,6 +1131,32 @@ export type Database = {
           p_team_id: string;
         };
         Returns: undefined;
+      };
+      create_sih_team: {
+        Args: {
+          p_event_id: string;
+          p_name: string;
+          p_lead_name: string;
+          p_lead_email: string;
+          p_lead_gender: string;
+          p_lead_phone: string;
+          p_lead_srn: string;
+          p_lead_branch: string;
+          p_lead_year: string;
+        };
+        Returns: Json;
+      };
+      join_sih_team: {
+        Args: { p_event_id: string; p_join_code: string; p_member: Json };
+        Returns: Json;
+      };
+      rotate_sih_join_code: {
+        Args: { p_management_token: string };
+        Returns: string;
+      };
+      make_sih_join_code: {
+        Args: Record<string, never>;
+        Returns: string;
       };
     };
     Enums: {

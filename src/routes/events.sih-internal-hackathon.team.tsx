@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Check, KeyRound, Save, Send, Users } from "lucide-react";
+import { ArrowLeft, Check, Copy, KeyRound, RefreshCw, Save, Send, Users } from "lucide-react";
 import { toast } from "sonner";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import {
   getHackathonTeam,
+  rotateHackathonJoinCode,
   saveHackathonSubmission,
   uploadHackathonDeck,
   updateHackathonTeam,
@@ -93,7 +94,7 @@ function TeamConsole() {
                 <Users className="text-silver" size={28} />
                 <p className="mt-5 font-display text-2xl">Your workspace stays private.</p>
                 <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-                  Open it with your team key to manage your six-person roster and submission.
+                  Open it with your team key to manage your roster and submission.
                 </p>
               </div>
             )}
@@ -121,11 +122,81 @@ function TeamWorkspace({
           {data.team.status}
         </span>
         <h2 className="mt-3 font-display text-4xl">{data.team.name}</h2>
-        <p className="mt-2 text-sm text-muted-foreground"></p>
+        <p className="mt-2 font-mono text-[11px] tracking-widest text-muted-foreground">
+          {data.members.length}/6 roster confirmed
+        </p>
       </div>
+      {data.team.joinCode && data.members.length < 6 && (
+        <InvitePanel data={data} token={token} onRefresh={onRefresh} />
+      )}
       <RosterEditor data={data} token={token} onSaved={onRefresh} />
       <SubmissionEditor data={data} token={token} onSaved={onRefresh} />
       <ActivityLog items={data.activities} />
+    </div>
+  );
+}
+
+function InvitePanel({
+  data,
+  token,
+  onRefresh,
+}: {
+  data: TeamData;
+  token: string;
+  onRefresh: () => Promise<unknown>;
+}) {
+  const rotate = useServerFn(rotateHackathonJoinCode);
+  const [busy, setBusy] = useState(false);
+  const joinCode = data.team.joinCode!;
+  const joinLink = `${window.location.origin}/events/sih-internal-hackathon/join?code=${joinCode}`;
+
+  return (
+    <div className="glass-panel rounded-2xl p-6">
+      <p className="font-mono text-[10px] uppercase tracking-[.2em] text-silver">Invites</p>
+      <h3 className="mt-2 font-display text-2xl">Fill the remaining {6 - data.members.length} spots.</h3>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <span className="rounded-lg border border-hairline bg-surface-2 px-4 py-2 font-mono text-lg tracking-[0.3em]">
+          {joinCode}
+        </span>
+        <button
+          onClick={() =>
+            navigator.clipboard.writeText(joinLink).then(() => toast.success("Invite link copied."))
+          }
+          className="btn-primary rounded-lg px-3 py-2 font-mono text-[9px] uppercase tracking-widest"
+        >
+          <Copy size={12} /> Copy invite link
+        </button>
+        <button
+          onClick={() =>
+            navigator.clipboard.writeText(joinCode).then(() => toast.success("Join code copied."))
+          }
+          className="btn-ghost rounded-lg px-3 py-2 font-mono text-[9px] uppercase tracking-widest"
+        >
+          Copy code
+        </button>
+        <button
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            try {
+              await rotate({ data: { token } });
+              toast.success("New code generated. The old link no longer works.");
+              await onRefresh();
+            } catch (error) {
+              toast.error(error instanceof Error ? error.message : "Could not rotate the code.");
+            } finally {
+              setBusy(false);
+            }
+          }}
+          className="btn-ghost rounded-lg px-3 py-2 font-mono text-[9px] uppercase tracking-widest disabled:opacity-50"
+        >
+          <RefreshCw size={12} /> Reset code
+        </button>
+      </div>
+      <p className="mt-3 text-xs leading-5 text-muted-foreground">
+        Teammates open the link, enter their own details, and appear here instantly. Resetting the
+        code blocks anyone who still has the old one.
+      </p>
     </div>
   );
 }
@@ -168,7 +239,11 @@ function RosterEditor({
   };
 
   const save = async () => {
-    if (members.length !== 6) return toast.error("SIH teams must have exactly six students.");
+    if (members.length < 1) return toast.error("Keep at least the team lead on the roster.");
+    if (members.length > 6) return toast.error("SIH teams can have at most six students.");
+    if (!members.some((member) => member.isLead)) {
+      return toast.error("Mark exactly one person as the team lead.");
+    }
     setSaving(true);
     try {
       await update({ data: { token, name, mentorName, mentorEmail, members } });
@@ -208,6 +283,17 @@ function RosterEditor({
               </div>
             </div>
           ))}
+          {Array.from({ length: Math.max(0, 6 - data.members.length) }).map((_, index) => (
+            <div
+              key={`slot-${index}`}
+              className="rounded-xl border border-dashed border-hairline p-4 text-muted-foreground"
+            >
+              <div className="font-display text-lg opacity-50">Open slot</div>
+              <div className="mt-1 font-mono text-[10px] uppercase tracking-widest">
+                Awaiting invite
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="mt-6 space-y-4">
@@ -227,18 +313,31 @@ function RosterEditor({
                 <span className="font-mono text-[10px] uppercase tracking-widest text-silver">
                   Member {index + 1}
                 </span>
-                <label className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                  <input
-                    type="radio"
-                    checked={member.isLead}
-                    onChange={() =>
-                      setMembers((current) =>
-                        current.map((item, i) => ({ ...item, isLead: i === index })),
-                      )
-                    }
-                  />{" "}
-                  Team lead
-                </label>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    <input
+                      type="radio"
+                      checked={member.isLead}
+                      onChange={() =>
+                        setMembers((current) =>
+                          current.map((item, i) => ({ ...item, isLead: i === index })),
+                        )
+                      }
+                    />{" "}
+                    Team lead
+                  </label>
+                  {members.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setMembers((current) => current.filter((_, i) => i !== index))
+                      }
+                      className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="grid gap-3 md:grid-cols-3">
                 <Field

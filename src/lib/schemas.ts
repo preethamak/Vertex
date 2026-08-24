@@ -104,7 +104,17 @@ export const hackathonRegisterInput = z.object({
   leadSrn: z.string().trim().max(40).optional().default(""),
   leadBranch: z.string().trim().max(80).optional().default(""),
   leadYear: z.string().trim().max(20).optional().default(""),
-  members: z.array(hackathonPerson).max(10).default([]),
+});
+
+export const hackathonJoinInput = z.object({
+  code: z.string().trim().min(4).max(20),
+  name: z.string().trim().min(2).max(100),
+  email: z.string().trim().email().max(160),
+  gender: z.enum(["female", "male", "prefer_not_to_say"]),
+  phone: z.string().trim().max(30).optional().default(""),
+  srn: z.string().trim().max(40).optional().default(""),
+  branch: z.string().trim().max(80).optional().default(""),
+  year: z.string().trim().max(20).optional().default(""),
 });
 
 export const hackathonTeamUpdateInput = z.object({
@@ -178,6 +188,7 @@ export const hackathonProblemStatementInput = z.object({
 });
 
 export type HackathonRegisterInput = z.infer<typeof hackathonRegisterInput>;
+export type HackathonJoinInput = z.infer<typeof hackathonJoinInput>;
 export type HackathonTeamUpdateInput = z.infer<typeof hackathonTeamUpdateInput>;
 export type HackathonSubmissionInput = z.infer<typeof hackathonSubmissionInput>;
 export type HackathonWorkspaceInput = z.infer<typeof hackathonWorkspaceInput>;

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   hackathonRegisterInput,
+  hackathonJoinInput,
   hackathonDeckUploadInput,
   hackathonSubmissionInput,
   hackathonTeamUpdateInput,
@@ -14,6 +15,18 @@ import {
 
 export const EVENT_SLUG = "sih-internal-hackathon";
 const OFFICIAL_SIH_TEAM_SIZE = 6;
+
+async function limit(scope: string, limit: number, windowMs: number) {
+  const { clientKey, rateLimit, RateLimitError } = await import("@/lib/rate-limit.server");
+  try {
+    rateLimit(await clientKey(scope, scope), limit, windowMs);
+  } catch (error) {
+    if (error instanceof RateLimitError) {
+      throw new Error(`Too many requests from your network. Try again in ${error.retryAfterSeconds}s.`);
+    }
+    throw error;
+  }
+}
 
 export const getHackathon = createServerFn({ method: "GET" }).handler(async () => {
   const { serverPublicClient } = await import("@/lib/supabase-public.server");
@@ -99,8 +112,27 @@ export const getHackathon = createServerFn({ method: "GET" }).handler(async () =
 export const registerHackathonTeam = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => hackathonRegisterInput.parse(input))
   .handler(async ({ data }) => {
+    await limit("sih-register", 5, 60 * 60 * 1000);
     const { createTeam } = await import("@/lib/hackathon.server");
     return createTeam(data);
+  });
+
+export const joinHackathonTeam = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => hackathonJoinInput.parse(input))
+  .handler(async ({ data }) => {
+    await limit("sih-join", 10, 60 * 60 * 1000);
+    const { joinTeam } = await import("@/lib/hackathon.server");
+    return joinTeam(data);
+  });
+
+export const rotateHackathonJoinCode = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ token: z.string().trim().min(10).max(120) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    await limit("sih-rotate", 10, 60 * 60 * 1000);
+    const { rotateJoinCode } = await import("@/lib/hackathon.server");
+    return rotateJoinCode(data.token);
   });
 
 export const getHackathonTeam = createServerFn({ method: "POST" })
@@ -115,6 +147,7 @@ export const getHackathonTeam = createServerFn({ method: "POST" })
 export const updateHackathonTeam = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => hackathonTeamUpdateInput.parse(input))
   .handler(async ({ data }) => {
+    await limit("sih-update", 30, 60 * 60 * 1000);
     const { updateTeam } = await import("@/lib/hackathon.server");
     return updateTeam(data);
   });
@@ -122,6 +155,7 @@ export const updateHackathonTeam = createServerFn({ method: "POST" })
 export const saveHackathonSubmission = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => hackathonSubmissionInput.parse(input))
   .handler(async ({ data }) => {
+    await limit("sih-submit", 30, 60 * 60 * 1000);
     const { saveSubmission } = await import("@/lib/hackathon.server");
     return saveSubmission(data);
   });
@@ -129,6 +163,7 @@ export const saveHackathonSubmission = createServerFn({ method: "POST" })
 export const uploadHackathonDeck = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => hackathonDeckUploadInput.parse(input))
   .handler(async ({ data }) => {
+    await limit("sih-deck", 12, 60 * 60 * 1000);
     const { storeSubmissionDeck } = await import("@/lib/hackathon.server");
     return storeSubmissionDeck(data);
   });
@@ -139,6 +174,7 @@ export const checkInHackathonTeam = createServerFn({ method: "POST" })
     z.object({ code: z.string().trim().min(8).max(240) }).parse(input),
   )
   .handler(async ({ data, context }) => {
+    await limit("sih-checkin", 240, 60 * 1000);
     const { assertStaff } = await import("@/lib/roles.server");
     await assertStaff(context.supabase, context.userId);
     const { checkInHackathonTeam: checkIn } = await import("@/lib/hackathon.server");

@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type {
+  HackathonJoinInput,
   HackathonRegisterInput,
   HackathonSubmissionInput,
   HackathonTeamUpdateInput,
@@ -12,20 +13,21 @@ function normalized(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
-function validateTeamEligibility(input: {
-  name: string;
-  people: { gender: "female" | "male" | "prefer_not_to_say" }[];
-}) {
-  if (!input.people.some((person) => person.gender === "female")) {
-    throw new Error("SIH 2026 requires each team to include at least one female student.");
-  }
-}
-
-function validateTeamSize(total: number) {
-  if (total !== OFFICIAL_SIH_TEAM_SIZE) {
+// A roster may grow gradually through invites; SIH eligibility is enforced when
+// the team finalizes (and by join_sih_team when the sixth member joins).
+function validateRosterShape(people: { name: string; email: string; srn: string }[]) {
+  if (people.length < 1 || people.length > OFFICIAL_SIH_TEAM_SIZE) {
     throw new Error(
-      `SIH 2026 teams must have exactly ${OFFICIAL_SIH_TEAM_SIZE} student members, including the team lead.`,
+      `A team can have at most ${OFFICIAL_SIH_TEAM_SIZE} student members, including the lead.`,
     );
+  }
+  const emails = people.map((member) => member.email.toLowerCase());
+  if (new Set(emails).size !== emails.length) {
+    throw new Error("Each team member must use a different email address.");
+  }
+  const srns = people.map((member) => member.srn.trim().toLowerCase()).filter(Boolean);
+  if (new Set(srns).size !== srns.length) {
+    throw new Error("An SRN can only appear once in a team.");
   }
 }
 
@@ -136,7 +138,19 @@ export async function checkInHackathonTeam(code: string, checkedInBy: string) {
     checked_in_at: checkedInAt,
     method: "qr",
   });
-  if (error) throw new Error("Could not record SIH check-in.");
+  // Concurrent scans race here; the UNIQUE(event_id, team_id) constraint makes
+  // the loser an idempotent "already checked in" instead of an error.
+  if (error) {
+    if (error.code === "23505") {
+      return {
+        status: "already" as const,
+        team: team.name,
+        members: members ?? [],
+        at: checkedInAt,
+      };
+    }
+    throw new Error("Could not record SIH check-in.");
+  }
   await supabaseAdmin.from("hackathon_activities").insert({
     team_id: team.id,
     activity_type: "checked_in",
@@ -147,102 +161,82 @@ export async function checkInHackathonTeam(code: string, checkedInBy: string) {
 
 export async function createTeam(data: HackathonRegisterInput) {
   const { eventId } = await resolveEvent();
-  const ws = await loadWorkspace(eventId);
-  if (!ws?.registration_open) throw new Error("Registration is closed right now.");
 
-  const members = data.members.filter((m) => m.name.trim() && m.email.trim());
-  const total = members.length + 1;
-  validateTeamSize(total);
-  validateTeamEligibility({
-    name: data.name,
-    people: [{ gender: data.leadGender }, ...members],
+  // Everything (team + lead + submission workspace + activity) happens in one
+  // atomic database call so a burst of registrations can never leave half-rows.
+  const { data: result, error } = await supabaseAdmin.rpc("create_sih_team", {
+    p_event_id: eventId,
+    p_name: data.name,
+    p_lead_name: data.leadName,
+    p_lead_email: data.leadEmail,
+    p_lead_gender: data.leadGender,
+    p_lead_phone: data.leadPhone,
+    p_lead_srn: data.leadSrn,
+    p_lead_branch: data.leadBranch,
+    p_lead_year: data.leadYear,
   });
-
-  const identities = [data.leadEmail, ...members.map((member) => member.email)].map((email) =>
-    email.trim().toLowerCase(),
-  );
-  if (new Set(identities).size !== identities.length) {
-    throw new Error("Each team member must use a different email address.");
-  }
-  const srns = [data.leadSrn, ...members.map((member) => member.srn)]
-    .map((srn) => srn.trim().toLowerCase())
-    .filter(Boolean);
-  if (new Set(srns).size !== srns.length) {
-    throw new Error("An SRN can only appear once in a team.");
+  if (error || !result) {
+    const message = typeof error?.message === "string" ? error.message : "";
+    if (message.includes("already registered")) {
+      throw new Error("A team with that name is already registered.");
+    }
+    if (message.includes("Registration is closed")) {
+      throw new Error("Registration is closed right now.");
+    }
+    throw new Error("Could not register your team. Please try again.");
   }
 
-  const token = crypto.randomUUID().replace(/-/g, "");
-  const checkinToken = crypto.randomUUID().replace(/-/g, "");
-  const { data: team, error } = await supabaseAdmin
-    .from("hackathon_teams")
-    .insert({
-      event_id: eventId,
-      name: data.name,
-      lead_name: data.leadName,
-      lead_email: data.leadEmail.toLowerCase(),
-      lead_phone: data.leadPhone || null,
-      management_token_hash: await hashToken(token),
-      checkin_token_hash: await hashToken(`checkin:${checkinToken}`),
-    })
-    .select("id, name")
-    .single();
-  if (error || !team) {
-    throw new Error(
-      error?.code === "23505"
-        ? "A team with that name is already registered."
-        : "Could not register your team.",
-    );
-  }
-
-  const rows = [
-    {
-      team_id: team.id,
-      name: data.leadName,
-      email: data.leadEmail.toLowerCase(),
-      gender: data.leadGender,
-      phone: data.leadPhone || null,
-      usn: data.leadSrn || null,
-      branch: data.leadBranch || null,
-      year: data.leadYear || null,
-      is_lead: true,
-    },
-    ...members.map((m) => ({
-      team_id: team.id,
-      name: m.name,
-      email: m.email.toLowerCase(),
-      gender: m.gender,
-      phone: m.phone || null,
-      usn: m.srn || null,
-      branch: m.branch || null,
-      year: m.year || null,
-      is_lead: false,
-    })),
-  ];
-  const { error: membersError } = await supabaseAdmin.from("hackathon_team_members").insert(rows);
-  if (membersError) {
-    await supabaseAdmin.from("hackathon_teams").delete().eq("id", team.id);
-    throw new Error("Could not save the team roster. Please try registering again.");
-  }
-  const { error: submissionError } = await supabaseAdmin
-    .from("hackathon_submissions")
-    .insert({ team_id: team.id });
-  if (submissionError) {
-    await supabaseAdmin.from("hackathon_teams").delete().eq("id", team.id);
-    throw new Error("Could not prepare the submission workspace. Please try registering again.");
-  }
-  const { error: activityError } = await supabaseAdmin.from("hackathon_activities").insert({
-    team_id: team.id,
-    activity_type: "registered",
-    summary: `${team.name} registered with ${rows.length} members.`,
-  });
-  if (activityError) console.error("SIH registration activity was not recorded", activityError);
-
+  const payload = result as Record<string, unknown>;
   return {
-    token,
-    teamId: team.id,
-    teamName: team.name,
-    checkinCode: `VTX-SIH:${checkinToken}`,
+    token: payload.management_token as string,
+    teamId: payload.team_id as string,
+    teamName: data.name,
+    joinCode: payload.join_code as string,
+    checkinCode: `VTX-SIH:${payload.checkin_token as string}`,
   };
+}
+
+export async function joinTeam(data: HackathonJoinInput) {
+  const { eventId } = await resolveEvent();
+  const { data: result, error } = await supabaseAdmin.rpc("join_sih_team", {
+    p_event_id: eventId,
+    p_join_code: data.code,
+    p_member: {
+      name: data.name,
+      email: data.email,
+      gender: data.gender,
+      phone: data.phone,
+      srn: data.srn,
+      branch: data.branch,
+      year: data.year,
+    },
+  });
+  if (error || !result) {
+    const raw = typeof error?.message === "string" ? error.message : "";
+    const known = [
+      "Registration is closed right now.",
+      "That join code does not match any team.",
+      "This team already submitted and its roster is locked.",
+      "This team already has all 6 members.",
+      "That email is already on this team.",
+      "That SRN is already on this team.",
+      "SIH 2026 requires each team to include at least one female student. This roster needs one before it can be completed.",
+    ];
+    throw new Error(known.includes(raw) ? raw : "Could not join the team. Please try again.");
+  }
+  const joined = result as Record<string, unknown>;
+  return {
+    teamName: joined.team_name as string,
+    memberCount: joined.member_count as number,
+  };
+}
+
+export async function rotateJoinCode(token: string) {
+  const { data: result, error } = await supabaseAdmin.rpc("rotate_sih_join_code", {
+    p_management_token: token,
+  });
+  if (error || !result) throw new Error("Could not generate a new invite code.");
+  return { joinCode: result as string };
 }
 
 async function teamFromToken(token: string) {
@@ -291,6 +285,7 @@ export async function loadTeamByToken(token: string) {
       leadPhone: team.lead_phone,
       mentorName: team.mentor_name,
       mentorEmail: team.mentor_email,
+      joinCode: team.join_code,
     },
     members: (members.data ?? []).map((member) => ({ ...member, srn: member.usn })),
     submission: submission.data ?? null,
@@ -303,14 +298,10 @@ export async function loadTeamByToken(token: string) {
 export async function updateTeam(data: HackathonTeamUpdateInput) {
   const team = await teamFromToken(data.token);
   const people = data.members.filter((m) => m.name.trim() && m.email.trim());
-  validateTeamSize(people.length);
-  if (!people.some((m) => m.isLead)) throw new Error("Mark one person as the team lead.");
-  validateTeamEligibility({ name: data.name, people });
-  const emails = people.map((member) => member.email.toLowerCase());
-  if (new Set(emails).size !== emails.length)
-    throw new Error("Each team member must use a different email address.");
-  const srns = people.map((member) => member.srn.trim().toLowerCase()).filter(Boolean);
-  if (new Set(srns).size !== srns.length) throw new Error("An SRN can only appear once in a team.");
+  validateRosterShape(people);
+  if (people.filter((m) => m.isLead).length !== 1) {
+    throw new Error("Mark exactly one person as the team lead.");
+  }
 
   const { data: submission } = await supabaseAdmin
     .from("hackathon_submissions")
@@ -396,6 +387,25 @@ export async function saveSubmission(data: HackathonSubmissionInput) {
     throw new Error(
       "Select a problem statement and complete the solution title and summary before final submission.",
     );
+  }
+
+  // Final submission locks the roster, so SIH eligibility is enforced here.
+  if (data.submit) {
+    const { data: roster } = await supabaseAdmin
+      .from("hackathon_team_members")
+      .select("gender")
+      .eq("team_id", team.id);
+    const members = roster ?? [];
+    if (members.length !== OFFICIAL_SIH_TEAM_SIZE) {
+      throw new Error(
+        `Your roster is incomplete: ${members.length}/6 members. All invites must be accepted before final submission.`,
+      );
+    }
+    if (!members.some((member) => member.gender === "female")) {
+      throw new Error(
+        "SIH 2026 requires each team to include at least one female student before final submission.",
+      );
+    }
   }
 
   let statement: { id: string; title: string; theme: string | null } | null = null;

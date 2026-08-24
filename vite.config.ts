@@ -39,7 +39,25 @@ export default defineConfig(({ mode }) => {
           client: { files: ["**/server/**"], specifiers: ["server-only"] },
         },
       }),
-      nitro({ preset: "vercel" }),
+      nitro({
+        preset: "vercel",
+        routeRules: {
+          // Public pages are CDN-cached so browsing traffic never touches the
+          // server functions during registration bursts.
+          "/": { headers: { "cache-control": "public, s-maxage=60, stale-while-revalidate=300" } },
+          "/members": { headers: { "cache-control": "public, s-maxage=60, stale-while-revalidate=300" } },
+          "/members/**": { headers: { "cache-control": "public, s-maxage=60, stale-while-revalidate=300" } },
+          "/projects": { headers: { "cache-control": "public, s-maxage=60, stale-while-revalidate=300" } },
+          "/announcements": { headers: { "cache-control": "public, s-maxage=60, stale-while-revalidate=300" } },
+          "/events": { headers: { "cache-control": "public, s-maxage=60, stale-while-revalidate=300" } },
+          "/events/**": { headers: { "cache-control": "public, s-maxage=30, stale-while-revalidate=120" } },
+          "/join": { headers: { "cache-control": "no-store" } },
+          "/auth/**": { headers: { "cache-control": "no-store" } },
+          "/me/**": { headers: { "cache-control": "no-store" } },
+          "/admin": { headers: { "cache-control": "no-store" } },
+          "/api/**": { headers: { "cache-control": "no-store" } },
+        },
+      }),
       react(),
     ],
   };

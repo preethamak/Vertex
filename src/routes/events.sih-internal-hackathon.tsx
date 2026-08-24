@@ -15,8 +15,7 @@ import {
   SIH_2026_THEME_NAMES,
 } from "@/data/sih-2026";
 
-export const Route = createFileRoute("/events/sih-internal-hackathon")({
-  loader: () => getHackathon(),
+export const Route = createFileRoute("/events/sih-internal-hackathon")({  loader: () => getHackathon(),
   head: () => ({
     meta: [
       { title: "SIH Internal Hackathon — Vertex" },
@@ -28,25 +27,6 @@ export const Route = createFileRoute("/events/sih-internal-hackathon")({
     ],
   }),
   component: HackathonPage,
-});
-
-type Person = {
-  name: string;
-  email: string;
-  gender: "female" | "male" | "prefer_not_to_say";
-  srn: string;
-  branch: string;
-  year: string;
-  phone: string;
-};
-const blankPerson = (): Person => ({
-  name: "",
-  email: "",
-  gender: "prefer_not_to_say",
-  srn: "",
-  branch: "",
-  year: "",
-  phone: "",
 });
 
 function HackathonPage() {
@@ -149,7 +129,7 @@ function HackathonPage() {
         </section>
 
         {registering && workspace && (
-          <Registration workspace={workspace} onClose={() => setRegistering(false)} />
+          <Registration onClose={() => setRegistering(false)} />
         )}
 
         <section className="mx-auto max-w-6xl px-6 py-20">
@@ -328,29 +308,19 @@ function HackathonPage() {
   );
 }
 
-function Registration({
-  workspace,
-  onClose,
-}: {
-  workspace: { min_team_size: number; max_team_size: number };
-  onClose: () => void;
-}) {
+function Registration({ onClose }: { onClose: () => void }) {
   const register = useServerFn(registerHackathonTeam);
-  const [members, setMembers] = useState<Person[]>(() =>
-    Array.from({ length: Math.max(0, workspace.min_team_size - 1) }, blankPerson),
-  );
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<{
     teamName: string;
     token: string;
+    joinCode: string;
     checkinCode: string;
   } | null>(null);
-  const updateMember = (index: number, key: keyof Person, value: string) =>
-    setMembers((current) =>
-      current.map((member, memberIndex) =>
-        memberIndex === index ? { ...member, [key]: value } : member,
-      ),
-    );
+
+  const joinLink = success
+    ? `${window.location.origin}/events/sih-internal-hackathon/join?code=${success.joinCode}`
+    : "";
 
   if (success)
     return (
@@ -359,39 +329,92 @@ function Registration({
           <div className="glass-strong rounded-2xl p-7 text-center">
             <Check className="mx-auto h-9 w-9 rounded-full bg-emerald-300 p-2 text-black" />
             <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.25em] text-silver">
-              Registration confirmed
+              Team registered
             </p>
             <h2 className="mt-3 font-display text-4xl">{success.teamName}</h2>
-            <div className="mx-auto mt-7 w-fit rounded-xl bg-white p-4">
-              <QRCodeSVG
-                value={success.checkinCode}
-                size={180}
-                bgColor="#ffffff"
-                fgColor="#000000"
-                level="M"
-              />
+
+            <div className="mt-7 grid gap-4 text-left sm:grid-cols-2">
+              <div className="surface-card rounded-xl p-4">
+                <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                  1 · Invite your team
+                </p>
+                <p className="mt-2 font-mono text-lg tracking-widest">{success.joinCode}</p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  Share this code or the invite link. Teammates open it and enter their own
+                  details until the roster reaches 6.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    onClick={() =>
+                      navigator.clipboard
+                        .writeText(joinLink)
+                        .then(() => toast.success("Invite link copied."))
+                    }
+                    className="btn-primary rounded-lg px-3 py-2 font-mono text-[9px] uppercase tracking-widest"
+                  >
+                    <Copy size={12} /> Copy invite link
+                  </button>
+                  <button
+                    onClick={() =>
+                      navigator.clipboard
+                        .writeText(success.joinCode)
+                        .then(() => toast.success("Join code copied."))
+                    }
+                    className="btn-ghost rounded-lg px-3 py-2 font-mono text-[9px] uppercase tracking-widest"
+                  >
+                    Copy code
+                  </button>
+                </div>
+              </div>
+              <div className="surface-card rounded-xl p-4">
+                <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                  2 · Keep your team key
+                </p>
+                <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                  This private key opens your team console — roster, submissions, updates. It is
+                  shown once; store it somewhere safe.
+                </p>
+                <button
+                  onClick={() =>
+                    navigator.clipboard
+                      .writeText(success.token)
+                      .then(() => toast.success("Team key copied."))
+                  }
+                  className="btn-primary mt-3 rounded-lg px-3 py-2 font-mono text-[9px] uppercase tracking-widest"
+                >
+                  <Copy size={12} /> Copy team key
+                </button>
+              </div>
             </div>
-            <p className="mx-auto mt-5 max-w-lg text-sm leading-6 text-muted-foreground">
-              Save this team key now. It opens the private team console. The QR is only for
-              event-day check-in—it cannot edit your team.
-            </p>
-            <div className="mt-5 flex flex-wrap justify-center gap-3">
-              <button
-                onClick={() =>
-                  navigator.clipboard
-                    .writeText(success.token)
-                    .then(() => toast.success("Team key copied."))
-                }
-                className="btn-primary rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest"
-              >
-                <Copy size={14} /> Copy team key
-              </button>
+
+            <div className="mt-6 flex flex-col items-center gap-3">
+              <div className="rounded-xl bg-white p-4">
+                <QRCodeSVG
+                  value={success.checkinCode}
+                  size={150}
+                  bgColor="#ffffff"
+                  fgColor="#000000"
+                  level="M"
+                />
+              </div>
+              <p className="max-w-md text-xs leading-5 text-muted-foreground">
+                Event-day check-in QR — save it or screenshot it. It cannot edit your team.
+              </p>
+            </div>
+
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Link
                 to="/events/sih-internal-hackathon/team"
+                className="btn-primary rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest"
+              >
+                Open team console <ArrowRight size={14} />
+              </Link>
+              <button
+                onClick={onClose}
                 className="btn-ghost rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest"
               >
-                Open team console
-              </Link>
+                Done
+              </button>
             </div>
           </div>
         </div>
@@ -400,13 +423,17 @@ function Registration({
 
   return (
     <section id="register" className="border-y border-hairline bg-surface-2">
-      <div className="mx-auto max-w-4xl px-6 py-16">
+      <div className="mx-auto max-w-3xl px-6 py-16">
         <div className="flex items-end justify-between gap-6">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-silver">
-              Step one
+              Step one · 30 seconds
             </p>
-            <h2 className="mt-2 font-display text-4xl">Register a team.</h2>
+            <h2 className="mt-2 font-display text-4xl">Register as team lead.</h2>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+              Only your own details are needed now. You will get an invite link to share — your
+              teammates fill in their own information and the roster locks at 6.
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -428,12 +455,13 @@ function Registration({
                   leadName: String(form.get("leadName")),
                   leadEmail: String(form.get("leadEmail")),
                   leadGender: String(form.get("leadGender")) as
-                    "female" | "male" | "prefer_not_to_say",
+                    | "female"
+                    | "male"
+                    | "prefer_not_to_say",
                   leadPhone: String(form.get("leadPhone")),
                   leadSrn: String(form.get("leadSrn")),
                   leadBranch: String(form.get("leadBranch")),
                   leadYear: String(form.get("leadYear")),
-                  members,
                 },
               });
               sessionStorage.setItem("vertex-sih-team-key", result.token);
@@ -449,102 +477,25 @@ function Registration({
         >
           <div className="grid gap-4 md:grid-cols-2">
             <Field name="teamName" label="Team name" required />
-            <Field name="leadName" label="Team lead name" required />
-            <Field name="leadEmail" label="Team lead email" type="email" required />
-            <GenderField name="leadGender" label="Lead gender (SIH eligibility)" />
-            <Field name="leadSrn" label="Lead SRN" />
-            <Field name="leadPhone" label="Lead phone" />
-            <Field name="leadBranch" label="Lead branch" />
-            <Field name="leadYear" label="Lead year" />
-          </div>
-          <div className="mt-8 border-t border-hairline pt-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h3 className="font-display text-xl">Team members</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Total team size must be exactly {workspace.min_team_size} members, including the
-                  lead.
-                </p>
-              </div>
-              {members.length < workspace.max_team_size - 1 && (
-                <button
-                  type="button"
-                  onClick={() => setMembers((current) => [...current, blankPerson()])}
-                  className="btn-ghost rounded-lg px-3 py-2 font-mono text-[10px] uppercase tracking-widest"
-                >
-                  Add member
-                </button>
-              )}
-            </div>
-            <div className="mt-5 grid gap-4">
-              {members.map((member, index) => (
-                <div key={index} className="surface-card rounded-xl p-4">
-                  <div className="mb-3 flex justify-between">
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-silver">
-                      Member {index + 2}
-                    </span>
-                    {members.length > Math.max(0, workspace.min_team_size - 1) && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setMembers((current) =>
-                            current.filter((_, memberIndex) => memberIndex !== index),
-                          )
-                        }
-                        className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid gap-3 md:grid-cols-3">
-                    <label className="flex flex-col gap-1">
-                      <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-                        Gender (SIH eligibility)
-                      </span>
-                      <select
-                        value={member.gender}
-                        onChange={(event) =>
-                          updateMember(index, "gender", event.target.value as Person["gender"])
-                        }
-                        className="field-input rounded-lg px-3 py-2 text-sm"
-                      >
-                        <option value="prefer_not_to_say">Prefer not to say</option>
-                        <option value="female">Female</option>
-                        <option value="male">Male</option>
-                      </select>
-                    </label>
-                    {(["name", "email", "srn", "branch", "year", "phone"] as const).map((key) => (
-                      <label key={key} className="flex flex-col gap-1">
-                        <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-                          {key === "srn" ? "SRN" : key}
-                        </span>
-                        <input
-                          required={key === "name" || key === "email"}
-                          type={key === "email" ? "email" : "text"}
-                          value={member[key]}
-                          onChange={(event) => updateMember(index, key, event.target.value)}
-                          className="field-input rounded-lg px-3 py-2 text-sm"
-                        />
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <Field name="leadName" label="Your full name" required />
+            <Field name="leadEmail" label="Your email" type="email" required />
+            <GenderField name="leadGender" label="Gender (SIH eligibility)" />
+            <Field name="leadSrn" label="SRN" />
+            <Field name="leadPhone" label="Phone" />
+            <Field name="leadBranch" label="Branch" />
+            <Field name="leadYear" label="Year" />
           </div>
           <button
             disabled={submitting}
             className="btn-primary mt-8 rounded-lg px-5 py-3 font-mono text-[11px] uppercase tracking-widest disabled:opacity-50"
           >
-            {submitting ? "Registering…" : "Confirm team registration"} <ArrowRight size={15} />
+            {submitting ? "Registering…" : "Create team & get invite link"} <ArrowRight size={15} />
           </button>
         </form>
       </div>
     </section>
   );
 }
-
 function GenderField({ name, label }: { name: string; label: string }) {
   return (
     <label className="flex flex-col gap-2">

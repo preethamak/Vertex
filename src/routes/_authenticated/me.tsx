@@ -287,7 +287,7 @@ function MePage() {
                 {mentorships.length === 0 && (
                   <div className="bg-background p-4 font-mono text-xs text-muted-foreground">
                     No mentorship requests yet.{" "}
-                    <Link to="/mentors" className="text-silver">
+                    <Link to="/members" className="text-silver">
                       Find a mentor →
                     </Link>
                   </div>
