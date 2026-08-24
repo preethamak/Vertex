@@ -127,7 +127,9 @@ export const submitApplication = createServerFn({ method: "POST" })
       rateLimit(await clientKey("apply", "apply"), 5, 60 * 60 * 1000);
     } catch (error) {
       if (error instanceof RateLimitError) {
-        throw new Error(`Too many applications from your network. Try again in ${error.retryAfterSeconds}s.`);
+        throw new Error(
+          `Too many applications from your network. Try again in ${error.retryAfterSeconds}s.`,
+        );
       }
       throw error;
     }

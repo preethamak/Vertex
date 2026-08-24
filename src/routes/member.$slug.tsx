@@ -8,6 +8,7 @@ import { Avatar } from "@/components/MemberCard";
 import { SpotlightCard } from "@/components/SpotlightCard";
 import { getDirectory } from "@/lib/club.functions";
 import { getMemberExtras } from "@/lib/public.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/member/$slug")({
   loader: async ({ params }) => {
@@ -174,6 +175,8 @@ function MemberProfile() {
                   Copy link
                 </button>
               </div>
+
+              <RequestMentorship mentorId={member.id} mentorName={member.name} />
 
               {Object.keys(member.links).length > 0 && (
                 <div className="mt-8">
@@ -344,6 +347,100 @@ function Stat({ label, value }: { label: string; value: string }) {
       <div className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
         {label}
       </div>
+    </div>
+  );
+}
+
+function RequestMentorship({ mentorId, mentorName }: { mentorId: string; mentorName: string }) {
+  const [signedIn, setSignedIn] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    import("@/integrations/supabase/client").then(({ supabase }) =>
+      supabase.auth.getUser().then(({ data }) => setSignedIn(Boolean(data.user))),
+    );
+  }, []);
+
+  if (!signedIn) return null;
+
+  return (
+    <div className="mt-8 border-t border-hairline pt-6">
+      {!sent ? (
+        <>
+          {!open ? (
+            <button
+              onClick={() => setOpen(true)}
+              className="border border-silver px-4 py-2 font-mono text-[11px] uppercase tracking-widest text-foreground hover:bg-card"
+            >
+              Request mentorship from {mentorName.split(" ")[0]}
+            </button>
+          ) : (
+            <form
+              className="grid max-w-md gap-3"
+              onSubmit={async (event) => {
+                event.preventDefault();
+                const form = new FormData(event.currentTarget);
+                setBusy(true);
+                try {
+                  const { requestMentor } = await import("@/lib/member.functions");
+                  const run = requestMentor as unknown as (args: {
+                    data: Record<string, unknown>;
+                  }) => Promise<{ ok: boolean }>;
+                  await run({
+                    data: {
+                      mentorId,
+                      topic: String(form.get("topic") ?? ""),
+                      message: String(form.get("message") ?? "") || null,
+                    },
+                  });
+                  setSent(true);
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : "Could not send request.");
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              <input
+                name="topic"
+                required
+                minLength={3}
+                maxLength={120}
+                placeholder="Topic — e.g. SIH idea review"
+                className="border border-hairline bg-background px-3 py-2 font-mono text-sm focus:border-silver focus:outline-none"
+              />
+              <textarea
+                name="message"
+                rows={3}
+                maxLength={1000}
+                placeholder="What do you want help with? (optional)"
+                className="resize-none border border-hairline bg-background px-3 py-2 font-mono text-sm focus:border-silver focus:outline-none"
+              />
+              <div className="flex gap-2">
+                <button
+                  disabled={busy}
+                  className="border border-silver bg-foreground px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-background disabled:opacity-50"
+                >
+                  {busy ? "Sending…" : "Send request"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="border border-hairline px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+        </>
+      ) : (
+        <p className="font-mono text-[11px] uppercase tracking-widest text-emerald-300">
+          Request sent — {mentorName.split(" ")[0]} will see it on their dashboard.
+        </p>
+      )}
     </div>
   );
 }

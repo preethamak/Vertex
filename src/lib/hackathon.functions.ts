@@ -22,7 +22,9 @@ async function limit(scope: string, limit: number, windowMs: number) {
     rateLimit(await clientKey(scope, scope), limit, windowMs);
   } catch (error) {
     if (error instanceof RateLimitError) {
-      throw new Error(`Too many requests from your network. Try again in ${error.retryAfterSeconds}s.`);
+      throw new Error(
+        `Too many requests from your network. Try again in ${error.retryAfterSeconds}s.`,
+      );
     }
     throw error;
   }
@@ -125,6 +127,47 @@ export const joinHackathonTeam = createServerFn({ method: "POST" })
     return joinTeam(data);
   });
 
+export const getMyTeamMembership = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ token: z.string().trim().min(10).max(120) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { loadTeamByMemberToken } = await import("@/lib/hackathon.server");
+    return loadTeamByMemberToken(data.token);
+  });
+
+export const updateMyMembership = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        token: z.string().trim().min(10).max(120),
+        member: z.object({
+          name: z.string().trim().max(100).optional(),
+          gender: z.enum(["female", "male", "prefer_not_to_say"]).optional(),
+          phone: z.string().trim().max(30).optional(),
+          srn: z.string().trim().max(40).optional(),
+          branch: z.string().trim().max(80).optional(),
+          year: z.string().trim().max(20).optional(),
+        }),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    await limit("sih-self", 20, 60 * 60 * 1000);
+    const { updateOwnMemberEntry } = await import("@/lib/hackathon.server");
+    return updateOwnMemberEntry(data.token, data.member);
+  });
+
+export const leaveMyTeam = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ token: z.string().trim().min(10).max(120) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    await limit("sih-leave", 5, 60 * 60 * 1000);
+    const { leaveTeam } = await import("@/lib/hackathon.server");
+    return leaveTeam(data.token);
+  });
+
 export const rotateHackathonJoinCode = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z.object({ token: z.string().trim().min(10).max(120) }).parse(input),
@@ -188,6 +231,84 @@ export const hackathonAdmin = createServerFn({ method: "GET" })
     await assertStaff(context.supabase, context.userId);
     const { adminOverviewData } = await import("@/lib/hackathon.server");
     return adminOverviewData();
+  });
+
+export const reissueHackathonTeamKey = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ teamId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertStaff } = await import("@/lib/roles.server");
+    await assertStaff(context.supabase, context.userId);
+    const { reissueTeamKey } = await import("@/lib/hackathon.server");
+    return reissueTeamKey(data.teamId);
+  });
+
+export const reopenHackathonSubmission = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ teamId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("@/lib/roles.server");
+    await assertAdmin(context.supabase, context.userId);
+    const { reopenSubmission } = await import("@/lib/hackathon.server");
+    return reopenSubmission(data.teamId);
+  });
+
+export const toggleHackathonShowcase = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ teamId: z.string().uuid(), published: z.boolean() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertStaff } = await import("@/lib/roles.server");
+    await assertStaff(context.supabase, context.userId);
+    const { setShowcase } = await import("@/lib/hackathon.server");
+    return setShowcase(data.teamId, data.published);
+  });
+
+export const assignHackathonMentor = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        teamId: z.string().uuid(),
+        mentorName: z.string().trim().max(100),
+        mentorEmail: z.string().trim().max(160),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertStaff } = await import("@/lib/roles.server");
+    await assertStaff(context.supabase, context.userId);
+    const { assignMentor } = await import("@/lib/hackathon.server");
+    return assignMentor(data.teamId, data.mentorName, data.mentorEmail);
+  });
+
+export const getJudging = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertStaff } = await import("@/lib/roles.server");
+    await assertStaff(context.supabase, context.userId);
+    const { getJudgingData } = await import("@/lib/hackathon.server");
+    return getJudgingData();
+  });
+
+export const saveJudgingScore = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        teamId: z.string().uuid(),
+        criterionId: z.string().uuid(),
+        score: z.number().min(0).max(1000),
+        feedback: z.string().trim().max(2000).optional().default(""),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertStaff } = await import("@/lib/roles.server");
+    await assertStaff(context.supabase, context.userId);
+    const { saveJudgeScore } = await import("@/lib/hackathon.server");
+    return saveJudgeScore({ ...data, judgeId: context.userId });
   });
 
 export const saveHackathonWorkspace = createServerFn({ method: "POST" })

@@ -52,7 +52,7 @@ export async function resolveEvent() {
 async function loadWorkspace(eventId: string) {
   const { data } = await supabaseAdmin
     .from("event_workspaces")
-    .select("registration_open, submissions_open, min_team_size, max_team_size")
+    .select("registration_open, submissions_open, min_team_size, max_team_size, rules")
     .eq("event_id", eventId)
     .maybeSingle();
   return data;
@@ -228,6 +228,7 @@ export async function joinTeam(data: HackathonJoinInput) {
   return {
     teamName: joined.team_name as string,
     memberCount: joined.member_count as number,
+    memberToken: joined.member_token as string,
   };
 }
 
@@ -458,7 +459,9 @@ export async function adminOverviewData() {
     await Promise.all([
       supabaseAdmin
         .from("hackathon_teams")
-        .select("id, name, status, lead_name, lead_email, lead_phone, mentor_name, created_at")
+        .select(
+          "id, name, status, lead_name, lead_email, lead_phone, mentor_name, mentor_email, created_at",
+        )
         .eq("event_id", eventId)
         .order("created_at"),
       supabaseAdmin
@@ -466,7 +469,9 @@ export async function adminOverviewData() {
         .select("id, team_id, name, email, phone, usn, branch, year, is_lead"),
       supabaseAdmin
         .from("hackathon_submissions")
-        .select("team_id, solution_title, status, repository_url, demo_url, submitted_at"),
+        .select(
+          "team_id, solution_title, status, repository_url, demo_url, video_url, deck_path, published, submitted_at, finalized_at",
+        ),
       supabaseAdmin
         .from("event_milestones")
         .select("id, title, description, starts_at, ends_at, sort_order, published")
@@ -501,4 +506,228 @@ export async function adminOverviewData() {
     checkins: checkins.data ?? [],
     workspace: ws,
   };
+}
+
+/* ============================================================
+   Teammate self-service
+   ============================================================ */
+
+async function memberFromToken(token: string) {
+  const { data } = await supabaseAdmin
+    .from("hackathon_team_members")
+    .select("id, team_id, name, email, gender, phone, usn, branch, year, is_lead")
+    .eq("member_token_hash", await hashToken(`member:${token}`))
+    .maybeSingle();
+  if (!data) throw new Error("That member key is not valid.");
+  return data;
+}
+
+export async function loadTeamByMemberToken(token: string) {
+  const member = await memberFromToken(token);
+  const { data: teamRow } = await supabaseAdmin
+    .from("hackathon_teams")
+    .select("id, event_id, name, status, lead_name, join_code")
+    .eq("id", member.team_id)
+    .maybeSingle();
+  if (!teamRow) throw new Error("Team not found.");
+  const [members, submission, ws] = await Promise.all([
+    supabaseAdmin
+      .from("hackathon_team_members")
+      .select("id, name, branch, year, is_lead")
+      .eq("team_id", member.team_id)
+      .order("is_lead", { ascending: false })
+      .order("created_at"),
+    supabaseAdmin
+      .from("hackathon_submissions")
+      .select("status, solution_title, finalized_at")
+      .eq("team_id", member.team_id)
+      .maybeSingle(),
+    loadWorkspace(teamRow.event_id),
+  ]);
+  return {
+    me: {
+      id: member.id,
+      name: member.name,
+      email: member.email,
+      gender: member.gender,
+      phone: member.phone,
+      srn: member.usn,
+      branch: member.branch,
+      year: member.year,
+    },
+    team: teamRow,
+    members: members.data ?? [],
+    submission: submission.data ?? null,
+    workspace: ws,
+  };
+}
+
+export async function updateOwnMemberEntry(token: string, member: Record<string, string>) {
+  const { error } = await supabaseAdmin.rpc("update_sih_member_own", {
+    p_member_token: token,
+    p_member: member,
+  });
+  if (error) {
+    const raw = error.message;
+    throw new Error(
+      raw.includes("SRN is already")
+        ? "That SRN is already used by a teammate."
+        : raw.includes("locked")
+          ? "This team already submitted and its roster is locked."
+          : "Could not update your details.",
+    );
+  }
+  return { ok: true };
+}
+
+export async function leaveTeam(token: string) {
+  const { error } = await supabaseAdmin.rpc("leave_sih_team", { p_member_token: token });
+  if (error) {
+    const raw = error.message;
+    throw new Error(
+      raw.includes("lead")
+        ? "The team lead cannot leave. Ask an administrator instead."
+        : raw.includes("locked")
+          ? "This team already submitted and its roster is locked."
+          : "Could not leave the team.",
+    );
+  }
+  return { ok: true };
+}
+
+/* ============================================================
+   Staff: key recovery, review workflow, mentors
+   ============================================================ */
+
+export async function reissueTeamKey(teamId: string) {
+  const { data, error } = await supabaseAdmin.rpc("reissue_sih_management_token", {
+    p_team_id: teamId,
+  });
+  if (error || !data) throw new Error("Could not reissue the team key.");
+  return { token: data as string };
+}
+
+export async function reopenSubmission(teamId: string) {
+  const { error } = await supabaseAdmin.rpc("reopen_sih_submission", { p_team_id: teamId });
+  if (error) throw new Error("Could not reopen the submission.");
+  await supabaseAdmin.from("hackathon_activities").insert({
+    team_id: teamId,
+    activity_type: "submission_reopened",
+    summary: "Submission reopened for edits by the SIH desk.",
+  });
+  return { ok: true };
+}
+
+export async function setShowcase(teamId: string, published: boolean) {
+  const { error } = await supabaseAdmin.rpc("set_sih_showcase", {
+    p_team_id: teamId,
+    p_published: published,
+  });
+  if (error) throw new Error("Could not update the showcase flag.");
+  return { ok: true };
+}
+
+export async function assignMentor(teamId: string, mentorName: string, mentorEmail: string) {
+  const { error } = await supabaseAdmin.rpc("assign_sih_mentor", {
+    p_team_id: teamId,
+    p_mentor_name: mentorName,
+    p_mentor_email: mentorEmail,
+  });
+  if (error) throw new Error("Could not assign the mentor.");
+  return { ok: true };
+}
+
+/* ============================================================
+   Judging
+   ============================================================ */
+
+export async function getJudgingData() {
+  const { eventId } = await resolveEvent();
+  const [criteria, teams, scores] = await Promise.all([
+    supabaseAdmin
+      .from("evaluation_criteria")
+      .select("id, name, description, max_score, weight, sort_order")
+      .eq("event_id", eventId)
+      .order("sort_order"),
+    supabaseAdmin
+      .from("hackathon_teams")
+      .select("id, name, status, checked_in(hackathon_checkins)")
+      .eq("event_id", eventId)
+      .neq("status", "withdrawn")
+      .order("name"),
+    supabaseAdmin
+      .from("evaluation_scores")
+      .select("team_id, criterion_id, judge_id, score, feedback"),
+  ]);
+
+  const teamIds = new Set((teams.data ?? []).map((t) => t.id));
+  const validScores = (scores.data ?? []).filter((s) => teamIds.has(s.team_id));
+
+  // Weighted leaderboard: total weight-normalised score per team, judges averaged.
+  const perTeam = new Map<
+    string,
+    { weighted: number; weightSum: number; judges: Set<string>; feedback: string[] }
+  >();
+  const criteriaById = new Map((criteria.data ?? []).map((c) => [c.id, c]));
+  for (const score of validScores) {
+    const criterion = criteriaById.get(score.criterion_id);
+    if (!criterion) continue;
+    const entry = perTeam.get(score.team_id) ?? {
+      weighted: 0,
+      weightSum: 0,
+      judges: new Set(),
+      feedback: [],
+    };
+    entry.weighted += Number(score.score) * Number(criterion.weight);
+    entry.weightSum += Number(criterion.weight);
+    entry.judges.add(score.judge_id);
+    if (score.feedback) entry.feedback.push(score.feedback);
+    perTeam.set(score.team_id, entry);
+  }
+
+  const leaderboard = (teams.data ?? [])
+    .map((team) => {
+      const entry = perTeam.get(team.id);
+      const total = entry && entry.weightSum > 0 ? entry.weighted / entry.weightSum : null;
+      return {
+        teamId: team.id,
+        name: team.name,
+        status: team.status,
+        judgeCount: entry?.judges.size ?? 0,
+        scoreTotal: total === null ? null : Math.round(total * 100) / 100,
+      };
+    })
+    .sort((a, b) => (b.scoreTotal ?? -1) - (a.scoreTotal ?? -1));
+
+  return {
+    criteria: criteria.data ?? [],
+    teams: (teams.data ?? []).map((t) => ({ id: t.id, name: t.name, status: t.status })),
+    scores: validScores,
+    leaderboard,
+  };
+}
+
+export async function saveJudgeScore(input: {
+  teamId: string;
+  criterionId: string;
+  judgeId: string;
+  score: number;
+  feedback: string;
+}) {
+  const { error } = await supabaseAdmin.rpc("upsert_evaluation_score", {
+    p_team_id: input.teamId,
+    p_criterion_id: input.criterionId,
+    p_judge_id: input.judgeId,
+    p_score: input.score,
+    p_feedback: input.feedback,
+  });
+  if (error) {
+    const raw = error.message;
+    throw new Error(
+      raw.startsWith("Score must be")
+        ? raw
+        : "Could not save that score. Check the range and try again.",
+    );
+  }
+  return { ok: true };
 }

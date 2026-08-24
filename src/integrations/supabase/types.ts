@@ -732,6 +732,7 @@ export type Database = {
           gender: string | null;
           id: string;
           is_lead: boolean;
+          member_token_hash: string | null;
           name: string;
           phone: string | null;
           team_id: string;
@@ -1157,6 +1158,40 @@ export type Database = {
       make_sih_join_code: {
         Args: Record<string, never>;
         Returns: string;
+      };
+      update_sih_member_own: {
+        Args: { p_member_token: string; p_member: Json };
+        Returns: undefined;
+      };
+      leave_sih_team: {
+        Args: { p_member_token: string };
+        Returns: undefined;
+      };
+      reissue_sih_management_token: {
+        Args: { p_team_id: string };
+        Returns: string;
+      };
+      reopen_sih_submission: {
+        Args: { p_team_id: string };
+        Returns: undefined;
+      };
+      set_sih_showcase: {
+        Args: { p_team_id: string; p_published: boolean };
+        Returns: undefined;
+      };
+      assign_sih_mentor: {
+        Args: { p_team_id: string; p_mentor_name: string; p_mentor_email: string };
+        Returns: undefined;
+      };
+      upsert_evaluation_score: {
+        Args: {
+          p_team_id: string;
+          p_criterion_id: string;
+          p_judge_id: string;
+          p_score: number;
+          p_feedback: string;
+        };
+        Returns: undefined;
       };
     };
     Enums: {

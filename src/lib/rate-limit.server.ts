@@ -41,10 +41,7 @@ export async function clientKey(scope: string, salt: string) {
   const request = getRequest();
   const forwarded = request?.headers?.get("x-forwarded-for") ?? "";
   const ip = forwarded.split(",")[0]?.trim() || request?.headers?.get("x-real-ip") || "unknown";
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(`${salt}:${ip}`),
-  );
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${salt}:${ip}`));
   const ipHash = Array.from(new Uint8Array(digest))
     .slice(0, 12)
     .map((b) => b.toString(16).padStart(2, "0"))

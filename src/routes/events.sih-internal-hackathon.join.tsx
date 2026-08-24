@@ -28,7 +28,11 @@ function JoinPage() {
   const join = useServerFn(joinHackathonTeam);
   const [code, setCode] = useState(invite.code);
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState<{ teamName: string; memberCount: number } | null>(null);
+  const [done, setDone] = useState<{
+    teamName: string;
+    memberCount: number;
+    memberToken: string;
+  } | null>(null);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -47,6 +51,7 @@ function JoinPage() {
           year: String(form.get("year")),
         },
       });
+      sessionStorage.setItem("vertex-sih-member-key", result.memberToken);
       setDone(result);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not join. Please try again.");
@@ -70,15 +75,23 @@ function JoinPage() {
                 </p>
                 <h1 className="mt-3 font-display text-4xl">{done.teamName}</h1>
                 <p className="mt-4 text-sm text-muted-foreground">
-                  {done.memberCount} of 6 members confirmed. Your team lead handles submissions
-                  from the team console — keep an eye on the SIH page for announcements.
+                  {done.memberCount} of 6 members confirmed. You can update your own details or
+                  leave the team anytime from the team console.
                 </p>
-                <Link
-                  to="/events/sih-internal-hackathon"
-                  className="btn-primary mt-6 rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest"
-                >
-                  Back to SIH workspace <ArrowRight size={14} />
-                </Link>
+                <div className="mt-6 flex flex-wrap justify-center gap-3">
+                  <Link
+                    to="/events/sih-internal-hackathon/team"
+                    className="btn-primary rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest"
+                  >
+                    Open team console <ArrowRight size={14} />
+                  </Link>
+                  <Link
+                    to="/events/sih-internal-hackathon"
+                    className="btn-ghost rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest"
+                  >
+                    SIH workspace
+                  </Link>
+                </div>
               </div>
             ) : (
               <>

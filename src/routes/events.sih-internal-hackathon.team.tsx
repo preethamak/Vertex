@@ -1,13 +1,26 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Check, Copy, KeyRound, RefreshCw, Save, Send, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Copy,
+  KeyRound,
+  LogOut,
+  RefreshCw,
+  Save,
+  Send,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import {
   getHackathonTeam,
+  getMyTeamMembership,
+  leaveMyTeam,
   rotateHackathonJoinCode,
   saveHackathonSubmission,
+  updateMyMembership,
   uploadHackathonDeck,
   updateHackathonTeam,
 } from "@/lib/hackathon.functions";
@@ -17,6 +30,7 @@ export const Route = createFileRoute("/events/sih-internal-hackathon/team")({
 });
 
 type TeamData = Awaited<ReturnType<typeof getHackathonTeam>>;
+type MemberData = Awaited<ReturnType<typeof getMyTeamMembership>>;
 type MemberDraft = {
   name: string;
   email: string;
@@ -30,21 +44,39 @@ type MemberDraft = {
 
 function TeamConsole() {
   const loadTeam = useServerFn(getHackathonTeam);
+  const loadMembership = useServerFn(getMyTeamMembership);
   const [token, setToken] = useState("");
   const [teamData, setTeamData] = useState<TeamData | null>(null);
+  const [memberData, setMemberData] = useState<MemberData | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => setToken(sessionStorage.getItem("vertex-sih-team-key") ?? ""), []);
 
-  const open = async () => {
+  const openLead = async () => {
     if (!token.trim()) return toast.error("Enter the private team key from registration.");
     setLoading(true);
     try {
       const data = await loadTeam({ data: { token: token.trim() } });
       sessionStorage.setItem("vertex-sih-team-key", token.trim());
+      setMemberData(null);
       setTeamData(data);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Team key not recognised.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openMember = async () => {
+    const memberToken = sessionStorage.getItem("vertex-sih-member-key") ?? "";
+    if (!memberToken) return toast.error("No member key saved — join a team first.");
+    setLoading(true);
+    try {
+      const data = await loadMembership({ data: { token: memberToken } });
+      setTeamData(null);
+      setMemberData(data);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Member key not recognised.");
     } finally {
       setLoading(false);
     }
@@ -65,11 +97,12 @@ function TeamConsole() {
             <KeyRound className="text-silver" size={21} />
             <h1 className="mt-4 font-display text-3xl">Team console</h1>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              This key controls your roster and submission. It is different from the event-day QR.
+              Leads use the private team key. Teammates who joined via invite can open their own
+              view with their member key.
             </p>
             <label className="mt-6 flex flex-col gap-2">
               <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                Team key
+                Team key (lead)
               </span>
               <input
                 value={token}
@@ -79,22 +112,32 @@ function TeamConsole() {
               />
             </label>
             <button
-              onClick={open}
+              onClick={openLead}
               disabled={loading}
               className="btn-primary mt-4 w-full justify-center rounded-lg px-4 py-3 font-mono text-[10px] uppercase tracking-widest disabled:opacity-50"
             >
-              {loading ? "Opening…" : "Open team workspace"}
+              {loading ? "Opening…" : "Open as lead"}
+            </button>
+            <button
+              onClick={openMember}
+              disabled={loading}
+              className="btn-ghost mt-2 w-full justify-center rounded-lg px-4 py-3 font-mono text-[10px] uppercase tracking-widest disabled:opacity-50"
+            >
+              Open as teammate
             </button>
           </aside>
           <section>
             {teamData ? (
-              <TeamWorkspace data={teamData} token={token.trim()} onRefresh={open} />
+              <TeamWorkspace data={teamData} token={token.trim()} onRefresh={openLead} />
+            ) : memberData ? (
+              <MemberWorkspace data={memberData} onRefresh={openMember} />
             ) : (
               <div className="surface-card rounded-2xl p-8">
                 <Users className="text-silver" size={28} />
                 <p className="mt-5 font-display text-2xl">Your workspace stays private.</p>
                 <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-                  Open it with your team key to manage your roster and submission.
+                  Leads open it with the team key; teammates open their own view with the member key
+                  saved when they joined.
                 </p>
               </div>
             )}
@@ -102,6 +145,196 @@ function TeamConsole() {
         </div>
       </main>
       <SiteFooter />
+    </div>
+  );
+}
+
+function MemberWorkspace({
+  data,
+  onRefresh,
+}: {
+  data: MemberData;
+  onRefresh: () => Promise<unknown>;
+}) {
+  const updateSelf = useServerFn(updateMyMembership);
+  const leave = useServerFn(leaveMyTeam);
+  const [saving, setSaving] = useState(false);
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [form, setForm] = useState({
+    name: data.me.name,
+    phone: data.me.phone ?? "",
+    srn: data.me.srn ?? "",
+    branch: data.me.branch ?? "",
+    year: data.me.year ?? "",
+    gender: (data.me.gender === "female" || data.me.gender === "male"
+      ? data.me.gender
+      : "prefer_not_to_say") as "female" | "male" | "prefer_not_to_say",
+  });
+  const finalized = Boolean(data.submission?.finalized_at);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await updateSelf({
+        data: { token: sessionStorage.getItem("vertex-sih-member-key") ?? "", member: form },
+      });
+      toast.success("Your details were updated.");
+      await onRefresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update your details.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const leaveTeam = async () => {
+    setSaving(true);
+    try {
+      await leave({ data: { token: sessionStorage.getItem("vertex-sih-member-key") ?? "" } });
+      sessionStorage.removeItem("vertex-sih-member-key");
+      toast.success("You left the team.");
+      window.location.href = "/events/sih-internal-hackathon";
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not leave the team.");
+    } finally {
+      setSaving(false);
+      setConfirmLeave(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="surface-card rounded-2xl p-7">
+        <span className="font-mono text-[10px] uppercase tracking-[.2em] text-silver">
+          Teammate view · {data.team.status}
+        </span>
+        <h2 className="mt-3 font-display text-4xl">{data.team.name}</h2>
+        <p className="mt-2 font-mono text-[11px] tracking-widest text-muted-foreground">
+          Led by {data.team.lead_name} · {data.members.length}/6 confirmed
+          {data.submission?.solution_title ? ` · submitted: ${data.submission.solution_title}` : ""}
+        </p>
+      </div>
+
+      <div className="glass-panel rounded-2xl p-6">
+        <p className="font-mono text-[10px] uppercase tracking-[.2em] text-silver">Your details</p>
+        <h3 className="mt-2 font-display text-2xl">Keep your entry accurate.</h3>
+        {finalized ? (
+          <p className="mt-4 text-sm text-muted-foreground">
+            The team submitted — details are locked. Ask the SIH desk to reopen if something is
+            wrong.
+          </p>
+        ) : (
+          <div className="mt-5 grid gap-3 md:grid-cols-2">
+            <Field
+              label="Full name"
+              value={form.name}
+              onChange={(v) => setForm({ ...form, name: v })}
+            />
+            <label className="flex flex-col gap-1">
+              <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                Gender (SIH eligibility)
+              </span>
+              <select
+                value={form.gender}
+                onChange={(event) =>
+                  setForm({ ...form, gender: event.target.value as typeof form.gender })
+                }
+                className="field-input rounded-lg px-3 py-2 text-sm"
+              >
+                <option value="prefer_not_to_say">Prefer not to say</option>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+              </select>
+            </label>
+            <Field
+              label="Phone"
+              value={form.phone}
+              onChange={(v) => setForm({ ...form, phone: v })}
+            />
+            <Field label="SRN" value={form.srn} onChange={(v) => setForm({ ...form, srn: v })} />
+            <Field
+              label="Branch"
+              value={form.branch}
+              onChange={(v) => setForm({ ...form, branch: v })}
+            />
+            <Field label="Year" value={form.year} onChange={(v) => setForm({ ...form, year: v })} />
+            <div className="flex flex-wrap items-center gap-3 md:col-span-2">
+              <button
+                disabled={saving}
+                onClick={save}
+                className="btn-primary rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest disabled:opacity-50"
+              >
+                <Save size={13} /> {saving ? "Saving…" : "Save my details"}
+              </button>
+              <button
+                disabled={saving}
+                onClick={() => setConfirmLeave(true)}
+                className="btn-ghost inline-flex items-center gap-2 rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-red-300 disabled:opacity-50"
+              >
+                <LogOut size={13} /> Leave team
+              </button>
+            </div>
+            {confirmLeave && (
+              <div className="rounded-xl border border-red-400/40 bg-red-400/10 p-4 text-sm md:col-span-2">
+                Leave “{data.team.name}”? Your details will be removed from the roster and your slot
+                frees up for someone else.
+                <div className="mt-3 flex gap-2">
+                  <button
+                    disabled={saving}
+                    onClick={leaveTeam}
+                    className="rounded-lg bg-red-400 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-black disabled:opacity-50"
+                  >
+                    Yes, leave
+                  </button>
+                  <button
+                    onClick={() => setConfirmLeave(false)}
+                    className="btn-ghost rounded-lg px-3 py-2 font-mono text-[10px] uppercase tracking-widest"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="surface-card rounded-2xl p-6">
+        <p className="font-mono text-[10px] uppercase tracking-[.2em] text-silver">Roster</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {data.members.map((member) => (
+            <div
+              key={member.id}
+              className={`rounded-xl border p-4 ${
+                member.id === data.me.id
+                  ? "border-accent/50 bg-accent/5"
+                  : "border-hairline bg-surface-2"
+              }`}
+            >
+              <div className="font-display text-lg">
+                {member.name}
+                {member.id === data.me.id ? " (you)" : ""}
+              </div>
+              <div className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                {member.is_lead ? "Team lead" : "Member"}
+                {member.branch ? ` · ${member.branch}` : ""}
+                {member.year ? ` · ${member.year}` : ""}
+              </div>
+            </div>
+          ))}
+          {Array.from({ length: Math.max(0, 6 - data.members.length) }).map((_, index) => (
+            <div
+              key={`slot-${index}`}
+              className="rounded-xl border border-dashed border-hairline p-4 text-muted-foreground"
+            >
+              <div className="font-display text-lg opacity-50">Open slot</div>
+              <div className="mt-1 font-mono text-[10px] uppercase tracking-widest">
+                Awaiting invite
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -153,7 +386,9 @@ function InvitePanel({
   return (
     <div className="glass-panel rounded-2xl p-6">
       <p className="font-mono text-[10px] uppercase tracking-[.2em] text-silver">Invites</p>
-      <h3 className="mt-2 font-display text-2xl">Fill the remaining {6 - data.members.length} spots.</h3>
+      <h3 className="mt-2 font-display text-2xl">
+        Fill the remaining {6 - data.members.length} spots.
+      </h3>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <span className="rounded-lg border border-hairline bg-surface-2 px-4 py-2 font-mono text-lg tracking-[0.3em]">
           {joinCode}
@@ -329,9 +564,7 @@ function RosterEditor({
                   {members.length > 1 && (
                     <button
                       type="button"
-                      onClick={() =>
-                        setMembers((current) => current.filter((_, i) => i !== index))
-                      }
+                      onClick={() => setMembers((current) => current.filter((_, i) => i !== index))}
                       className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
                     >
                       Remove

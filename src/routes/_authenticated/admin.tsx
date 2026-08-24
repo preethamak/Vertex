@@ -17,7 +17,16 @@ import {
   saveProject,
   setApplicationStatus,
 } from "@/lib/admin.functions";
-import { checkInHackathonTeam } from "@/lib/hackathon.functions";
+import { checkInHackathonTeam, reissueHackathonTeamKey } from "@/lib/hackathon.functions";
+import {
+  reopenHackathonSubmission,
+  toggleHackathonShowcase,
+  assignHackathonMentor,
+  saveHackathonWorkspace,
+  getJudging,
+  saveJudgingScore,
+} from "@/lib/hackathon.functions";
+import { listStaffRoles, setUserRole } from "@/lib/admin-users.functions";
 import {
   hackathonAdmin,
   saveHackathonProblemStatement,
@@ -53,8 +62,10 @@ export const Route = createFileRoute("/_authenticated/admin")({
 const TABS = [
   "Check-in",
   "SIH",
+  "Judging",
   "Applications",
   "Members",
+  "Roles",
   "Events",
   "Projects",
   "Announcements",
@@ -101,6 +112,7 @@ function AdminPage() {
               isAdmin ||
               t === "Check-in" ||
               t === "SIH" ||
+              t === "Judging" ||
               t === "Applications" ||
               t === "Announcements",
           ).map((t) => (
@@ -123,6 +135,8 @@ function AdminPage() {
             <CheckIn registrations={data.registrations} events={data.events} />
           )}
           {tab === "SIH" && <SihOperations isAdmin={isAdmin} />}
+          {tab === "Judging" && <Judging />}
+          {tab === "Roles" && isAdmin && <Roles />}
           {tab === "Applications" && <Applications rows={data.applications} />}
           {tab === "Members" && <Members members={data.members} teams={data.teams} />}
           {tab === "Events" && <Events events={data.events} />}
@@ -178,6 +192,11 @@ function SihOperations({ isAdmin }: { isAdmin: boolean }) {
   const load = useServerFn(hackathonAdmin);
   const saveStatement = useServerFn(saveHackathonProblemStatement);
   const setStatus = useServerFn(setHackathonTeamStatus);
+  const saveWorkspace = useServerFn(saveHackathonWorkspace);
+  const reissueKey = useServerFn(reissueHackathonTeamKey);
+  const reopenSub = useServerFn(reopenHackathonSubmission);
+  const toggleShowcase = useServerFn(toggleHackathonShowcase);
+  const assignMentor = useServerFn(assignHackathonMentor);
   const [data, setData] = useState<Awaited<ReturnType<typeof hackathonAdmin>> | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -210,12 +229,77 @@ function SihOperations({ isAdmin }: { isAdmin: boolean }) {
         <Stat label="Checked in" value={String(checkedIn.size)} />
       </div>
 
+      {data.workspace && (
+        <section className="border border-hairline bg-card/40 p-6">
+          <div className="font-display text-xl">Workspace controls</div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Gates for the whole hackathon. Close registration when slots fill; open submissions for
+            the build window.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button
+              className={data.workspace.registration_open ? btn : ghost}
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await saveWorkspace({
+                    data: {
+                      registrationOpen: !data.workspace!.registration_open,
+                      submissionsOpen: data.workspace!.submissions_open,
+                      rules: data.workspace!.rules ?? "",
+                    },
+                  });
+                  toast.success(
+                    `Registration ${data.workspace!.registration_open ? "closed" : "opened"}.`,
+                  );
+                  await refresh();
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : "Could not update.");
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Registration: {data.workspace.registration_open ? "OPEN" : "CLOSED"}
+            </button>
+            <button
+              className={data.workspace.submissions_open ? btn : ghost}
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await saveWorkspace({
+                    data: {
+                      registrationOpen: data.workspace!.registration_open,
+                      submissionsOpen: !data.workspace!.submissions_open,
+                      rules: data.workspace!.rules ?? "",
+                    },
+                  });
+                  toast.success(
+                    `Submissions ${data.workspace!.submissions_open ? "closed" : "opened"}.`,
+                  );
+                  await refresh();
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : "Could not update.");
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Submissions: {data.workspace.submissions_open ? "OPEN" : "CLOSED"}
+            </button>
+          </div>
+        </section>
+      )}
+
       <section className="border border-hairline bg-card/40 p-6">
         <div className="font-display text-xl">Teams</div>
         <div className="mt-4 flex flex-col gap-px border border-hairline bg-hairline">
           {data.teams.map((team) => {
             const roster = data.members.filter((member) => member.team_id === team.id);
             const submission = data.submissions.find((entry) => entry.team_id === team.id);
+            const lead = roster.find((member) => member.is_lead);
             return (
               <div key={team.id} className="bg-background p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -230,10 +314,57 @@ function SihOperations({ isAdmin }: { isAdmin: boolean }) {
                         .map((member) => `${member.name}${member.is_lead ? " (lead)" : ""}`)
                         .join(", ")}
                     </p>
-                    {submission?.solution_title && (
-                      <p className="mt-1 text-xs text-silver">
-                        {submission.solution_title} · {submission.status}
+                    {lead && (
+                      <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                        lead: {lead.email}
+                        {lead.phone ? ` · ${lead.phone}` : ""}
                       </p>
+                    )}
+                    {team.mentor_name && (
+                      <p className="mt-1 font-mono text-[10px] text-silver">
+                        mentor: {team.mentor_name}
+                        {team.mentor_email ? ` · ${team.mentor_email}` : ""}
+                      </p>
+                    )}
+                    {submission?.solution_title && (
+                      <div className="mt-2 border border-hairline p-3 text-xs">
+                        <p className="text-silver">
+                          {submission.solution_title} · {submission.status}
+                          {submission.finalized_at ? " · final" : ""}
+                        </p>
+                        <div className="mt-1 flex flex-wrap gap-3 font-mono text-[10px] uppercase tracking-widest">
+                          {submission.deck_path && (
+                            <a
+                              href={`/api/public/media/${submission.deck_path}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-silver hover:text-foreground"
+                            >
+                              Open deck PDF
+                            </a>
+                          )}
+                          {submission.repository_url && (
+                            <a
+                              href={submission.repository_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-silver hover:text-foreground"
+                            >
+                              Repository
+                            </a>
+                          )}
+                          {submission.demo_url && (
+                            <a
+                              href={submission.demo_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-silver hover:text-foreground"
+                            >
+                              Demo
+                            </a>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
                   <select
@@ -268,6 +399,101 @@ function SihOperations({ isAdmin }: { isAdmin: boolean }) {
                       </option>
                     ))}
                   </select>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <button
+                    className={ghost}
+                    onClick={async () => {
+                      const name = window.prompt(
+                        `Mentor name for ${team.name}`,
+                        team.mentor_name ?? "",
+                      );
+                      if (name === null) return;
+                      const email =
+                        window.prompt("Mentor email (optional)", team.mentor_email ?? "") ?? "";
+                      try {
+                        await assignMentor({
+                          data: { teamId: team.id, mentorName: name, mentorEmail: email },
+                        });
+                        toast.success("Mentor saved.");
+                        await refresh();
+                      } catch (error) {
+                        toast.error(
+                          error instanceof Error ? error.message : "Could not save mentor.",
+                        );
+                      }
+                    }}
+                  >
+                    {team.mentor_name ? "Edit mentor" : "Assign mentor"}
+                  </button>
+                  <button
+                    className={ghost}
+                    onClick={async () => {
+                      if (
+                        !window.confirm(
+                          `Reissue the private team key for ${team.name}? The old key stops working.`,
+                        )
+                      )
+                        return;
+                      try {
+                        const result = await reissueKey({ data: { teamId: team.id } });
+                        await navigator.clipboard.writeText(result.token);
+                        toast.success("New team key copied to clipboard — hand it to the lead.");
+                      } catch (error) {
+                        toast.error(
+                          error instanceof Error ? error.message : "Could not reissue key.",
+                        );
+                      }
+                    }}
+                  >
+                    Reissue team key
+                  </button>
+                  {submission?.finalized_at && (
+                    <>
+                      {isAdmin && (
+                        <button
+                          className={ghost}
+                          onClick={async () => {
+                            if (!window.confirm(`Reopen the finalized submission of ${team.name}?`))
+                              return;
+                            try {
+                              await reopenSub({ data: { teamId: team.id } });
+                              toast.success("Submission reopened.");
+                              await refresh();
+                            } catch (error) {
+                              toast.error(
+                                error instanceof Error ? error.message : "Could not reopen.",
+                              );
+                            }
+                          }}
+                        >
+                          Reopen submission
+                        </button>
+                      )}
+                      <button
+                        className={ghost}
+                        onClick={async () => {
+                          try {
+                            await toggleShowcase({
+                              data: { teamId: team.id, published: !submission.published },
+                            });
+                            toast.success(
+                              submission.published
+                                ? "Removed from showcase."
+                                : "Published to showcase.",
+                            );
+                            await refresh();
+                          } catch (error) {
+                            toast.error(
+                              error instanceof Error ? error.message : "Could not update showcase.",
+                            );
+                          }
+                        }}
+                      >
+                        {submission.published ? "Unpublish showcase" : "Publish to showcase"}
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             );
@@ -1244,6 +1470,217 @@ function Announcements({
             </button>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- judging ---------------- */
+
+function Judging() {
+  const load = useServerFn(getJudging);
+  const saveScore = useServerFn(saveJudgingScore);
+  const [data, setData] = useState<Awaited<ReturnType<typeof getJudging>> | null>(null);
+  const [teamId, setTeamId] = useState("");
+  const [draft, setDraft] = useState<Record<string, { score: string; feedback: string }>>({});
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    load()
+      .then(setData)
+      .catch(() => toast.error("Could not load judging data."));
+  }, [load]);
+
+  if (!data) return <p className="font-mono text-xs text-muted-foreground">Loading judging…</p>;
+  if (data.teams.length === 0)
+    return <p className="font-mono text-xs text-muted-foreground">No teams to judge yet.</p>;
+
+  const team = data.teams.find((t) => t.id === teamId) ?? data.teams[0]!;
+  const myScores = new Map(
+    data.scores.filter((s) => s.team_id === team.id).map((s) => [s.criterion_id, s]),
+  );
+
+  return (
+    <div className="grid gap-8">
+      <section className="border border-hairline bg-card/40 p-6">
+        <div className="font-display text-xl">Leaderboard</div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Weighted average across all judges. Criteria weights:{" "}
+          {data.criteria.map((c) => `${c.name.split(" ")[0]} ×${c.weight}`).join(", ")}
+        </p>
+        <div className="mt-4 flex flex-col gap-px border border-hairline bg-hairline">
+          {data.leaderboard.map((row, index) => (
+            <button
+              key={row.teamId}
+              onClick={() => setTeamId(row.teamId)}
+              className={`flex items-center justify-between gap-4 bg-background p-3 text-left hover:bg-black/[0.03] ${
+                row.teamId === team.id ? "outline outline-1 outline-silver" : ""
+              }`}
+            >
+              <span className="flex items-center gap-3">
+                <span className="w-6 text-right font-mono text-[10px] text-muted-foreground">
+                  {row.scoreTotal === null ? "—" : `#${index + 1}`}
+                </span>
+                <span className="font-display text-sm">{row.name}</span>
+              </span>
+              <span className="font-mono text-xs text-silver">
+                {row.scoreTotal === null
+                  ? "not scored"
+                  : `${row.scoreTotal}/10 · ${row.judgeCount} judge${row.judgeCount === 1 ? "" : "s"}`}
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="border border-hairline bg-card/40 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="font-display text-xl">Score team</div>
+          <select value={team.id} onChange={(e) => setTeamId(e.target.value)} className={field}>
+            {data.teams.map((t) => (
+              <option key={t.id} value={t.id} className="bg-background">
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="mt-4 grid gap-4">
+          {data.criteria.map((criterion) => {
+            const existing = myScores.get(criterion.id);
+            const entry = draft[criterion.id] ?? {
+              score: existing ? String(existing.score) : "",
+              feedback: existing?.feedback ?? "",
+            };
+            return (
+              <div key={criterion.id} className="border border-hairline p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <div className="text-sm">{criterion.name}</div>
+                    <div className="mt-0.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      0–{criterion.max_score} points · weight ×{criterion.weight}
+                    </div>
+                  </div>
+                  <input
+                    type="number"
+                    min={0}
+                    max={criterion.max_score}
+                    step="0.5"
+                    value={entry.score}
+                    onChange={(e) =>
+                      setDraft({ ...draft, [criterion.id]: { ...entry, score: e.target.value } })
+                    }
+                    className={`${field} w-24`}
+                    placeholder="0"
+                  />
+                </div>
+                <textarea
+                  rows={2}
+                  value={entry.feedback}
+                  onChange={(e) =>
+                    setDraft({ ...draft, [criterion.id]: { ...entry, feedback: e.target.value } })
+                  }
+                  placeholder="Feedback for the team (optional)"
+                  className={`${field} mt-3 w-full resize-none`}
+                />
+                <button
+                  className={`${btn} mt-3`}
+                  disabled={busy || entry.score === ""}
+                  onClick={async () => {
+                    setBusy(true);
+                    try {
+                      await saveScore({
+                        data: {
+                          teamId: team.id,
+                          criterionId: criterion.id,
+                          score: Number(entry.score),
+                          feedback: entry.feedback,
+                        },
+                      });
+                      toast.success(`Saved ${criterion.name}.`);
+                      setData(await load());
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : "Could not save score.");
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                >
+                  Save score
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/* ---------------- roles ---------------- */
+
+function Roles() {
+  const load = useServerFn(listStaffRoles);
+  const save = useServerFn(setUserRole);
+  const [data, setData] = useState<Awaited<ReturnType<typeof listStaffRoles>> | null>(null);
+
+  useEffect(() => {
+    load()
+      .then(setData)
+      .catch(() => toast.error("Could not load roles."));
+  }, [load]);
+
+  if (!data) return <p className="font-mono text-xs text-muted-foreground">Loading roles…</p>;
+
+  const roleOf = (userId: string) => data.roles.find((r) => r.userId === userId)?.role ?? "none";
+
+  return (
+    <div className="border border-hairline bg-card/40 p-6">
+      <div className="font-display text-xl">Staff roles</div>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Admins control everything. Heads can run check-in, judge, and triage teams. Only members who
+        signed in at least once appear here.
+      </p>
+      <div className="mt-4 flex flex-col gap-px border border-hairline bg-hairline">
+        {data.members.map((member) => (
+          <div
+            key={member.id}
+            className="flex flex-wrap items-center justify-between gap-3 bg-background p-3"
+          >
+            <div>
+              <div className="font-display text-sm">{member.name}</div>
+              <div className="font-mono text-[10px] text-muted-foreground">
+                /{member.slug}
+                {member.isHead ? " · roster head" : ""}
+              </div>
+            </div>
+            <select
+              value={roleOf(member.userId)}
+              onChange={async (event) => {
+                try {
+                  await save({
+                    data: { userId: member.userId, role: event.target.value as "admin" },
+                  });
+                  toast.success("Role updated.");
+                  setData(await load());
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : "Could not update role.");
+                }
+              }}
+              className={field}
+            >
+              {["none", "member", "head", "admin"].map((role) => (
+                <option key={role} value={role} className="bg-background">
+                  {role}
+                </option>
+              ))}
+            </select>
+          </div>
+        ))}
+        {data.members.length === 0 && (
+          <div className="bg-background p-4 text-sm text-muted-foreground">
+            No signed-in members yet.
+          </div>
+        )}
       </div>
     </div>
   );
