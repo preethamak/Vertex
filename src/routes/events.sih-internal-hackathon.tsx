@@ -15,7 +15,8 @@ import {
   SIH_2026_THEME_NAMES,
 } from "@/data/sih-2026";
 
-export const Route = createFileRoute("/events/sih-internal-hackathon")({  loader: () => getHackathon(),
+export const Route = createFileRoute("/events/sih-internal-hackathon")({
+  loader: () => getHackathon(),
   head: () => ({
     meta: [
       { title: "SIH Internal Hackathon — Vertex" },
@@ -128,180 +129,14 @@ function HackathonPage() {
           </div>
         </section>
 
-        {registering && workspace && (
-          <Registration onClose={() => setRegistering(false)} />
-        )}
+        {registering && workspace && <Registration onClose={() => setRegistering(false)} />}
 
-        <section className="mx-auto max-w-6xl px-6 py-20">
-          <Reveal>
-            <Eyebrow number="01" label="Live desk" title="Every update, in one place." />
-          </Reveal>
-          <div className="mt-10 grid gap-5 lg:grid-cols-[1fr_.9fr]">
-            <div className="surface-card rounded-2xl p-6">
-              <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-silver">
-                <FileText size={14} /> Rules
-              </div>
-              <ul className="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
-                {SIH_2026_RULES.map((rule) => (
-                  <li key={rule} className="flex gap-3">
-                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-silver" />
-                    {rule}
-                  </li>
-                ))}
-              </ul>
-              <a
-                href={SIH_2026_GUIDELINES_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="btn-ghost mt-5 rounded-lg px-3 py-2 font-mono text-[10px] uppercase tracking-widest"
-              >
-                Read official SIH guidelines
-              </a>
-            </div>
-            <div className="glass-panel rounded-2xl p-6">
-              <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-silver">
-                <Users size={14} /> Team access
-              </div>
-              <p className="mt-4 text-sm leading-7 text-muted-foreground">
-                Already registered? Open the private team console with the team key you saved at
-                registration.
-              </p>
-              <Link
-                to="/events/sih-internal-hackathon/team"
-                className="btn-ghost mt-5 rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest"
-              >
-                Open team console <ArrowRight size={14} />
-              </Link>
-            </div>
-          </div>
-          {(announcements.length > 0 || milestones.length > 0) && (
-            <div className="mt-12 grid gap-8 lg:grid-cols-2">
-              <div>
-                <h2 className="font-display text-2xl">Announcements</h2>
-                <div className="mt-4 grid gap-3">
-                  {announcements.map((item) => (
-                    <article key={item.id} className="surface-card rounded-xl p-5">
-                      <h3 className="font-display text-lg">{item.title}</h3>
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.body}</p>
-                    </article>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h2 className="font-display text-2xl">Timeline</h2>
-                <ol className="mt-4 border-l border-hairline pl-5">
-                  {milestones.map((item) => (
-                    <li
-                      key={item.id}
-                      className="relative pb-6 before:absolute before:-left-[1.4rem] before:top-1.5 before:h-2 before:w-2 before:rounded-full before:bg-silver"
-                    >
-                      <div className="font-mono text-[10px] uppercase tracking-widest text-silver">
-                        {item.starts_at
-                          ? new Date(item.starts_at).toLocaleDateString()
-                          : "Date to be announced"}
-                      </div>
-                      <h3 className="mt-1 font-display text-lg">{item.title}</h3>
-                      {item.description && (
-                        <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
-                      )}
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            </div>
-          )}
-        </section>
-
-        <section id="statements" className="border-y border-hairline bg-surface-2">
-          <div className="mx-auto max-w-6xl px-6 py-20">
-            <Reveal>
-              <Eyebrow
-                number="02"
-                label="Problem statements"
-                title="Choose the right problem, not a random one."
-              />
-            </Reveal>
-            {statements.length ? (
-              <div className="mt-10 grid gap-4 md:grid-cols-2">
-                {statements.map((item) => (
-                  <article key={item.id} className="surface-card rounded-2xl p-6">
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="chip rounded-md px-2 py-1 font-mono text-[10px] text-silver">
-                        {item.statement_code}
-                      </span>
-                      {item.category && (
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                          {item.category}
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="mt-5 font-display text-xl leading-tight">{item.title}</h3>
-                    <p className="mt-3 text-sm text-muted-foreground">
-                      {[item.organization, item.theme].filter(Boolean).join(" · ")}
-                    </p>
-                    {item.description && (
-                      <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">
-                        {item.description}
-                      </p>
-                    )}
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <div className="glass-panel mt-10 rounded-2xl p-8">
-                <p className="font-display text-2xl">Official statements are being verified.</p>
-                <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-                  Only statements approved by the Vertex SIH desk will appear here. This prevents
-                  students from starting on an outdated or unofficial prompt.
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-6xl px-6 py-20">
-          <Reveal>
-            <Eyebrow
-              number="03"
-              label="Official SIH themes"
-              title="Find the right lane for your idea."
-            />
-          </Reveal>
-          <div className="mt-10 flex flex-wrap gap-3">
-            {SIH_2026_THEME_NAMES.map((theme) => (
-              <a
-                key={theme}
-                href={SIH_2026_SOURCE_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="chip rounded-full px-4 py-2 text-sm text-muted-foreground hover:text-foreground"
-              >
-                {theme}
-              </a>
-            ))}
-          </div>
-        </section>
-
-        {roster.length > 0 && (
-          <section className="mx-auto max-w-6xl px-6 py-20">
-            <Eyebrow number="04" label="Teams" title="The builders in the room." />
-            <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {roster.map((team) => (
-                <article key={team.id} className="surface-card rounded-2xl p-5">
-                  <div className="flex justify-between gap-3">
-                    <h3 className="font-display text-xl">{team.name}</h3>
-                    <span className="font-mono text-[9px] uppercase tracking-widest text-silver">
-                      {team.status}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {team.members.map((member) => member.name).join(" · ")}
-                  </p>
-                </article>
-              ))}
-            </div>
-          </section>
-        )}
+        <TabbedWorkspace
+          statements={statements}
+          announcements={announcements}
+          milestones={milestones}
+          roster={roster}
+        />
       </main>
       <SiteFooter />
     </div>
@@ -340,8 +175,8 @@ function Registration({ onClose }: { onClose: () => void }) {
                 </p>
                 <p className="mt-2 font-mono text-lg tracking-widest">{success.joinCode}</p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  Share this code or the invite link. Teammates open it and enter their own
-                  details until the roster reaches 6.
+                  Share this code or the invite link. Teammates open it and enter their own details
+                  until the roster reaches 6.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
@@ -455,9 +290,7 @@ function Registration({ onClose }: { onClose: () => void }) {
                   leadName: String(form.get("leadName")),
                   leadEmail: String(form.get("leadEmail")),
                   leadGender: String(form.get("leadGender")) as
-                    | "female"
-                    | "male"
-                    | "prefer_not_to_say",
+                    "female" | "male" | "prefer_not_to_say",
                   leadPhone: String(form.get("leadPhone")),
                   leadSrn: String(form.get("leadSrn")),
                   leadBranch: String(form.get("leadBranch")),
@@ -547,6 +380,341 @@ function Eyebrow({ number, label, title }: { number: string; label: string; titl
         {number} · {label}
       </div>
       <h2 className="mt-3 font-display text-3xl tracking-tight md:text-4xl">{title}</h2>
+    </div>
+  );
+}
+
+const TABS = [
+  { id: "updates", label: "Updates & Rules" },
+  { id: "statements", label: "Problem Statements" },
+  { id: "themes", label: "Themes" },
+  { id: "teams", label: "Teams" },
+] as const;
+type TabId = (typeof TABS)[number]["id"];
+
+function TabbedWorkspace({
+  statements,
+  announcements,
+  milestones,
+  roster,
+}: {
+  statements: {
+    id: string;
+    statement_code: string;
+    title: string;
+    organization: string | null;
+    category: string | null;
+    theme: string | null;
+    description: string | null;
+  }[];
+  announcements: { id: string; title: string; body: string }[];
+  milestones: {
+    id: string;
+    title: string;
+    description: string | null;
+    starts_at: string | null;
+  }[];
+  roster: {
+    id: string;
+    name: string;
+    status: string;
+    members: { name: string }[];
+  }[];
+}) {
+  const [tab, setTab] = useState<TabId>("updates");
+  const themes = [
+    ...new Set(statements.map((s) => s.theme).filter((t): t is string => Boolean(t))),
+  ].sort();
+
+  return (
+    <section className="mx-auto max-w-6xl px-6 py-14">
+      <div className="sticky top-[57px] z-30 -mx-6 border-b border-hairline bg-background/85 px-6 py-3 backdrop-blur-md">
+        <div className="flex flex-wrap gap-2">
+          {TABS.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setTab(item.id)}
+              className={`rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                tab === item.id
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {item.label}
+              {item.id === "statements" && statements.length > 0 && (
+                <span className="ml-2 opacity-60">{statements.length}</span>
+              )}
+              {item.id === "teams" && roster.length > 0 && (
+                <span className="ml-2 opacity-60">{roster.length}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-10">
+        {tab === "updates" && <UpdatesTab announcements={announcements} milestones={milestones} />}
+        {tab === "statements" && <StatementsTab statements={statements} themes={themes} />}
+        {tab === "themes" && <ThemesTab counts={countByTheme(statements)} />}
+        {tab === "teams" && <TeamsTab roster={roster} />}
+      </div>
+    </section>
+  );
+}
+
+function countByTheme(statements: { theme: string | null }[]) {
+  const counts = new Map<string, number>();
+  for (const statement of statements) {
+    if (!statement.theme) continue;
+    counts.set(statement.theme, (counts.get(statement.theme) ?? 0) + 1);
+  }
+  return counts;
+}
+
+function UpdatesTab({
+  announcements,
+  milestones,
+}: {
+  announcements: { id: string; title: string; body: string }[];
+  milestones: { id: string; title: string; description: string | null; starts_at: string | null }[];
+}) {
+  return (
+    <div className="space-y-12">
+      <div className="grid gap-5 lg:grid-cols-[1fr_.9fr]">
+        <div className="surface-card rounded-2xl p-6">
+          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-silver">
+            <FileText size={14} /> Rules
+          </div>
+          <ul className="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
+            {SIH_2026_RULES.map((rule) => (
+              <li key={rule} className="flex gap-3">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-silver" />
+                {rule}
+              </li>
+            ))}
+          </ul>
+          <a
+            href={SIH_2026_GUIDELINES_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-ghost mt-5 rounded-lg px-3 py-2 font-mono text-[10px] uppercase tracking-widest"
+          >
+            Read official SIH guidelines
+          </a>
+        </div>
+        <div className="glass-panel rounded-2xl p-6">
+          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-silver">
+            <Users size={14} /> Team access
+          </div>
+          <p className="mt-4 text-sm leading-7 text-muted-foreground">
+            Already registered? Open the private team console with the team key you saved at
+            registration — invites, roster, and submissions live there.
+          </p>
+          <Link
+            to="/events/sih-internal-hackathon/team"
+            className="btn-ghost mt-5 rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest"
+          >
+            Open team console <ArrowRight size={14} />
+          </Link>
+        </div>
+      </div>
+      {(announcements.length > 0 || milestones.length > 0) && (
+        <div className="grid gap-8 lg:grid-cols-2">
+          {announcements.length > 0 && (
+            <div>
+              <h2 className="font-display text-2xl">Announcements</h2>
+              <div className="mt-4 grid gap-3">
+                {announcements.map((item) => (
+                  <article key={item.id} className="surface-card rounded-xl p-5">
+                    <h3 className="font-display text-lg">{item.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.body}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
+          {milestones.length > 0 && (
+            <div>
+              <h2 className="font-display text-2xl">Timeline</h2>
+              <ol className="mt-4 border-l border-hairline pl-5">
+                {milestones.map((item) => (
+                  <li
+                    key={item.id}
+                    className="relative pb-6 before:absolute before:-left-[1.4rem] before:top-1.5 before:h-2 before:w-2 before:rounded-full before:bg-silver"
+                  >
+                    <div className="font-mono text-[10px] uppercase tracking-widest text-silver">
+                      {item.starts_at
+                        ? new Date(item.starts_at).toLocaleDateString()
+                        : "Date to be announced"}
+                    </div>
+                    <h3 className="mt-1 font-display text-lg">{item.title}</h3>
+                    {item.description && (
+                      <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatementsTab({
+  statements,
+  themes,
+}: {
+  statements: {
+    id: string;
+    statement_code: string;
+    title: string;
+    organization: string | null;
+    category: string | null;
+    theme: string | null;
+    description: string | null;
+  }[];
+  themes: string[];
+}) {
+  const [query, setQuery] = useState("");
+  const [theme, setTheme] = useState("");
+  const [category, setCategory] = useState("");
+
+  const filtered = statements.filter((statement) => {
+    if (theme && statement.theme !== theme) return false;
+    if (category && statement.category !== category) return false;
+    if (query) {
+      const haystack =
+        `${statement.statement_code} ${statement.title} ${statement.organization ?? ""}`.toLowerCase();
+      if (!haystack.includes(query.toLowerCase())) return false;
+    }
+    return true;
+  });
+
+  return (
+    <div>
+      <div className="glass-panel flex flex-wrap items-center gap-3 rounded-2xl p-4">
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search code, title, organization…"
+          className="field-input min-w-[220px] flex-1 rounded-lg px-3 py-2 text-sm"
+        />
+        <select
+          value={theme}
+          onChange={(event) => setTheme(event.target.value)}
+          className="field-input rounded-lg px-3 py-2 text-sm"
+        >
+          <option value="">All themes</option>
+          {themes.map((item) => (
+            <option key={item} value={item}>
+              {item}
+            </option>
+          ))}
+        </select>
+        <select
+          value={category}
+          onChange={(event) => setCategory(event.target.value)}
+          className="field-input rounded-lg px-3 py-2 text-sm"
+        >
+          <option value="">Software + Hardware</option>
+          <option value="Software">Software</option>
+          <option value="Hardware">Hardware</option>
+        </select>
+        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          {filtered.length} / {statements.length}
+        </span>
+      </div>
+
+      {filtered.length > 0 ? (
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          {filtered.map((item) => (
+            <article key={item.id} className="surface-card rounded-2xl p-6">
+              <div className="flex items-start justify-between gap-4">
+                <span className="chip rounded-md px-2 py-1 font-mono text-[10px] text-silver">
+                  {item.statement_code}
+                </span>
+                {item.category && (
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    {item.category}
+                  </span>
+                )}
+              </div>
+              <h3 className="mt-5 font-display text-xl leading-tight">{item.title}</h3>
+              <p className="mt-3 text-sm text-muted-foreground">
+                {[item.organization, item.theme].filter(Boolean).join(" · ")}
+              </p>
+              {item.description && (
+                <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">
+                  {item.description}
+                </p>
+              )}
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="glass-panel mt-6 rounded-2xl p-8 text-center">
+          <p className="font-display text-2xl">No statements match those filters.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ThemesTab({ counts }: { counts: Map<string, number> }) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {SIH_2026_THEME_NAMES.map((theme) => (
+        <a
+          key={theme}
+          href={SIH_2026_SOURCE_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="surface-card flex items-center justify-between rounded-xl p-4"
+        >
+          <span className="text-sm">{theme}</span>
+          {counts.get(theme) ? (
+            <span className="chip rounded-md px-2 py-1 font-mono text-[10px] text-silver">
+              {counts.get(theme)}
+            </span>
+          ) : null}
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function TeamsTab({
+  roster,
+}: {
+  roster: { id: string; name: string; status: string; members: { name: string }[] }[];
+}) {
+  if (roster.length === 0) {
+    return (
+      <div className="glass-panel rounded-2xl p-8 text-center">
+        <p className="font-display text-2xl">No teams registered yet.</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Be the first — hit “Register your team” above.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {roster.map((team) => (
+        <article key={team.id} className="surface-card rounded-2xl p-5">
+          <div className="flex justify-between gap-3">
+            <h3 className="font-display text-xl">{team.name}</h3>
+            <span className="font-mono text-[9px] uppercase tracking-widest text-silver">
+              {team.status}
+            </span>
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {team.members.map((member) => member.name).join(" · ")}
+          </p>
+        </article>
+      ))}
     </div>
   );
 }

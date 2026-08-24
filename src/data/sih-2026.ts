@@ -1,23 +1,24 @@
-// Source: https://www.sih.gov.in/ (SIH 2026 theme section, checked 2026-08-20).
+// Source: https://www.sih.gov.in/ — themes actually present in the released
+// SIH 2026 problem statements (seeded 2026-08-24 from sih.gov.in/sih2026PS).
 export const SIH_2026_THEME_NAMES = [
-  "Smart Automation",
+  "Agriculture, FoodTech & Rural Development",
+  "Blockchain & Cybersecurity",
+  "Clean & Green Technology",
+  "Disaster Management",
   "Fitness & Sports",
-  "Space Technology",
   "Heritage & Culture",
   "MedTech / BioTech / HealthTech",
-  "Agriculture, FoodTech & Rural Development",
-  "Smart Vehicles",
-  "Transportation & Logistics",
-  "Robotics and Drones",
-  "Clean & Green Technology",
-  "Tourism",
-  "Renewable / Sustainable Energy",
-  "Blockchain & Cybersecurity",
-  "Smart Education",
-  "Disaster Management",
-  "Games & Toys",
   "Miscellaneous",
-  "Fintech",
+  "Renewable / Sustainable Energy",
+  "Robotics and Drones",
+  "Smart Automation",
+  "Smart Education",
+  "Smart Resource Conservation",
+  "Smart Vehicles",
+  "Space Technology",
+  "Toys & Games",
+  "Transportation & Logistics",
+  "Travel & Tourism",
 ] as const;
 
 // Source: SIH 2026 Guidelines, Ministry of Education's Innovation Cell, 29 July 2026.
