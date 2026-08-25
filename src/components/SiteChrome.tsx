@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion, useScroll } from "motion/react";
-import { Menu, X } from "lucide-react";
+import { Github, Instagram, Linkedin, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { VertexLogo } from "@/components/VertexLogo";
 import { ScrollProgress } from "@/components/motion-kit";
