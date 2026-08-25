@@ -295,8 +295,7 @@ export const assignHackathonMentor = createServerFn({ method: "POST" })
 export const getJudging = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { assertStaff } = await import("@/lib/roles.server");
-    await assertStaff(context.supabase, context.userId);
+    await (await import("@/lib/roles.server")).assertJudge(context.supabase, context.userId);
     const { getJudgingData } = await import("@/lib/hackathon.server");
     return getJudgingData();
   });
@@ -314,8 +313,7 @@ export const saveJudgingScore = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { assertStaff } = await import("@/lib/roles.server");
-    await assertStaff(context.supabase, context.userId);
+    await (await import("@/lib/roles.server")).assertJudge(context.supabase, context.userId);
     const { saveJudgeScore } = await import("@/lib/hackathon.server");
     return saveJudgeScore({ ...data, judgeId: context.userId });
   });

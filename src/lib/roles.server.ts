@@ -8,6 +8,8 @@ export type Viewer = {
   roles: string[];
   isAdmin: boolean;
   isHead: boolean;
+  isJudge: boolean;
+  isMentor: boolean;
   headTeams: string[];
   member: {
     id: string;
@@ -40,6 +42,8 @@ export async function loadViewer(supabase: Db, userId: string): Promise<Viewer> 
     roles,
     isAdmin: roles.includes("admin"),
     isHead: roles.includes("head") || Boolean(m?.is_head),
+    isJudge: roles.includes("judge"),
+    isMentor: roles.includes("mentor"),
     headTeams: m?.is_head && m.team_id ? [m.team_id] : [],
     member: m
       ? {
@@ -66,6 +70,24 @@ export async function assertAdmin(supabase: Db, userId: string): Promise<Viewer>
 export async function assertStaff(supabase: Db, userId: string): Promise<Viewer> {
   const viewer = await loadViewer(supabase, userId);
   if (!viewer.isAdmin && !viewer.isHead) throw new Error("Team heads and admins only.");
+  return viewer;
+}
+
+/** Judges, heads, and admins can score; mentors and students cannot. */
+export async function assertJudge(supabase: Db, userId: string): Promise<Viewer> {
+  const viewer = await loadViewer(supabase, userId);
+  if (!viewer.isAdmin && !viewer.isHead && !viewer.isJudge) {
+    throw new Error("Judges, team heads, and admins only.");
+  }
+  return viewer;
+}
+
+/** Mentors, heads, and admins. */
+export async function assertMentor(supabase: Db, userId: string): Promise<Viewer> {
+  const viewer = await loadViewer(supabase, userId);
+  if (!viewer.isAdmin && !viewer.isHead && !viewer.isMentor) {
+    throw new Error("Mentors, team heads, and admins only.");
+  }
   return viewer;
 }
 

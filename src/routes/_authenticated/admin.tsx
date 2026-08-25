@@ -28,6 +28,12 @@ import {
 } from "@/lib/hackathon.functions";
 import { listStaffRoles, setUserRole } from "@/lib/admin-users.functions";
 import {
+  issueStaffInvite,
+  listMentorshipRequests,
+  listStaffInvites,
+  revokeStaffInvite,
+} from "@/lib/staff.functions";
+import {
   hackathonAdmin,
   saveHackathonProblemStatement,
   setHackathonTeamStatus,
@@ -65,7 +71,7 @@ const TABS = [
   "Judging",
   "Applications",
   "Members",
-  "Roles",
+  "People",
   "Events",
   "Projects",
   "Announcements",
@@ -83,6 +89,28 @@ function AdminPage() {
   const data = Route.useLoaderData();
   const [tab, setTab] = useState<Tab>("Check-in");
   const isAdmin = data.viewer.isAdmin;
+  const isJudgeOnly = data.viewer.isJudge && !data.viewer.isAdmin && !data.viewer.isHead;
+
+  if (isJudgeOnly) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <SiteHeader />
+        <div className="mx-auto max-w-6xl px-6 py-14">
+          <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+            <span className="inline-block h-px w-8 bg-silver" />
+            Judge console
+          </div>
+          <h1 className="mt-5 font-display text-4xl font-semibold tracking-tight md:text-6xl">
+            Score the teams.
+          </h1>
+          <div className="mt-10">
+            <Judging />
+          </div>
+        </div>
+        <SiteFooter />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -91,6 +119,8 @@ function AdminPage() {
         <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
           <span className="inline-block h-px w-8 bg-silver" />
           {isAdmin ? "Admin" : "Team head"} console
+          {data.viewer.isJudge ? " · judge" : ""}
+          {data.viewer.isMentor ? " · mentor" : ""}
         </div>
         <h1 className="mt-5 font-display text-4xl font-semibold tracking-tight md:text-6xl">
           Control room.
@@ -136,7 +166,7 @@ function AdminPage() {
           )}
           {tab === "SIH" && <SihOperations isAdmin={isAdmin} />}
           {tab === "Judging" && <Judging />}
-          {tab === "Roles" && isAdmin && <Roles />}
+          {tab === "People" && isAdmin && <People />}
           {tab === "Applications" && <Applications rows={data.applications} />}
           {tab === "Members" && <Members members={data.members} teams={data.teams} />}
           {tab === "Events" && <Events events={data.events} />}
@@ -211,6 +241,11 @@ function SihOperations({ isAdmin }: { isAdmin: boolean }) {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  const [psQuery, setPsQuery] = useState("");
+  const [psTheme, setPsTheme] = useState("");
+  const [psCategory, setPsCategory] = useState("");
+  const [psLimit, setPsLimit] = useState(30);
 
   if (!data) {
     return <p className="font-mono text-xs text-muted-foreground">Loading SIH operations…</p>;
@@ -513,88 +548,238 @@ function SihOperations({ isAdmin }: { isAdmin: boolean }) {
       </section>
 
       {isAdmin && (
-        <section className="grid gap-5 border border-hairline bg-card/40 p-6">
-          <div>
-            <div className="font-display text-xl">Official problem statements</div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Paste only statements verified against the official SIH release. Publishing makes a
-              statement available to teams.
-            </p>
-          </div>
-          <form
-            className="grid gap-3 md:grid-cols-2"
-            onSubmit={async (event) => {
-              event.preventDefault();
-              const form = event.currentTarget;
-              const values = new FormData(form);
-              setBusy(true);
-              try {
-                await saveStatement({
-                  data: {
-                    statementCode: String(values.get("code") ?? ""),
-                    title: String(values.get("title") ?? ""),
-                    organization: String(values.get("organization") ?? "") || null,
-                    category: String(values.get("category") ?? "") || null,
-                    theme: String(values.get("theme") ?? "") || null,
-                    description: String(values.get("description") ?? "") || null,
-                    sourceUrl: String(values.get("sourceUrl") ?? "") || null,
-                    sourceVersion: String(values.get("sourceVersion") ?? "") || null,
-                    published: values.get("published") === "on",
-                    sortOrder: Number(values.get("sortOrder") ?? 0),
-                  },
-                });
-                toast.success("Problem statement saved.");
-                form.reset();
-                await refresh();
-              } catch (error) {
-                toast.error(error instanceof Error ? error.message : "Could not save statement.");
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            <input name="code" required placeholder="Problem statement code" className={field} />
-            <input name="title" required placeholder="Official title" className={field} />
-            <input name="organization" placeholder="Organisation" className={field} />
-            <input name="theme" placeholder="Official theme" className={field} />
-            <input name="category" placeholder="Category" className={field} />
-            <input
-              name="sourceUrl"
-              type="url"
-              placeholder="Official source URL"
-              className={field}
-            />
-            <input name="sourceVersion" placeholder="Source version / release" className={field} />
-            <input name="sortOrder" type="number" min="0" defaultValue="0" className={field} />
-            <textarea
-              name="description"
-              placeholder="Official description"
-              rows={4}
-              className={`${field} resize-none md:col-span-2`}
-            />
-            <label className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              <input type="checkbox" name="published" /> Publish to teams
-            </label>
-            <button className={`${btn} w-fit`} disabled={busy}>
-              {busy ? "Saving…" : "Save statement"}
-            </button>
-          </form>
-          <div className="flex flex-col gap-px border border-hairline bg-hairline">
-            {data.statements.map((statement) => (
-              <div key={statement.id} className="bg-background p-3 text-sm">
-                <span className="font-mono text-[10px] text-silver">
-                  {statement.statement_code}
-                </span>{" "}
-                <span className="ml-2">{statement.title}</span>{" "}
-                <span className="ml-2 text-muted-foreground">
-                  {statement.published ? "Published" : "Draft"}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
+        <StatementsAdmin
+          statements={data.statements}
+          saveStatement={saveStatement}
+          refresh={refresh}
+          busy={busy}
+          setBusy={setBusy}
+          filters={{
+            query: psQuery,
+            setQuery: setPsQuery,
+            theme: psTheme,
+            setTheme: setPsTheme,
+            category: psCategory,
+            setCategory: setPsCategory,
+            limit: psLimit,
+            setLimit: setPsLimit,
+          }}
+        />
       )}
     </div>
+  );
+}
+
+function StatementsAdmin({
+  statements,
+  saveStatement,
+  refresh,
+  busy,
+  setBusy,
+  filters,
+}: {
+  statements: {
+    id: string;
+    statement_code: string;
+    title: string;
+    organization: string | null;
+    category: string | null;
+    theme: string | null;
+    description: string | null;
+    source_url: string | null;
+    source_version: string | null;
+    published: boolean;
+    sort_order: number;
+  }[];
+  saveStatement: ReturnType<typeof useServerFn<typeof saveHackathonProblemStatement>>;
+  refresh: () => Promise<void>;
+  busy: boolean;
+  setBusy: (value: boolean) => void;
+  filters: {
+    query: string;
+    setQuery: (value: string) => void;
+    theme: string;
+    setTheme: (value: string) => void;
+    category: string;
+    setCategory: (value: string) => void;
+    limit: number;
+    setLimit: (value: number) => void;
+  };
+}) {
+  const themes = [
+    ...new Set(statements.map((s) => s.theme).filter((t): t is string => Boolean(t))),
+  ].sort();
+  const filtered = statements.filter((statement) => {
+    if (filters.category && statement.category !== filters.category) return false;
+    if (filters.theme && statement.theme !== filters.theme) return false;
+    if (filters.query) {
+      const haystack =
+        `${statement.statement_code} ${statement.title} ${statement.organization ?? ""}`.toLowerCase();
+      if (!haystack.includes(filters.query.toLowerCase())) return false;
+    }
+    return true;
+  });
+  const visible = filtered.slice(0, filters.limit);
+
+  return (
+    <section className="grid gap-5 border border-hairline bg-card/40 p-6">
+      <div>
+        <div className="font-display text-xl">Official problem statements</div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {statements.length} seeded from sih.gov.in. Toggle publishing below; add missing ones with
+          the form.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          value={filters.query}
+          onChange={(event) => filters.setQuery(event.target.value)}
+          placeholder="Search code, title, ministry…"
+          className={`${field} min-w-[200px] flex-1`}
+        />
+        <select
+          value={filters.theme}
+          onChange={(event) => filters.setTheme(event.target.value)}
+          className={field}
+        >
+          <option value="" className="bg-background">
+            All themes
+          </option>
+          {themes.map((theme) => (
+            <option key={theme} value={theme} className="bg-background">
+              {theme}
+            </option>
+          ))}
+        </select>
+        <select
+          value={filters.category}
+          onChange={(event) => filters.setCategory(event.target.value)}
+          className={field}
+        >
+          <option value="" className="bg-background">
+            Software + Hardware
+          </option>
+          <option value="Software" className="bg-background">
+            Software
+          </option>
+          <option value="Hardware" className="bg-background">
+            Hardware
+          </option>
+        </select>
+        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          {filtered.length} / {statements.length}
+        </span>
+      </div>
+
+      <div className="flex max-h-[420px] flex-col gap-px overflow-y-auto border border-hairline bg-hairline">
+        {visible.map((statement) => (
+          <div
+            key={statement.id}
+            className="flex flex-wrap items-center justify-between gap-3 bg-background p-3 text-sm"
+          >
+            <div className="min-w-0">
+              <span className="font-mono text-[10px] text-silver">{statement.statement_code}</span>
+              <span className="ml-2">{statement.title}</span>
+              <span className="ml-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                {statement.category === "Hardware" ? "HW" : "SW"}
+                {statement.theme ? ` · ${statement.theme}` : ""}
+              </span>
+            </div>
+            <button
+              className={ghost}
+              onClick={async () => {
+                try {
+                  await saveStatement({
+                    data: {
+                      id: statement.id,
+                      statementCode: statement.statement_code,
+                      title: statement.title,
+                      organization: statement.organization,
+                      category: statement.category,
+                      theme: statement.theme,
+                      description: statement.description,
+                      sourceUrl: statement.source_url,
+                      sourceVersion: statement.source_version,
+                      published: !statement.published,
+                      sortOrder: statement.sort_order,
+                    },
+                  });
+                  toast.success(statement.published ? "Unpublished." : "Published to teams.");
+                  await refresh();
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : "Could not update.");
+                }
+              }}
+            >
+              {statement.published ? "Unpublish" : "Publish"}
+            </button>
+          </div>
+        ))}
+      </div>
+      {filtered.length > visible.length && (
+        <button className={`${ghost} w-fit`} onClick={() => filters.setLimit(filters.limit + 60)}>
+          Show more ({filtered.length - visible.length} remaining)
+        </button>
+      )}
+
+      <div>
+        <div className="font-display text-lg">Add a statement manually</div>
+      </div>
+      <form
+        className="grid gap-3 md:grid-cols-2"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          const form = event.currentTarget;
+          const values = new FormData(form);
+          setBusy(true);
+          try {
+            await saveStatement({
+              data: {
+                statementCode: String(values.get("code") ?? ""),
+                title: String(values.get("title") ?? ""),
+                organization: String(values.get("organization") ?? "") || null,
+                category: String(values.get("category") ?? "") || null,
+                theme: String(values.get("theme") ?? "") || null,
+                description: String(values.get("description") ?? "") || null,
+                sourceUrl: String(values.get("sourceUrl") ?? "") || null,
+                sourceVersion: String(values.get("sourceVersion") ?? "") || null,
+                published: values.get("published") === "on",
+                sortOrder: Number(values.get("sortOrder") ?? 0),
+              },
+            });
+            toast.success("Problem statement saved.");
+            form.reset();
+            await refresh();
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Could not save statement.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <input name="code" required placeholder="Problem statement code" className={field} />
+        <input name="title" required placeholder="Official title" className={field} />
+        <input name="organization" placeholder="Organisation" className={field} />
+        <input name="theme" placeholder="Official theme" className={field} />
+        <input name="category" placeholder="Category" className={field} />
+        <input name="sourceUrl" type="url" placeholder="Official source URL" className={field} />
+        <input name="sourceVersion" placeholder="Source version / release" className={field} />
+        <input name="sortOrder" type="number" min="0" defaultValue="0" className={field} />
+        <textarea
+          name="description"
+          placeholder="Official description"
+          rows={4}
+          className={`${field} resize-none md:col-span-2`}
+        />
+        <label className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <input type="checkbox" name="published" /> Publish to teams
+        </label>
+        <button className={`${btn} w-fit`} disabled={busy}>
+          {busy ? "Saving…" : "Save statement"}
+        </button>
+      </form>
+    </section>
   );
 }
 
@@ -1622,9 +1807,216 @@ function Judging() {
   );
 }
 
-/* ---------------- roles ---------------- */
+/* ---------------- people: codes, roles, mentorship ---------------- */
 
-function Roles() {
+function People() {
+  const [section, setSection] = useState<"codes" | "roles" | "mentorship">("codes");
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap gap-2">
+        {(
+          [
+            ["codes", "Access codes"],
+            ["roles", "Staff roles"],
+            ["mentorship", "Mentorship"],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            onClick={() => setSection(id)}
+            className={`border px-3 py-2 font-mono text-[10px] uppercase tracking-widest ${
+              section === id
+                ? "border-silver text-foreground"
+                : "border-hairline text-muted-foreground hover:border-silver"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {section === "codes" && <AccessCodes />}
+      {section === "roles" && <StaffRoles />}
+      {section === "mentorship" && <MentorshipAdmin />}
+    </div>
+  );
+}
+
+function AccessCodes() {
+  const load = useServerFn(listStaffInvites);
+  const issue = useServerFn(issueStaffInvite);
+  const revoke = useServerFn(revokeStaffInvite);
+  const [data, setData] = useState<Awaited<ReturnType<typeof listStaffInvites>> | null>(null);
+  const [role, setRole] = useState<"judge" | "mentor">("judge");
+  const [label, setLabel] = useState("");
+  const [maxUses, setMaxUses] = useState(1);
+  const [lastCode, setLastCode] = useState("");
+
+  useEffect(() => {
+    load()
+      .then(setData)
+      .catch(() => toast.error("Could not load codes."));
+  }, [load]);
+
+  return (
+    <div className="grid gap-6">
+      <div className="border border-hairline bg-card/40 p-6">
+        <div className="font-display text-xl">Issue a verification code</div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Hand a code to a judge or mentor you trust. They enter it once at sign-up — no code, no
+          staff access.
+        </p>
+        <div className="mt-4 flex flex-wrap items-end gap-3">
+          <Label text="Role">
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as "judge")}
+              className={field}
+            >
+              <option value="judge" className="bg-background">
+                Judge
+              </option>
+              <option value="mentor" className="bg-background">
+                Mentor
+              </option>
+            </select>
+          </Label>
+          <Label text="Label (optional)">
+            <input
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder="e.g. Prof from NMIT"
+              className={`${field} w-56`}
+            />
+          </Label>
+          <Label text="Uses">
+            <input
+              type="number"
+              min={1}
+              max={50}
+              value={maxUses}
+              onChange={(e) => setMaxUses(Number(e.target.value))}
+              className={`${field} w-20`}
+            />
+          </Label>
+          <button
+            className={btn}
+            onClick={async () => {
+              try {
+                const result = await issue({ data: { role, label, maxUses } });
+                setLastCode(result.code);
+                await navigator.clipboard.writeText(result.code).catch(() => {});
+                toast.success("Code created and copied.");
+                setData(await load());
+              } catch (error) {
+                toast.error(error instanceof Error ? error.message : "Could not create code.");
+              }
+            }}
+          >
+            Create code
+          </button>
+          {lastCode && (
+            <span className="font-mono text-sm tracking-widest text-silver">{lastCode}</span>
+          )}
+        </div>
+      </div>
+      <div className="flex flex-col gap-px border border-hairline bg-hairline">
+        {(data?.invites ?? []).map((invite) => (
+          <div
+            key={invite.id}
+            className="flex flex-wrap items-center justify-between gap-3 bg-background p-3"
+          >
+            <div>
+              <span className="font-mono text-sm tracking-widest">{invite.code}</span>
+              <span className="ml-3 font-mono text-[10px] uppercase tracking-widest text-silver">
+                {invite.role}
+                {invite.label ? ` · ${invite.label}` : ""}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-[10px] text-muted-foreground">
+                {invite.used_count}/{invite.max_uses} used
+              </span>
+              {invite.revoked ? (
+                <span className="font-mono text-[10px] uppercase tracking-widest text-red-300">
+                  revoked
+                </span>
+              ) : (
+                <button
+                  className={ghost}
+                  onClick={async () => {
+                    try {
+                      await revoke({ data: { id: invite.id } });
+                      toast.success("Code revoked.");
+                      setData(await load());
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : "Could not revoke.");
+                    }
+                  }}
+                >
+                  Revoke
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+        {data?.invites.length === 0 && (
+          <div className="bg-background p-4 text-sm text-muted-foreground">
+            No codes issued yet.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MentorshipAdmin() {
+  const load = useServerFn(listMentorshipRequests);
+  const [data, setData] = useState<Awaited<ReturnType<typeof listMentorshipRequests>> | null>(null);
+
+  useEffect(() => {
+    load()
+      .then(setData)
+      .catch(() => toast.error("Could not load mentorship."));
+  }, [load]);
+
+  if (!data) return <p className="font-mono text-xs text-muted-foreground">Loading…</p>;
+
+  return (
+    <div className="flex flex-col gap-px border border-hairline bg-hairline">
+      {data.requests.map((request) => (
+        <div
+          key={request.id}
+          className="flex flex-wrap items-center justify-between gap-3 bg-background p-3"
+        >
+          <div>
+            <div className="text-sm">
+              {request.mentee} → {request.mentor}
+            </div>
+            <div className="font-mono text-[10px] text-muted-foreground">{request.topic}</div>
+          </div>
+          <span
+            className={`font-mono text-[10px] uppercase tracking-widest ${
+              request.status === "accepted"
+                ? "text-emerald-300"
+                : request.status === "pending"
+                  ? "text-amber-300"
+                  : "text-muted-foreground"
+            }`}
+          >
+            {request.status}
+          </span>
+        </div>
+      ))}
+      {data.requests.length === 0 && (
+        <div className="bg-background p-4 text-sm text-muted-foreground">
+          No mentorship requests yet.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StaffRoles() {
   const load = useServerFn(listStaffRoles);
   const save = useServerFn(setUserRole);
   const [data, setData] = useState<Awaited<ReturnType<typeof listStaffRoles>> | null>(null);

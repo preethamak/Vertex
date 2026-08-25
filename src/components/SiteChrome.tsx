@@ -92,7 +92,11 @@ export function SiteHeader() {
 }
 
 const socials = [
-  { label: "LinkedIn", href: "https://www.linkedin.com/company/vertex-technical-club", Icon: Linkedin },
+  {
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/company/vertex-technical-club",
+    Icon: Linkedin,
+  },
   { label: "GitHub", href: "https://github.com/vertex-technical-club", Icon: Github },
   { label: "Instagram", href: "https://www.instagram.com/vertex.technical.club", Icon: Instagram },
 ];

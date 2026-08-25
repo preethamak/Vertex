@@ -19,9 +19,23 @@ export const getViewer = createServerFn({ method: "GET" })
 export const adminOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { assertStaff } = await import("@/lib/roles.server");
-    const viewer = await assertStaff(context.supabase, context.userId);
+    const { assertJudge } = await import("@/lib/roles.server");
+    const viewer = await assertJudge(context.supabase, context.userId);
     const sb = context.supabase;
+
+    // Judges get their own console; they never see club data.
+    if (!viewer.isAdmin && !viewer.isHead) {
+      return {
+        viewer,
+        applications: [],
+        members: [],
+        teams: [],
+        events: [],
+        projects: [],
+        announcements: [],
+        registrations: [],
+      };
+    }
 
     const [apps, members, teams, events, projects, announcements, regs] = await Promise.all([
       sb.from("applications").select("*").order("created_at", { ascending: false }),

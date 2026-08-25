@@ -1084,6 +1084,50 @@ export type Database = {
         };
         Relationships: [];
       };
+      staff_invites: {
+        Row: {
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          label: string | null;
+          max_uses: number;
+          revoked: boolean;
+          role: string;
+          used_count: number;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          label?: string | null;
+          max_uses?: number;
+          revoked?: boolean;
+          role: string;
+          used_count?: number;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          label?: string | null;
+          max_uses?: number;
+          revoked?: boolean;
+          role?: string;
+          used_count?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "staff_invites_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       user_roles: {
         Row: {
           created_at: string;
@@ -1193,9 +1237,13 @@ export type Database = {
         };
         Returns: undefined;
       };
+      redeem_staff_invite: {
+        Args: { p_code: string; p_role: string };
+        Returns: undefined;
+      };
     };
     Enums: {
-      app_role: "admin" | "head" | "member";
+      app_role: "admin" | "head" | "member" | "judge" | "mentor";
     };
     CompositeTypes: {
       [_ in never]: never;
