@@ -16,7 +16,7 @@ import {
   SIH_2026_THEME_NAMES,
 } from "@/data/sih-2026";
 
-export const Route = createFileRoute("/events/sih-internal-hackathon")({
+export const Route = createFileRoute("/events/sih-internal-hackathon/")({
   loader: () => getHackathon(),
   head: () => ({
     meta: [
@@ -136,7 +136,9 @@ function HackathonPage() {
           </div>
         </section>
 
-        {registering && workspace && <Registration onClose={() => setRegistering(false)} />}
+        {registering && workspace && (
+          <Registration statements={statements} onClose={() => setRegistering(false)} />
+        )}
 
         <TabbedWorkspace
           statements={statements}
@@ -150,7 +152,18 @@ function HackathonPage() {
   );
 }
 
-function Registration({ onClose }: { onClose: () => void }) {
+function Registration({
+  statements,
+  onClose,
+}: {
+  statements: {
+    id: string;
+    statement_code: string;
+    title: string;
+    theme: string | null;
+  }[];
+  onClose: () => void;
+}) {
   const register = useServerFn(registerHackathonTeam);
   const [submitting, setSubmitting] = useState(false);
   const [pass, setPass] = useState<ParticipantPass | null>(null);
@@ -316,6 +329,7 @@ function Registration({ onClose }: { onClose: () => void }) {
                   leadSrn: String(form.get("leadSrn")),
                   leadBranch: String(form.get("leadBranch")),
                   leadYear: String(form.get("leadYear")),
+                  problemStatementId: String(form.get("problemStatementId")),
                 },
               });
               sessionStorage.removeItem("vertex-sih-team-key");
@@ -367,6 +381,24 @@ function Registration({ onClose }: { onClose: () => void }) {
             <Field name="leadPhone" label="Phone" defaultValue={pass?.phone} />
             <Field name="leadBranch" label="Branch" defaultValue={pass?.branch} />
             <Field name="leadYear" label="Year" defaultValue={pass?.year} />
+            <label className="flex flex-col gap-2 md:col-span-2">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Problem statement (optional — you can change it later in the team console)
+              </span>
+              <select
+                name="problemStatementId"
+                defaultValue=""
+                className="field-input rounded-lg px-3 py-2.5 text-sm"
+              >
+                <option value="">Decide later</option>
+                {statements.map((statement) => (
+                  <option key={statement.id} value={statement.id}>
+                    {statement.statement_code} · {statement.title.slice(0, 80)}
+                    {statement.theme ? ` — ${statement.theme}` : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
           <button
             disabled={submitting}
@@ -514,7 +546,18 @@ function UpdatesTab({
 }) {
   return (
     <div className="space-y-12">
-      <div className="grid gap-5 lg:grid-cols-[1fr_.9fr]">
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="glass-panel rounded-2xl p-6">
+          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-silver">
+            <Users size={14} /> Faculty coordinator
+          </div>
+          <p className="mt-4 font-display text-xl">Kiran M</p>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            Head of Department, Artificial Intelligence &amp; Data Science
+            <br />
+            School of Computer Science and Engineering
+          </p>
+        </div>
         <div className="surface-card rounded-2xl p-6">
           <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-silver">
             <FileText size={14} /> Rules

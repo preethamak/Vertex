@@ -174,6 +174,7 @@ export async function createTeam(data: HackathonRegisterInput) {
     p_lead_srn: data.leadSrn,
     p_lead_branch: data.leadBranch,
     p_lead_year: data.leadYear,
+    p_problem_statement_id: data.problemStatementId,
   });
   if (error || !result) {
     const message = typeof error?.message === "string" ? error.message : "";

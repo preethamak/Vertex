@@ -104,6 +104,7 @@ export const hackathonRegisterInput = z.object({
   leadSrn: z.string().trim().max(40).optional().default(""),
   leadBranch: z.string().trim().max(80).optional().default(""),
   leadYear: z.string().trim().max(20).optional().default(""),
+  problemStatementId: z.string().trim().max(60).optional().default(""),
 });
 
 export const hackathonJoinInput = z.object({

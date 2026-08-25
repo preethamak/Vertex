@@ -1188,6 +1188,7 @@ export type Database = {
           p_lead_srn: string;
           p_lead_branch: string;
           p_lead_year: string;
+          p_problem_statement_id?: string;
         };
         Returns: Json;
       };

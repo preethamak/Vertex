@@ -44,7 +44,8 @@ CREATE OR REPLACE FUNCTION public.create_sih_team(
   p_lead_phone text,
   p_lead_srn text,
   p_lead_branch text,
-  p_lead_year text
+  p_lead_year text,
+  p_problem_statement_id text DEFAULT ''
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -104,7 +105,22 @@ BEGIN
     true
   );
 
-  INSERT INTO public.hackathon_submissions (team_id) VALUES (v_team_id);
+  IF coalesce(p_problem_statement_id, '') <> '' THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM public.hackathon_problem_statements
+      WHERE id::text = p_problem_statement_id AND event_id = p_event_id AND published = true
+    ) THEN
+      RAISE EXCEPTION 'That problem statement is not available.';
+    END IF;
+  END IF;
+
+  INSERT INTO public.hackathon_submissions (team_id, problem_statement_id, problem_statement_title, theme)
+  SELECT v_team_id, ps.id, ps.title, ps.theme
+  FROM public.hackathon_problem_statements ps
+  WHERE p_problem_statement_id <> '' AND ps.id::text = p_problem_statement_id
+  UNION ALL
+  SELECT v_team_id, NULL, NULL, NULL
+  WHERE coalesce(p_problem_statement_id, '') = '';
 
   INSERT INTO public.hackathon_activities (team_id, activity_type, summary)
   VALUES (v_team_id, 'registered', btrim(p_name) || ' registered. Invites are open for the rest of the roster.');
@@ -253,3 +269,5 @@ GRANT EXECUTE ON FUNCTION public.create_sih_team(uuid, text, text, text, text, t
 GRANT EXECUTE ON FUNCTION public.join_sih_team(uuid, text, jsonb) TO service_role;
 GRANT EXECUTE ON FUNCTION public.rotate_sih_join_code(text) TO service_role;
 GRANT EXECUTE ON FUNCTION public.make_sih_join_code() TO service_role;
+
+DROP FUNCTION IF EXISTS public.create_sih_team(uuid, text, text, text, text, text, text, text, text);

@@ -362,3 +362,6 @@ GRANT EXECUTE ON FUNCTION public.upsert_evaluation_score(uuid, uuid, uuid, numer
 UPDATE public.hackathon_team_members
 SET member_token_hash = encode(sha256(('vertex:member:' || replace(gen_random_uuid()::text, '-', ''))::bytea), 'hex')
 WHERE member_token_hash IS NULL AND is_lead = false;
+
+-- Dedupe guard for criteria seeding.
+CREATE UNIQUE INDEX IF NOT EXISTS evaluation_criteria_event_name_key ON public.evaluation_criteria (event_id, lower(name));
