@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion, useScroll } from "motion/react";
-import { Github, Instagram, Linkedin, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { VertexLogo } from "@/components/VertexLogo";
 import { ScrollProgress } from "@/components/motion-kit";
@@ -9,7 +9,14 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const { scrollY } = useScroll();
   const [scrolled, setScrolled] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
 
+  useEffect(() => {
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session)));
+      supabase.auth.onAuthStateChange((_event, session) => setSignedIn(Boolean(session)));
+    });
+  }, []);
   useEffect(() => scrollY.on("change", (value) => setScrolled(value > 18)), [scrollY]);
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -45,9 +52,22 @@ export function SiteHeader() {
           <Link to="/join" className="hover:text-foreground">
             Join
           </Link>
-          <Link to="/auth" className="btn-ghost rounded-lg px-3 py-1.5 hover:text-foreground">
-            Sign in
-          </Link>
+          {signedIn ? (
+            <button
+              onClick={async () => {
+                const { supabase } = await import("@/integrations/supabase/client");
+                await supabase.auth.signOut();
+                window.location.href = "/";
+              }}
+              className="btn-ghost rounded-lg px-3 py-1.5 hover:text-foreground"
+            >
+              Sign out
+            </button>
+          ) : (
+            <Link to="/auth" className="btn-ghost rounded-lg px-3 py-1.5 hover:text-foreground">
+              Sign in
+            </Link>
+          )}
         </nav>
         <button
           aria-label={open ? "Close menu" : "Open menu"}
@@ -83,6 +103,19 @@ export function SiteHeader() {
               >
                 Join Vertex →
               </Link>
+              {signedIn && (
+                <button
+                  onClick={async () => {
+                    const { supabase } = await import("@/integrations/supabase/client");
+                    await supabase.auth.signOut();
+                    setOpen(false);
+                    window.location.href = "/";
+                  }}
+                  className="mt-2 rounded-xl border border-hairline px-4 py-3 text-left"
+                >
+                  Sign out
+                </button>
+              )}
             </nav>
           </motion.div>
         )}
