@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { DirectoryExplorer } from "@/components/DirectoryExplorer";
 import { MemberCard } from "@/components/MemberCard";
@@ -7,6 +8,7 @@ import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import { SpotlightCard } from "@/components/SpotlightCard";
 import { Reveal } from "@/components/Reveal";
 import { Atmosphere } from "@/components/Atmosphere";
+import { CountUp, ShinyText } from "@/components/motion-kit";
 import { getDirectory } from "@/lib/club.functions";
 
 export const Route = createFileRoute("/members")({
@@ -23,7 +25,21 @@ export const Route = createFileRoute("/members")({
 function MembersPage() {
   const directory = Route.useLoaderData();
   const [activeTeamId, setActiveTeamId] = useState(directory.teams[0]?.id ?? "");
+  const [query, setQuery] = useState("");
+  const showAll = activeTeamId === "__all";
   const activeTeam = directory.teams.find((team) => team.id === activeTeamId) ?? directory.teams[0];
+
+  const searchMatches = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return null;
+    return directory.all.filter(
+      (member) =>
+        member.name.toLowerCase().includes(q) ||
+        member.role.toLowerCase().includes(q) ||
+        (member.team ?? "").toLowerCase().includes(q) ||
+        member.skills.some((skill) => skill.toLowerCase().includes(q)),
+    );
+  }, [query, directory.all]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -40,7 +56,8 @@ function MembersPage() {
                 Meet Vertex.
               </h1>
               <p className="mt-5 max-w-lg text-base leading-7 text-muted-foreground">
-                The people who run the club and make the work happen.
+                <CountUp to={directory.all.length} /> people who run the club and make the work
+                happen.
               </p>
             </Reveal>
           </div>
@@ -65,66 +82,118 @@ function MembersPage() {
           )}
 
           <section className="mt-14">
-            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-              Teams
-            </p>
-            <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
-              {directory.teams.map((team) => (
-                <button
-                  key={team.id}
-                  onClick={() => setActiveTeamId(team.id)}
-                  className={`shrink-0 rounded-full border px-4 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors ${activeTeam?.id === team.id ? "border-silver bg-black/[0.04] text-foreground" : "border-hairline text-muted-foreground hover:border-silver"}`}
-                >
-                  {team.name}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                Teams
+              </p>
+              <label className="relative w-full max-w-xs">
+                <Search
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search name, skill, team…"
+                  className="field-input w-full rounded-lg py-2 pl-9 pr-3 text-sm"
+                />
+              </label>
             </div>
-            <AnimatePresence mode="wait">
-              {activeTeam && (
-                <motion.div
-                  key={activeTeam.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.28 }}
-                  className="mt-4"
-                >
-                  <SpotlightCard>
-                    <section className="p-6">
-                      <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div>
-                          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-silver">
-                            {activeTeam.code}
-                          </p>
-                          <h2 className="mt-2 font-display text-3xl">{activeTeam.name}</h2>
-                          {activeTeam.blurb && (
-                            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-                              {activeTeam.blurb}
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setActiveTeamId("__all")}
+                className={`shrink-0 rounded-full border px-4 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors ${showAll ? "border-silver bg-black/[0.04] text-foreground" : "border-hairline text-muted-foreground hover:border-silver"}`}
+              >
+                All · {directory.all.length}
+              </button>
+              {directory.teams.map((team) => {
+                const count = (team.head ? 1 : 0) + team.members.length;
+                return (
+                  <button
+                    key={team.id}
+                    onClick={() => setActiveTeamId(team.id)}
+                    className={`shrink-0 rounded-full border px-4 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors ${!showAll && activeTeam?.id === team.id ? "border-silver bg-black/[0.04] text-foreground" : "border-hairline text-muted-foreground hover:border-silver"}`}
+                  >
+                    {team.name} · {count}
+                  </button>
+                );
+              })}
+            </div>
+            {searchMatches ? (
+              <motion.div
+                key="search"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.28 }}
+                className="mt-4"
+              >
+                <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <ShinyText
+                    text={`${searchMatches.length} match${searchMatches.length === 1 ? "" : "es"}`}
+                  />
+                </p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {searchMatches.map((member, index) => (
+                    <MemberCard
+                      key={member.id}
+                      member={member}
+                      index={index + 1}
+                      isHead={member.isHead}
+                    />
+                  ))}
+                </div>
+                {searchMatches.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Nobody matches “{query}”.</p>
+                )}
+              </motion.div>
+            ) : (
+              <AnimatePresence mode="wait">
+                {activeTeam && (
+                  <motion.div
+                    key={activeTeam.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.28 }}
+                    className="mt-4"
+                  >
+                    <SpotlightCard>
+                      <section className="p-6">
+                        <div className="flex flex-wrap items-start justify-between gap-4">
+                          <div>
+                            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-silver">
+                              {activeTeam.code}
+                            </p>
+                            <h2 className="mt-2 font-display text-3xl">{activeTeam.name}</h2>
+                            {activeTeam.blurb && (
+                              <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+                                {activeTeam.blurb}
+                              </p>
+                            )}
+                          </div>
+                          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                            {(activeTeam.head ? 1 : 0) + activeTeam.members.length} members
+                          </span>
+                        </div>
+                        <div className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                          {activeTeam.head && (
+                            <MemberCard member={activeTeam.head} index={1} isHead />
+                          )}
+                          {activeTeam.members.map((member, index) => (
+                            <MemberCard key={member.id} member={member} index={index + 2} />
+                          ))}
+                          {!activeTeam.head && activeTeam.members.length === 0 && (
+                            <p className="text-sm text-muted-foreground">
+                              Team roster will be added soon.
                             </p>
                           )}
                         </div>
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                          {(activeTeam.head ? 1 : 0) + activeTeam.members.length} members
-                        </span>
-                      </div>
-                      <div className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                        {activeTeam.head && (
-                          <MemberCard member={activeTeam.head} index={1} isHead />
-                        )}
-                        {activeTeam.members.map((member, index) => (
-                          <MemberCard key={member.id} member={member} index={index + 2} />
-                        ))}
-                        {!activeTeam.head && activeTeam.members.length === 0 && (
-                          <p className="text-sm text-muted-foreground">
-                            Team roster will be added soon.
-                          </p>
-                        )}
-                      </div>
-                    </section>
-                  </SpotlightCard>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                      </section>
+                    </SpotlightCard>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            )}
           </section>
 
           <section className="mt-14 border-t border-hairline pt-8">

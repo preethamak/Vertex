@@ -34,6 +34,10 @@ export const Route = createFileRoute("/member/$slug")({
             property: "og:description",
             content: `${loaderData.member.name} · ${loaderData.member.team ?? "Vertex"} · ${loaderData.member.role}`,
           },
+          ...(loaderData.member.photo
+            ? [{ property: "og:image", content: loaderData.member.photo }]
+            : []),
+          { name: "theme-color", content: "#0c0a09" },
           { property: "og:type", content: "profile" },
           { name: "twitter:card", content: "summary" },
         ]

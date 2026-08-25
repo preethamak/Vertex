@@ -66,7 +66,7 @@ export function MemberCard({
     <Link
       to="/member/$slug"
       params={{ slug: member.slug }}
-      className="group relative flex items-center gap-4 border border-hairline bg-card/40 p-4 transition-colors hover:border-silver/50 hover:bg-card"
+      className="glare-card group relative flex items-center gap-4 border border-hairline bg-card/40 p-4 transition-colors hover:border-silver/50 hover:bg-card"
     >
       <Avatar name={member.name} size={56} photo={member.photo} />
       <div className="min-w-0 flex-1">
@@ -84,6 +84,23 @@ export function MemberCard({
         {member.role && (
           <div className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
             {member.role}
+          </div>
+        )}
+        {member.skills.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {member.skills.slice(0, 3).map((skill) => (
+              <span
+                key={skill}
+                className="rounded border border-hairline px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-muted-foreground"
+              >
+                {skill}
+              </span>
+            ))}
+            {member.skills.length > 3 && (
+              <span className="font-mono text-[9px] uppercase tracking-widest text-silver">
+                +{member.skills.length - 3}
+              </span>
+            )}
           </div>
         )}
       </div>

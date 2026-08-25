@@ -1,4 +1,5 @@
 import {
+  AnimatePresence,
   motion,
   useInView,
   useMotionValue,
@@ -195,5 +196,134 @@ export function Parallax({
     <div ref={ref} className={className}>
       <motion.div style={{ y }}>{children}</motion.div>
     </div>
+  );
+}
+
+/* --- React-Bits-inspired primitives ------------------------------------ */
+
+/** Words blur into focus one by one (reactbits: Blur Text). */
+export function BlurText({
+  text,
+  className = "",
+  delay = 0,
+  stagger = 0.045,
+}: {
+  text: string;
+  className?: string;
+  delay?: number;
+  stagger?: number;
+}) {
+  const reduceMotion = useReducedMotion();
+  const words = text.split(" ");
+  if (reduceMotion) return <span className={className}>{text}</span>;
+  return (
+    <span className={className} aria-label={text}>
+      {words.map((word, index) => (
+        <motion.span
+          key={index}
+          aria-hidden="true"
+          className="inline-block will-change-[filter,transform,opacity]"
+          initial={{ opacity: 0, filter: "blur(10px)", y: 8 }}
+          whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+          viewport={{ once: true, amount: 0.6 }}
+          transition={{ duration: 0.5, delay: delay + index * stagger, ease: "easeOut" }}
+        >
+          {word}
+          {index < words.length - 1 ? "\u00A0" : ""}
+        </motion.span>
+      ))}
+    </span>
+  );
+}
+
+/** Shimmer sweep across text (reactbits: Shiny Text). */
+export function ShinyText({
+  text,
+  className = "",
+  speed = 4,
+}: {
+  text: string;
+  className?: string;
+  speed?: number;
+}) {
+  return (
+    <span
+      className={`shiny-text ${className}`}
+      style={{ ["--shiny-speed" as string]: `${speed}s` }}
+    >
+      {text}
+    </span>
+  );
+}
+
+/** 3D tilt that follows the cursor (reactbits: Tilted Card). */
+export function TiltCard({
+  children,
+  className = "",
+  maxTilt = 7,
+}: {
+  children: ReactNode;
+  className?: string;
+  maxTilt?: number;
+}) {
+  const reduceMotion = useReducedMotion();
+  const rx = useSpring(useMotionValue(0), { stiffness: 180, damping: 16 });
+  const ry = useSpring(useMotionValue(0), { stiffness: 180, damping: 16 });
+  if (reduceMotion) return <div className={className}>{children}</div>;
+  return (
+    <motion.div
+      className={`[transform-style:preserve-3d] ${className}`}
+      style={{ rotateX: rx, rotateY: ry, perspective: 900 }}
+      onMouseMove={(event) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const px = (event.clientX - rect.left) / rect.width - 0.5;
+        const py = (event.clientY - rect.top) / rect.height - 0.5;
+        ry.set(px * maxTilt * 2);
+        rx.set(-py * maxTilt * 2);
+      }}
+      onMouseLeave={() => {
+        rx.set(0);
+        ry.set(0);
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/** A word that cycles through a list (reactbits: Rotating Text). */
+export function RotatingText({
+  words,
+  className = "",
+  interval = 2200,
+}: {
+  words: string[];
+  className?: string;
+  interval?: number;
+}) {
+  const reduceMotion = useReducedMotion();
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    if (reduceMotion || words.length < 2) return;
+    const timer = setInterval(() => setIndex((i) => (i + 1) % words.length), interval);
+    return () => clearInterval(timer);
+  }, [reduceMotion, words.length, interval]);
+  const word = words[index] ?? "";
+  return (
+    <span className={`relative inline-block ${className}`} aria-label={word}>
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={word}
+          aria-hidden="true"
+          className="inline-block"
+          initial={reduceMotion ? false : { opacity: 0, y: "60%" }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={reduceMotion ? undefined : { opacity: 0, y: "-60%" }}
+          transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {word}
+        </motion.span>
+      </AnimatePresence>
+    </span>
   );
 }

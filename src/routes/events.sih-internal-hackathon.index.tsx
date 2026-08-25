@@ -8,6 +8,7 @@ import { Atmosphere } from "@/components/Atmosphere";
 import { Reveal } from "@/components/Reveal";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import { getHackathon, registerHackathonTeam } from "@/lib/hackathon.functions";
+import { CountUp, ShinyText, TiltCard } from "@/components/motion-kit";
 import { loadPass, mergePass, setTeamKey, type ParticipantPass } from "@/lib/participant";
 import {
   SIH_2026_GUIDELINES_URL,
@@ -484,7 +485,7 @@ function TabbedWorkspace({
     id: string;
     name: string;
     status: string;
-    members: { name: string }[];
+    members: { name: string; branch: string | null; year: string | null; isLead: boolean }[];
   }[];
 }) {
   const [tab, setTab] = useState<TabId>("updates");
@@ -943,36 +944,172 @@ function ThemesTab({ counts }: { counts: Map<string, number> }) {
   );
 }
 
+const STATUS_STYLES: Record<string, string> = {
+  registered: "border-hairline text-muted-foreground",
+  in_review: "border-sky-300/40 text-sky-300",
+  shortlisted: "border-amber-300/50 text-amber-300",
+  selected: "border-emerald-300/50 text-emerald-300",
+  waitlisted: "border-purple-300/40 text-purple-300",
+  rejected: "border-red-400/40 text-red-300",
+  withdrawn: "border-hairline text-muted-foreground line-through",
+};
+
 function TeamsTab({
   roster,
 }: {
-  roster: { id: string; name: string; status: string; members: { name: string }[] }[];
+  roster: {
+    id: string;
+    name: string;
+    status: string;
+    members: { name: string; branch: string | null; year: string | null; isLead: boolean }[];
+  }[];
 }) {
-  if (roster.length === 0) {
-    return (
-      <div className="glass-panel rounded-2xl p-8 text-center">
-        <p className="font-display text-2xl">No teams registered yet.</p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Be the first — hit “Register your team” above.
-        </p>
-      </div>
-    );
-  }
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("");
+
+  const filtered = roster.filter((team) => {
+    if (status && team.status !== status) return false;
+    if (query) {
+      const haystack = `${team.name} ${team.members.map((m) => m.name).join(" ")}`.toLowerCase();
+      if (!haystack.includes(query.toLowerCase())) return false;
+    }
+    return true;
+  });
+
+  const totalStudents = roster.reduce((sum, team) => sum + team.members.length, 0);
+  const fullTeams = roster.filter((team) => team.members.length >= 6).length;
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {roster.map((team) => (
-        <article key={team.id} className="surface-card rounded-2xl p-5">
-          <div className="flex justify-between gap-3">
-            <h3 className="font-display text-xl">{team.name}</h3>
-            <span className="font-mono text-[9px] uppercase tracking-widest text-silver">
-              {team.status}
-            </span>
+    <div>
+      {roster.length > 0 && (
+        <div className="grid max-w-3xl grid-cols-3 gap-px border border-hairline bg-hairline">
+          <div className="bg-background p-4">
+            <div className="font-display text-3xl tracking-tight">
+              <CountUp to={roster.length} />
+            </div>
+            <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
+              Teams
+            </div>
           </div>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {team.members.map((member) => member.name).join(" · ")}
+          <div className="bg-background p-4">
+            <div className="font-display text-3xl tracking-tight">
+              <CountUp to={totalStudents} />
+            </div>
+            <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
+              Students
+            </div>
+          </div>
+          <div className="bg-background p-4">
+            <div className="font-display text-3xl tracking-tight">
+              <CountUp to={fullTeams} suffix="/6" />
+            </div>
+            <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
+              Full rosters
+            </div>
+          </div>
+        </div>
+      )}
+
+      {roster.length > 3 && (
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Find a team or teammate…"
+            className="field-input min-w-[220px] flex-1 rounded-lg px-3 py-2 text-sm"
+          />
+          <select
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+            className="field-input rounded-lg px-3 py-2 text-sm"
+          >
+            <option value="">All statuses</option>
+            {["registered", "in_review", "shortlisted", "selected", "waitlisted"].map((option) => (
+              <option key={option} value={option}>
+                {option.replaceAll("_", " ")}
+              </option>
+            ))}
+          </select>
+          <ShinyText
+            text={`${filtered.length} shown`}
+            className="font-mono text-[10px] uppercase tracking-widest"
+          />
+        </div>
+      )}
+
+      {filtered.length > 0 ? (
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((team) => (
+            <Reveal key={team.id}>
+              <TiltCard>
+                <article className="glare-card surface-card flex h-full flex-col rounded-2xl p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="font-display text-xl leading-tight">{team.name}</h3>
+                    <span
+                      className={`shrink-0 rounded-md border px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest ${
+                        STATUS_STYLES[team.status] ?? STATUS_STYLES.registered
+                      }`}
+                    >
+                      {team.status.replaceAll("_", " ")}
+                    </span>
+                  </div>
+
+                  {/* Roster slots */}
+                  <div className="mt-4 flex items-center gap-1.5">
+                    {Array.from({ length: 6 }).map((_, slot) => {
+                      const member = team.members[slot];
+                      return (
+                        <span
+                          key={slot}
+                          title={member ? member.name : "Open slot"}
+                          className={`flex h-7 w-7 items-center justify-center rounded-full border font-mono text-[9px] ${
+                            member
+                              ? member.isLead
+                                ? "border-accent/60 bg-accent/10 text-accent"
+                                : "border-hairline bg-surface-2 text-muted-foreground"
+                              : "border-dashed border-hairline text-transparent"
+                          }`}
+                        >
+                          {member
+                            ? member.name
+                                .split(" ")
+                                .map((part) => part[0])
+                                .join("")
+                                .slice(0, 2)
+                                .toUpperCase()
+                            : "+"}
+                        </span>
+                      );
+                    })}
+                    <span className="ml-1 font-mono text-[10px] tracking-widest text-muted-foreground">
+                      {team.members.length}/6
+                    </span>
+                  </div>
+
+                  <div className="mt-4 border-t border-hairline pt-3">
+                    <p className="text-sm leading-6 text-muted-foreground">
+                      {team.members
+                        .map((member) => `${member.name}${member.isLead ? " · lead" : ""}`)
+                        .join(" · ")}
+                    </p>
+                  </div>
+                </article>
+              </TiltCard>
+            </Reveal>
+          ))}
+        </div>
+      ) : (
+        <div className="glass-panel mt-6 rounded-2xl p-8 text-center">
+          <p className="font-display text-2xl">
+            {roster.length === 0 ? "No teams registered yet." : "No teams match that search."}
           </p>
-        </article>
-      ))}
+          <p className="mt-2 text-sm text-muted-foreground">
+            {roster.length === 0
+              ? "Be the first — hit “Register your team” above."
+              : "Try a different name or clear the status filter."}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

@@ -418,3 +418,64 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* --- react-bits-inspired ------------------------------------------------ */
+
+@keyframes shiny-sweep {
+  0% {
+    background-position: 150% center;
+  }
+  100% {
+    background-position: -50% center;
+  }
+}
+
+.shiny-text {
+  color: color-mix(in oklab, currentColor 55%, transparent);
+  background: linear-gradient(
+    120deg,
+    transparent 35%,
+    currentColor 50%,
+    transparent 65%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shiny-sweep var(--shiny-speed, 4s) linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shiny-text {
+    animation: none;
+    background: none;
+    color: inherit;
+  }
+}
+
+/* Glare hover: a light sweep across cards (reactbits: Glare Hover). */
+.glare-card {
+  position: relative;
+  overflow: hidden;
+}
+.glare-card::after {
+  content: "";
+  position: absolute;
+  inset: -60% -20%;
+  background: linear-gradient(
+    105deg,
+    transparent 42%,
+    color-mix(in oklab, white 26%, transparent) 50%,
+    transparent 58%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.glare-card:hover::after {
+  transform: translateX(120%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .glare-card::after {
+    display: none;
+  }
+}
