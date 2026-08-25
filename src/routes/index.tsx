@@ -154,7 +154,7 @@ function Home() {
                     <img
                       src="/sih-2026-logo.png"
                       alt="Smart India Hackathon 2026 — Ministry of Education, AICTE, MoE's Innovation Cell"
-                      className="w-full max-w-[210px]"
+                      className="w-full"
                       loading="lazy"
                     />
                   </div>
