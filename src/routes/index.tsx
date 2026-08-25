@@ -147,16 +147,17 @@ function Home() {
                 >
                   <div className="relative min-h-52 overflow-hidden border-b border-hairline p-6 md:border-b-0 md:border-r">
                     <div className="grid-backdrop absolute inset-0 opacity-60" />
-                    <div className="relative flex h-full flex-col justify-between">
-                      <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-silver">
-                        Now building
-                      </span>
-                      <span className="font-display text-5xl tracking-[-0.06em] text-foreground">
-                        SIH
-                        <span className="text-accent">·</span>
-                        26
-                      </span>
-                    </div>
+                  <div className="relative flex h-full flex-col justify-between">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-silver">
+                      Now building
+                    </span>
+                    <img
+                      src="/sih-2026-logo.png"
+                      alt="Smart India Hackathon 2026 — Ministry of Education, AICTE, MoE's Innovation Cell"
+                      className="w-full max-w-[210px]"
+                      loading="lazy"
+                    />
+                  </div>
                   </div>
                   <div className="flex flex-col justify-between p-6 md:p-9">
                     <div>
