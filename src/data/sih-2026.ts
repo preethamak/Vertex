@@ -36,3 +36,16 @@ export const SIH_2026_RULES = [
 export const SIH_2026_SOURCE_URL = "https://www.sih.gov.in/";
 export const SIH_2026_GUIDELINES_URL =
   "https://www.sih.gov.in/letters/2026/SIH%202026%20Guidelines.pdf";
+
+// SIH Internal Hackathon — REVA 2026 (external Microsoft Form registration)
+// Keep this flag for other hackathons: set to "internal" to restore in-site registration + judges/mentors.
+export const SIH_REGISTRATION_MODE: "external" | "internal" = "external";
+export const SIH_2026_FORM_URL = "https://forms.cloud.microsoft/r/wJFucRCzkd";
+export const SIH_2026_INTERNAL_DATES = "9th & 10th September 2026 (Wed & Thu)";
+export const SIH_2026_INTERNAL_TIME = "8:30 AM – 4:30 PM";
+export const SIH_2026_INTERNAL_VENUE =
+  "REVA Rangasthala, Swami Vivekananda Block & Amphi Theatre, C V Raman Block";
+export const SIH_2026_REGISTRATION_DEADLINE = "7th September 2026";
+export const SIH_2026_CONTACT_NAME = "Prof. Kiran M";
+export const SIH_2026_CONTACT_ROLE = "SPOC, REVA University — SIH 2026";
+export const SIH_2026_CONTACT_PHONE = "9035505082";

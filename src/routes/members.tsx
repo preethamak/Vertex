@@ -64,10 +64,53 @@ function MembersPage() {
         </section>
 
         <div className="mx-auto max-w-6xl px-6 py-14 md:py-20">
+          <section>
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] font-semibold text-muted-foreground">
+              Faculty Coordinator
+            </p>
+            <div className="mt-4">
+              <Reveal>
+                <SpotlightCard>
+                  <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:gap-6">
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-foreground text-background font-mono text-lg font-bold">
+                      KM
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.2em] font-semibold text-silver">
+                        REVA University · School of CSE
+                      </p>
+                      <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight text-foreground">
+                        Prof. Kiran M
+                      </h2>
+                      <p className="mt-1 font-mono text-[11px] font-semibold uppercase tracking-widest text-foreground/80">
+                        Head of Department, Artificial Intelligence &amp; Data Science
+                      </p>
+                      <p className="text-sm font-medium leading-6 text-muted-foreground">
+                        School of Computer Science and Engineering
+                      </p>
+                      <p className="mt-3 max-w-2xl text-[13px] font-medium leading-6 text-foreground">
+                        Faculty Coordinator for Vertex Technical Club — mentoring student leadership,
+                        guiding technical initiatives, workshops and community events.
+                      </p>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface-2 px-3 py-1.5 font-mono text-[11px] font-bold tracking-widest text-foreground">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" /> 9035505082
+                        </span>
+                        <span className="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface-2 px-3 py-1.5 font-mono text-[11px] font-semibold tracking-widest text-muted-foreground">
+                          Vertex Faculty Coordinator
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </SpotlightCard>
+              </Reveal>
+            </div>
+          </section>
+
           {directory.leadership.length > 0 && (
-            <section>
-              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                Leadership
+            <section className="mt-14">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] font-semibold text-muted-foreground">
+                Student Leadership
               </p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {directory.leadership.map((member, index) => (

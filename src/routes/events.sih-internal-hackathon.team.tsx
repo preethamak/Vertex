@@ -25,6 +25,13 @@ import {
   uploadHackathonDeck,
   updateHackathonTeam,
 } from "@/lib/hackathon.functions";
+import {
+  SIH_2026_CONTACT_NAME,
+  SIH_2026_CONTACT_PHONE,
+  SIH_2026_FORM_URL,
+  SIH_2026_REGISTRATION_DEADLINE,
+  SIH_REGISTRATION_MODE,
+} from "@/data/sih-2026";
 
 export const Route = createFileRoute("/events/sih-internal-hackathon/team")({
   component: TeamConsole,
@@ -87,13 +94,36 @@ function TeamConsole() {
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-6 py-16">
-        <Link
-          to="/events/sih-internal-hackathon"
-          className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft size={14} /> SIH workspace
-        </Link>
-        <div className="mt-10 grid gap-8 lg:grid-cols-[320px_1fr]">
+          <Link
+            to="/events/sih-internal-hackathon"
+            className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft size={14} /> SIH workspace
+          </Link>
+          {SIH_REGISTRATION_MODE === "external" && (
+            <div className="mt-6 rounded-xl border border-amber-300/30 bg-amber-300/10 p-4">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-amber-200">
+                SIH 2026 — registration external
+              </p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                For this SIH Internal Hackathon, team registration and updates are handled on the
+                official Microsoft Form (deadline {SIH_2026_REGISTRATION_DEADLINE}). This console is kept
+                for other hackathons and will show no SIH teams.
+              </p>
+              <a
+                href={SIH_2026_FORM_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-primary mt-3 inline-flex rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest"
+              >
+                Open Microsoft Form
+              </a>
+              <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                {SIH_2026_CONTACT_NAME} · {SIH_2026_CONTACT_PHONE}
+              </p>
+            </div>
+          )}
+          <div className="mt-10 grid gap-8 lg:grid-cols-[320px_1fr]">
           <aside className="glass-panel h-fit rounded-2xl p-6">
             <KeyRound className="text-silver" size={21} />
             <h1 className="mt-4 font-display text-3xl">Team console</h1>
@@ -535,14 +565,23 @@ function RosterEditor({
         <div className="mt-6 space-y-4">
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Team name" value={name} onChange={setName} />
-            <Field label="Mentor name (optional)" value={mentorName} onChange={setMentorName} />
-            <Field
-              label="Mentor email (optional)"
-              value={mentorEmail}
-              onChange={setMentorEmail}
-              type="email"
-            />
+            {SIH_REGISTRATION_MODE === "internal" && (
+              <>
+                <Field label="Mentor name (optional)" value={mentorName} onChange={setMentorName} />
+                <Field
+                  label="Mentor email (optional)"
+                  value={mentorEmail}
+                  onChange={setMentorEmail}
+                  type="email"
+                />
+              </>
+            )}
           </div>
+          {SIH_REGISTRATION_MODE === "external" && (
+            <p className="rounded-lg border border-hairline bg-surface-2 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              Mentors are not collected on this site for SIH 2026 — handled via the official process.
+            </p>
+          )}
           {members.map((member, index) => (
             <div key={index} className="rounded-xl border border-hairline p-4">
               <div className="mb-3 flex items-center justify-between">

@@ -11,10 +11,18 @@ import { getHackathon, registerHackathonTeam } from "@/lib/hackathon.functions";
 import { CountUp, ShinyText, TiltCard } from "@/components/motion-kit";
 import { loadPass, mergePass, setTeamKey, type ParticipantPass } from "@/lib/participant";
 import {
+  SIH_2026_CONTACT_NAME,
+  SIH_2026_CONTACT_PHONE,
+  SIH_2026_FORM_URL,
   SIH_2026_GUIDELINES_URL,
+  SIH_2026_INTERNAL_DATES,
+  SIH_2026_INTERNAL_TIME,
+  SIH_2026_INTERNAL_VENUE,
+  SIH_2026_REGISTRATION_DEADLINE,
   SIH_2026_RULES,
   SIH_2026_SOURCE_URL,
   SIH_2026_THEME_NAMES,
+  SIH_REGISTRATION_MODE,
 } from "@/data/sih-2026";
 
 export const Route = createFileRoute("/events/sih-internal-hackathon/")({
@@ -67,12 +75,19 @@ function HackathonPage() {
               />
               {registrationOpen ? "Registration open" : "Registration status pending"}
             </div>
-            <img
-              src="/sih-2026-logo.png"
-              alt="Smart India Hackathon 2026 — Ministry of Education, AICTE, MoE's Innovation Cell"
-              className="mt-8 w-full max-w-md"
-              loading="eager"
-            />
+            <picture>
+              <source srcSet="/sih-2026-logo-480.webp 480w, /sih-2026-logo-720.webp 720w, /sih-2026-logo.png 1200w" type="image/webp" />
+              <img
+                src="/sih-2026-logo.png"
+                alt="Smart India Hackathon 2026 — Ministry of Education, AICTE, MoE's Innovation Cell"
+                width={480}
+                height={52}
+                className="mt-8 h-auto w-full max-w-md"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
+              />
+            </picture>
             <div className="mt-8 grid gap-10 lg:grid-cols-[1.35fr_.65fr] lg:items-end">
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.28em] text-muted-foreground">
@@ -84,11 +99,21 @@ function HackathonPage() {
                   Hackathon.
                 </h1>
                 <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-                  Form your team, choose an official problem statement, build the idea, and submit
-                  it through one controlled workspace.
+                  {SIH_REGISTRATION_MODE === "external"
+                    ? `Register via the official Microsoft Form by ${SIH_2026_REGISTRATION_DEADLINE}. Explore the statements and themes below — then submit your team on the Form.`
+                    : "Form your team, choose an official problem statement, build the idea, and submit it through one controlled workspace."}
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
-                  {registrationOpen ? (
+                  {SIH_REGISTRATION_MODE === "external" ? (
+                    <a
+                      href={SIH_2026_FORM_URL}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-primary rounded-lg px-5 py-3 font-mono text-[11px] uppercase tracking-widest"
+                    >
+                      Register on Microsoft Forms <ArrowRight size={15} />
+                    </a>
+                  ) : registrationOpen ? (
                     <button
                       onClick={() => setRegistering(true)}
                       className="btn-primary rounded-lg px-5 py-3 font-mono text-[11px] uppercase tracking-widest"
@@ -107,6 +132,11 @@ function HackathonPage() {
                     Browse statements
                   </a>
                 </div>
+                {SIH_REGISTRATION_MODE === "external" && (
+                  <p className="mt-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Deadline: {SIH_2026_REGISTRATION_DEADLINE} · Contact: {SIH_2026_CONTACT_NAME} — {SIH_2026_CONTACT_PHONE}
+                  </p>
+                )}
               </div>
               <div className="glass-panel edge-highlight rounded-2xl p-6">
                 <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
@@ -114,8 +144,20 @@ function HackathonPage() {
                 </div>
                 <dl className="mt-5 grid gap-4 text-sm">
                   <div className="flex justify-between gap-6">
-                    <dt className="text-muted-foreground">Location</dt>
-                    <dd className="text-right">{event.location}</dd>
+                    <dt className="text-muted-foreground">Dates</dt>
+                    <dd className="text-right">{SIH_2026_INTERNAL_DATES}</dd>
+                  </div>
+                  <div className="flex justify-between gap-6">
+                    <dt className="text-muted-foreground">Time</dt>
+                    <dd className="text-right">{SIH_2026_INTERNAL_TIME}</dd>
+                  </div>
+                  <div className="flex justify-between gap-6">
+                    <dt className="text-muted-foreground">Venue</dt>
+                    <dd className="max-w-[170px] text-right text-xs leading-4">{SIH_2026_INTERNAL_VENUE}</dd>
+                  </div>
+                  <div className="flex justify-between gap-6">
+                    <dt className="text-muted-foreground">Deadline</dt>
+                    <dd className="text-right font-mono text-xs">{SIH_2026_REGISTRATION_DEADLINE}</dd>
                   </div>
                   <div className="flex justify-between gap-6">
                     <dt className="text-muted-foreground">Team size</dt>
@@ -131,13 +173,57 @@ function HackathonPage() {
                     <dt className="text-muted-foreground">Problem statements</dt>
                     <dd>{statements.length || "Being verified"}</dd>
                   </div>
+                  <div className="flex justify-between gap-6">
+                    <dt className="text-muted-foreground">Contact</dt>
+                    <dd className="text-right text-xs">{SIH_2026_CONTACT_NAME} — {SIH_2026_CONTACT_PHONE}</dd>
+                  </div>
                 </dl>
+                {SIH_REGISTRATION_MODE === "external" && (
+                  <a
+                    href={SIH_2026_FORM_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-primary mt-5 w-full justify-center rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest"
+                  >
+                    Open registration form <ArrowRight size={14} />
+                  </a>
+                )}
               </div>
             </div>
           </div>
         </section>
 
-        {registering && workspace && (
+        {SIH_REGISTRATION_MODE === "external" && (
+          <section className="border-y border-hairline bg-surface-2">
+            <div className="mx-auto max-w-6xl px-6 py-8">
+              <div className="glass-panel flex flex-col gap-4 rounded-2xl p-6 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-silver">
+                    SIH 2026 · Registration
+                  </p>
+                  <h2 className="mt-2 font-display text-2xl">Registration is on Microsoft Forms.</h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                    This site now shows the official problem statements, themes and updates. To register
+                    your team for the REVA internal hackathon ({SIH_2026_INTERNAL_DATES}, {SIH_2026_INTERNAL_TIME}), use the official Form. Last date: {SIH_2026_REGISTRATION_DEADLINE}.
+                  </p>
+                </div>
+                <a
+                  href={SIH_2026_FORM_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-primary shrink-0 rounded-lg px-5 py-3 font-mono text-[11px] uppercase tracking-widest"
+                >
+                  Register here — Forms <ArrowRight size={15} />
+                </a>
+              </div>
+              <p className="mt-3 text-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                For queries: {SIH_2026_CONTACT_NAME} · {SIH_2026_CONTACT_PHONE}
+              </p>
+            </div>
+          </section>
+        )}
+
+        {SIH_REGISTRATION_MODE === "internal" && registering && workspace && (
           <Registration statements={statements} onClose={() => setRegistering(false)} />
         )}
 
@@ -451,12 +537,18 @@ function Eyebrow({ number, label, title }: { number: string; label: string; titl
   );
 }
 
-const TABS = [
+const TABS_INTERNAL = [
   { id: "updates", label: "Updates & Rules" },
   { id: "statements", label: "Problem Statements" },
   { id: "themes", label: "Themes" },
   { id: "teams", label: "Teams" },
 ] as const;
+const TABS_EXTERNAL = [
+  { id: "updates", label: "Updates & Rules" },
+  { id: "statements", label: "Problem Statements" },
+  { id: "themes", label: "Themes" },
+] as const;
+const TABS = (SIH_REGISTRATION_MODE === "external" ? TABS_EXTERNAL : TABS_INTERNAL) as typeof TABS_INTERNAL;
 type TabId = (typeof TABS)[number]["id"];
 
 function TabbedWorkspace({
@@ -523,7 +615,7 @@ function TabbedWorkspace({
         {tab === "updates" && <UpdatesTab announcements={announcements} milestones={milestones} />}
         {tab === "statements" && <StatementsTab statements={statements} themes={themes} />}
         {tab === "themes" && <ThemesTab counts={countByTheme(statements)} />}
-        {tab === "teams" && <TeamsTab roster={roster} />}
+        {SIH_REGISTRATION_MODE === "internal" && tab === "teams" && <TeamsTab roster={roster} />}
       </div>
     </section>
   );
@@ -547,27 +639,41 @@ function UpdatesTab({
 }) {
   return (
     <div className="space-y-12">
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        <div className="glass-panel rounded-2xl p-6">
-          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-silver">
+      <div className="grid gap-6 lg:grid-cols-3 items-start">
+        <div className="rounded-2xl border border-hairline bg-card p-6 shadow-sm">
+          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] font-semibold text-silver">
             <Users size={14} /> Faculty coordinator
           </div>
-          <p className="mt-4 font-display text-xl">Kiran M</p>
-          <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            Head of Department, Artificial Intelligence &amp; Data Science
-            <br />
-            School of Computer Science and Engineering
-          </p>
+          <div className="mt-4 flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-foreground text-background font-mono text-sm font-bold">
+              KM
+            </div>
+            <div>
+              <p className="font-display text-[18px] font-semibold leading-tight text-foreground">Prof. Kiran M</p>
+              <p className="mt-1 font-mono text-[10px] font-semibold uppercase tracking-widest text-silver">
+                SPOC — SIH 2026 · REVA University
+              </p>
+              <p className="mt-2 text-[13px] font-medium leading-5 text-foreground">
+                Head of Department, Artificial Intelligence &amp; Data Science
+              </p>
+              <p className="text-[12px] leading-5 text-muted-foreground">
+                School of Computer Science and Engineering
+              </p>
+              <a href="tel:9035505082" className="mt-3 inline-flex items-center gap-2 rounded-full bg-foreground px-3 py-1.5 font-mono text-[11px] font-bold tracking-widest text-background">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> 9035505082
+              </a>
+            </div>
+          </div>
         </div>
         <div className="surface-card rounded-2xl p-6">
-          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-silver">
+          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] font-semibold text-silver">
             <FileText size={14} /> Rules
           </div>
-          <ul className="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
+          <ul className="mt-4 space-y-3 text-[13px] font-medium leading-6 text-foreground">
             {SIH_2026_RULES.map((rule) => (
               <li key={rule} className="flex gap-3">
                 <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-silver" />
-                {rule}
+                <span className="text-foreground">{rule}</span>
               </li>
             ))}
           </ul>
@@ -575,26 +681,54 @@ function UpdatesTab({
             href={SIH_2026_GUIDELINES_URL}
             target="_blank"
             rel="noreferrer"
-            className="btn-ghost mt-5 rounded-lg px-3 py-2 font-mono text-[10px] uppercase tracking-widest"
+            className="btn-ghost mt-5 inline-flex rounded-lg px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-widest"
           >
             Read official SIH guidelines
           </a>
         </div>
-        <div className="glass-panel rounded-2xl p-6">
-          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-silver">
-            <Users size={14} /> Team access
+        {SIH_REGISTRATION_MODE === "external" ? (
+          <div className="rounded-2xl bg-foreground p-6 text-background shadow-lg">
+            <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] font-semibold text-white/70">
+              <Users size={14} /> Registration
+            </div>
+            <p className="mt-3 font-display text-xl font-semibold leading-tight text-white">On Microsoft Forms</p>
+            <p className="mt-2 text-[13px] font-medium leading-6 text-white/80">
+              Register for the REVA internal hackathon via the official Form. Choose your problem statement here, then submit on the Form.
+            </p>
+            <div className="mt-4 grid gap-2 border-y border-white/15 py-3 font-mono text-[11px]">
+              <div className="flex justify-between gap-2"><span className="text-white/60">Deadline</span><span className="font-bold text-white">{SIH_2026_REGISTRATION_DEADLINE}</span></div>
+              <div className="flex justify-between gap-2"><span className="text-white/60">Dates</span><span className="font-bold text-white">{SIH_2026_INTERNAL_DATES}</span></div>
+              <div className="text-white/80 leading-4"><span className="text-white/60">Venue</span> <span className="font-medium text-white">{SIH_2026_INTERNAL_VENUE}</span></div>
+            </div>
+            <a
+              href={SIH_2026_FORM_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 inline-flex w-full justify-center rounded-lg bg-white px-4 py-3 font-mono text-[11px] font-bold uppercase tracking-widest text-foreground hover:bg-white/90"
+            >
+              Open Form <ArrowRight size={14} />
+            </a>
+            <p className="mt-3 text-center font-mono text-[10px] font-semibold uppercase tracking-widest text-white/60">
+              Queries: {SIH_2026_CONTACT_NAME} · {SIH_2026_CONTACT_PHONE}
+            </p>
           </div>
-          <p className="mt-4 text-sm leading-7 text-muted-foreground">
-            Already registered? Open the private team console with the team key you saved at
-            registration — invites, roster, and submissions live there.
-          </p>
-          <Link
-            to="/events/sih-internal-hackathon/team"
-            className="btn-ghost mt-5 rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest"
-          >
-            Open team console <ArrowRight size={14} />
-          </Link>
-        </div>
+        ) : (
+          <div className="rounded-2xl border border-hairline bg-card p-6 shadow-sm">
+            <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] font-semibold text-silver">
+              <Users size={14} /> Team access
+            </div>
+            <p className="mt-4 text-[13px] font-medium leading-7 text-foreground">
+              Already registered? Open the private team console with the team key you saved at
+              registration — invites, roster, and submissions live there.
+            </p>
+            <Link
+              to="/events/sih-internal-hackathon/team"
+              className="btn-ghost mt-5 inline-flex rounded-lg px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-widest"
+            >
+              Open team console <ArrowRight size={14} />
+            </Link>
+          </div>
+        )}
       </div>
       {(announcements.length > 0 || milestones.length > 0) && (
         <div className="grid gap-8 lg:grid-cols-2">
@@ -909,14 +1043,26 @@ function StatementModal({
             Full description available on the official SIH portal.
           </p>
         )}
-        <a
-          href={`https://sih.gov.in/sih2026PS`}
-          target="_blank"
-          rel="noreferrer"
-          className="btn-ghost mt-6 inline-block rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest"
-        >
-          Verify on sih.gov.in
-        </a>
+        <div className="mt-6 flex flex-wrap gap-2">
+          <a
+            href={`https://sih.gov.in/sih2026PS`}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-ghost rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest"
+          >
+            Verify on sih.gov.in
+          </a>
+          <button
+            onClick={() =>
+              navigator.clipboard
+                .writeText(`${statement.code} — ${statement.title}${statement.org ? ` — ${statement.org}` : ""} — https://sih.gov.in/sih2026PS`)
+                .then(() => toast.success("Statement copied."))
+            }
+            className="rounded-lg border border-hairline bg-card px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:border-silver hover:text-foreground"
+          >
+            Copy link
+          </button>
+        </div>
       </div>
     </div>
   );

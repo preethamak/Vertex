@@ -7,6 +7,13 @@ import { Atmosphere } from "@/components/Atmosphere";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import { joinHackathonTeam, previewJoinCode } from "@/lib/hackathon.functions";
 import { loadPass, mergePass, setMemberKey, type ParticipantPass } from "@/lib/participant";
+import {
+  SIH_2026_CONTACT_NAME,
+  SIH_2026_CONTACT_PHONE,
+  SIH_2026_FORM_URL,
+  SIH_2026_REGISTRATION_DEADLINE,
+  SIH_REGISTRATION_MODE,
+} from "@/data/sih-2026";
 
 export const Route = createFileRoute("/events/sih-internal-hackathon/join")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -111,6 +118,29 @@ function JoinPage() {
               </div>
             ) : (
               <>
+                {SIH_REGISTRATION_MODE === "external" && (
+                  <div className="mb-6 rounded-xl border border-amber-300/30 bg-amber-300/10 p-4">
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-amber-200">
+                      SIH 2026 — join via official Form
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      For this SIH edition, team formation is via the official Microsoft Form
+                      (deadline {SIH_2026_REGISTRATION_DEADLINE}). This invite page is kept for other
+                      hackathons.
+                    </p>
+                    <a
+                      href={SIH_2026_FORM_URL}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-primary mt-3 inline-flex rounded-lg px-4 py-2 font-mono text-[10px] uppercase tracking-widest"
+                    >
+                      Open Microsoft Form
+                    </a>
+                    <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                      {SIH_2026_CONTACT_NAME} · {SIH_2026_CONTACT_PHONE}
+                    </p>
+                  </div>
+                )}
                 <p className="font-mono text-[10px] uppercase tracking-[0.26em] text-muted-foreground">
                   Team invite
                 </p>
