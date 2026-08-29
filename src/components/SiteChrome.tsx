@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion, useScroll } from "motion/react";
-import { Github, Instagram, Linkedin, Menu, X } from "lucide-react";
+import { Instagram, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { VertexLogo } from "@/components/VertexLogo";
 import { ScrollProgress } from "@/components/motion-kit";
@@ -188,12 +188,6 @@ export function SiteHeader() {
 }
 
 const socials = [
-  {
-    label: "LinkedIn",
-    href: "https://www.linkedin.com/company/vertex-technical-club",
-    Icon: Linkedin,
-  },
-  { label: "GitHub", href: "https://github.com/vertex-technical-club", Icon: Github },
   { label: "Instagram", href: "https://www.instagram.com/vertex.technical.club", Icon: Instagram },
 ];
 

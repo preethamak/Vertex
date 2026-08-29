@@ -59,21 +59,16 @@ function Home() {
                   Technical Club
                 </span>
               </motion.div>
-              <h1 className="mt-10 max-w-5xl font-display text-6xl font-semibold leading-[0.95] tracking-[-0.035em] sm:text-8xl lg:text-[8rem]">
+              <h1 className="mt-10 max-w-5xl font-display text-6xl font-semibold leading-[0.95] tracking-[-0.055em] sm:text-8xl lg:text-[8rem]">
                 <KineticHeading text="Vertex" delay={0.15} />
-                <motion.span
-                  className="text-accent"
-                  initial={{ opacity: 0, scale: 0.4 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.65, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  .
-                </motion.span>
               </h1>
+              <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.28em] text-silver">
+                Technical Club · REVA University
+              </p>
               <KineticHeading
                 delay={0.5}
                 stagger={0.035}
-                className="mt-7 block max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
+                className="mt-6 block max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
                 text="A place to learn seriously, make useful things, and find people who care about the work."
               />
               <motion.div
@@ -127,9 +122,8 @@ function Home() {
             <Reveal delay={0.35} className="mt-12">
               <div className="flex max-w-3xl flex-wrap gap-x-10 gap-y-4 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
                 <Stat value={30} suffix="+" label="Active members" />
-                <Stat value={188} suffix="" label="SIH problem statements" />
-                <Stat value={18} suffix="" label="Official themes" />
                 <Stat value={5} suffix="" label="Core teams" />
+                <Stat value={2026} suffix="" label="Established" />
               </div>
             </Reveal>
           </div>
@@ -148,32 +142,42 @@ function Home() {
                   <div className="relative min-h-52 overflow-hidden border-b border-hairline p-6 md:border-b-0 md:border-r">
                     <div className="grid-backdrop absolute inset-0 opacity-60" />
                     <div className="relative flex h-full flex-col justify-between">
-                      <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-silver">
-                        Now building
+                      <span className="font-mono text-[10px] uppercase tracking-[0.25em] font-semibold text-silver">
+                        Featured · Hosted by Vertex
                       </span>
-                      <img
-                        src="/sih-2026-logo.png"
-                        alt="Smart India Hackathon 2026 — Ministry of Education, AICTE, MoE's Innovation Cell"
-                        className="w-full"
-                        loading="lazy"
-                      />
+                      <picture>
+                        <source srcSet="/sih-2026-logo-480.webp 480w, /sih-2026-logo-720.webp 720w" type="image/webp" />
+                        <img
+                          src="/sih-2026-logo.png"
+                          alt="Smart India Hackathon 2026 — Ministry of Education, AICTE, MoE's Innovation Cell"
+                          width={480}
+                          height={52}
+                          className="h-auto w-full"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </picture>
                     </div>
                   </div>
                   <div className="flex flex-col justify-between p-6 md:p-9">
                     <div>
-                      <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-                        Internal Hackathon
+                      <p className="font-mono text-[10px] uppercase tracking-[0.25em] font-semibold text-silver">
+                        9–10 September 2026 · REVA Rangasthala
                       </p>
-                      <h2 className="mt-4 font-display text-3xl tracking-tight md:text-4xl">
-                        {sih.title}
+                      <h2 className="mt-3 font-display text-3xl tracking-tight md:text-4xl">
+                        SIH Internal Hackathon 2026
                       </h2>
-                      <p className="mt-4 max-w-xl text-sm leading-7 text-muted-foreground">
-                        188 official problem statements are live. Register as a lead, invite your
-                        five, and build — all in one workspace.
+                      <p className="mt-4 max-w-xl text-[13px] font-medium leading-7 text-foreground">
+                        Vertex is hosting REVA’s internal selection for Smart India Hackathon 2026.
+                        Explore official problem statements and themes here — then register your team
+                        via the official Microsoft Form.
+                      </p>
+                      <p className="mt-2 font-mono text-[11px] font-semibold tracking-widest text-muted-foreground">
+                        Deadline: 7 Sept · SPOC: Prof. Kiran M — 9035505082
                       </p>
                     </div>
-                    <span className="mt-8 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-silver">
-                      Open workspace{" "}
+                    <span className="mt-8 inline-flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-silver">
+                      Open SIH workspace{" "}
                       <ArrowUpRight
                         size={15}
                         className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
