@@ -138,7 +138,7 @@ export function SiteHeader() {
 }
 
 const socials = [
-  { label: "Instagram", href: "https://www.instagram.com/vertex.technical.club", Icon: Instagram },
+  { label: "Instagram", href: "https://www.instagram.com/vertex.reva/", Icon: Instagram },
 ];
 
 export function SiteFooter() {

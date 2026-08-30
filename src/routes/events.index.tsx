@@ -101,7 +101,7 @@ function EventsPage() {
                         to="/events/sih-internal-hackathon"
                         className="btn-primary rounded-lg px-4 py-2 font-mono text-[11px] uppercase tracking-widest"
                       >
-                        Open SIH workspace →
+                        View details →
                       </Link>
                     ) : (
                       <button
