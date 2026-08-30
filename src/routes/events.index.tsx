@@ -5,6 +5,14 @@ import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { SiteHeader, SiteFooter } from "@/components/SiteChrome";
 import { getEvents, registerForEvent } from "@/lib/club.functions";
+import {
+  SIH_2026_INTERNAL_DATES,
+  SIH_2026_INTERNAL_TIME,
+  SIH_2026_INTERNAL_VENUE,
+  SIH_2026_REGISTRATION_DEADLINE,
+  SIH_2026_CONTACT_NAME,
+  SIH_2026_CONTACT_PHONE,
+} from "@/data/sih-2026";
 
 export const Route = createFileRoute("/events/")({
   loader: () => getEvents(),
@@ -61,12 +69,66 @@ function EventsPage() {
 
           <div className="mt-14 flex flex-col gap-px border border-hairline bg-hairline">
             {events.map((e) => {
+              const isSih = e.slug === "sih-internal-hackathon";
               const d = e.event_date ? new Date(e.event_date) : null;
-              const day = d ? d.toLocaleDateString("en-US", { day: "2-digit" }) : "--";
-              const mon = d
-                ? d.toLocaleDateString("en-US", { month: "short" }).toUpperCase()
-                : "TBA";
+              const day = isSih ? "09" : d ? d.toLocaleDateString("en-US", { day: "2-digit" }) : "--";
+              const mon = isSih
+                ? "SEP"
+                : d
+                  ? d.toLocaleDateString("en-US", { month: "short" }).toUpperCase()
+                  : "TBA";
               const open = openSlug === e.slug;
+
+              if (isSih) {
+                return (
+                  <article key={e.id} className="bg-background p-6">
+                    <div className="flex flex-wrap items-start gap-6">
+                      <div className="flex w-20 shrink-0 flex-col items-center border border-hairline p-3">
+                        <div className="font-display text-3xl leading-none">{day}</div>
+                        <div className="mt-1 font-mono text-[10px] tracking-widest text-silver">{mon}</div>
+                        <div className="mt-2 font-mono text-[10px] text-muted-foreground">2026</div>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                          <span className="border border-hairline px-2 py-0.5 text-silver">{e.tag}</span>
+                          <span>· {SIH_2026_INTERNAL_VENUE}</span>
+                          <span>· {SIH_2026_INTERNAL_TIME}</span>
+                        </div>
+                        <h2 className="mt-2 font-display text-2xl font-semibold leading-tight">
+                          {e.title}
+                        </h2>
+                        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+                          Vertex is hosting REVA's internal selection for Smart India Hackathon 2026.
+                          Explore official problem statements and themes — register your team via the Microsoft Form.
+                        </p>
+                        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px] text-muted-foreground">
+                          <span>Deadline: {SIH_2026_REGISTRATION_DEADLINE}</span>
+                          <span>SPOC: {SIH_2026_CONTACT_NAME} — {SIH_2026_CONTACT_PHONE}</span>
+                        </div>
+                        <picture className="mt-4 block">
+                          <source srcSet="/sih-2026-logo-480.webp 480w, /sih-2026-logo-720.webp 720w" type="image/webp" />
+                          <img
+                            src="/sih-2026-logo.png"
+                            alt="Smart India Hackathon 2026"
+                            width={320}
+                            height={35}
+                            className="h-auto w-64"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </picture>
+                      </div>
+                      <Link
+                        to="/events/sih-internal-hackathon"
+                        className="btn-primary rounded-lg px-4 py-2 font-mono text-[11px] uppercase tracking-widest"
+                      >
+                        View details →
+                      </Link>
+                    </div>
+                  </article>
+                );
+              }
+
               return (
                 <article key={e.id} className="bg-background p-6">
                   <div className="flex flex-wrap items-start gap-6">
@@ -96,21 +158,12 @@ function EventsPage() {
                         </p>
                       )}
                     </div>
-                    {e.slug === "sih-internal-hackathon" ? (
-                      <Link
-                        to="/events/sih-internal-hackathon"
-                        className="btn-primary rounded-lg px-4 py-2 font-mono text-[11px] uppercase tracking-widest"
-                      >
-                        View details →
-                      </Link>
-                    ) : (
-                      <button
-                        onClick={() => setOpenSlug(open ? null : e.slug)}
-                        className="border border-hairline px-4 py-2 font-mono text-[11px] uppercase tracking-widest hover:border-silver"
-                      >
-                        {open ? "Close" : "Register →"}
-                      </button>
-                    )}
+                    <button
+                      onClick={() => setOpenSlug(open ? null : e.slug)}
+                      className="border border-hairline px-4 py-2 font-mono text-[11px] uppercase tracking-widest hover:border-silver"
+                    >
+                      {open ? "Close" : "Register →"}
+                    </button>
                   </div>
 
                   {open && (
