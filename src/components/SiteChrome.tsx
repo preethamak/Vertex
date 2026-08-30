@@ -5,65 +5,6 @@ import { useEffect, useState } from "react";
 import { VertexLogo } from "@/components/VertexLogo";
 import { ScrollProgress } from "@/components/motion-kit";
 
-function AdminGateLink({ onDone, mobile = false }: { onDone?: () => void; mobile?: boolean }) {
-  const [show, setShow] = useState(false);
-  const [value, setValue] = useState("");
-  const [error, setError] = useState("");
-
-  const expected = (import.meta.env.VITE_ADMIN_PASS as string | undefined) ?? "ordinate";
-  const submit = () => {
-    if (value === expected) {
-      sessionStorage.setItem("vertex-admin-ok", "1");
-      setShow(false);
-      setValue("");
-      setError("");
-      onDone?.();
-      window.location.href = "/admin";
-    } else {
-      setError("Wrong password.");
-    }
-  };
-
-  return (
-    <>
-      <button
-        onClick={() => setShow(true)}
-        className={
-          mobile
-            ? "rounded-xl px-4 py-3 text-left hover:bg-black/[0.04] w-full"
-            : "transition-colors hover:text-foreground"
-        }
-      >
-        Admin
-      </button>
-      {show && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={() => setShow(false)}>
-          <div className="w-full max-w-sm rounded-2xl border border-hairline bg-card p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] font-semibold text-silver">Admin access</p>
-            <h3 className="mt-2 font-display text-xl font-semibold">Enter admin password</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Dashboard stays unchanged — this only gates admin tools.</p>
-            <input
-              type="password"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && submit()}
-              placeholder="Password"
-              autoFocus
-              className="field-input mt-4 w-full rounded-lg px-3 py-2.5 text-sm"
-            />
-            {error && <p className="mt-2 text-sm font-medium text-destructive">{error}</p>}
-            <p className="mt-2 font-mono text-[10px] text-muted-foreground">Hint: faculty password — set VITE_ADMIN_PASS to override.</p>
-            <div className="mt-4 flex gap-2">
-              <button onClick={submit} className="btn-primary flex-1 justify-center rounded-lg px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-widest">Unlock</button>
-              <button onClick={() => setShow(false)} className="btn-ghost rounded-lg px-4 py-2.5 font-mono text-[11px] uppercase tracking-widest">Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const { scrollY } = useScroll();
@@ -89,7 +30,6 @@ export function SiteHeader() {
     { label: "Events", to: "/events" as const },
     { label: "Projects", to: "/projects" as const },
     { label: "Feed", to: "/announcements" as const },
-    { label: "Dashboard", to: "/me" as const },
   ];
 
   return (
@@ -108,7 +48,11 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
-          <AdminGateLink />
+          {signedIn && (
+            <Link to="/me" className="transition-colors hover:text-foreground">
+              Dashboard
+            </Link>
+          )}
           <Link to="/join" className="hover:text-foreground">
             Join
           </Link>
@@ -156,9 +100,15 @@ export function SiteHeader() {
                   {item.label}
                 </Link>
               ))}
-              <div className="rounded-xl px-4 py-3 hover:bg-black/[0.04]" onClick={() => setOpen(false)}>
-                <AdminGateLink onDone={() => setOpen(false)} mobile />
-              </div>
+              {signedIn && (
+                <Link
+                  to="/me"
+                  onClick={() => setOpen(false)}
+                  className="rounded-xl px-4 py-3 hover:bg-black/[0.04]"
+                >
+                  Dashboard
+                </Link>
+              )}
               <Link
                 to="/join"
                 onClick={() => setOpen(false)}
