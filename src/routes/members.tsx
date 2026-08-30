@@ -15,7 +15,7 @@ export const Route = createFileRoute("/members")({
   loader: () => getDirectory(),
   head: () => ({
     meta: [
-      { title: "Members — Vertex Technical Club" },
+      { title: "Members — Vertex — The Tech Club" },
       { name: "description", content: "Meet the people building Vertex." },
     ],
   }),
@@ -89,7 +89,7 @@ function MembersPage() {
                         School of Computer Science and Engineering
                       </p>
                       <p className="mt-3 max-w-2xl text-[13px] font-medium leading-6 text-foreground">
-                        Faculty Coordinator for Vertex Technical Club — mentoring student leadership,
+                        Faculty Coordinator for Vertex — the Tech Club at REVA University — mentoring student leadership,
                         guiding technical initiatives, workshops and community events.
                       </p>
                       <div className="mt-4 flex flex-wrap gap-2">

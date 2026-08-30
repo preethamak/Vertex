@@ -18,13 +18,13 @@ export const Route = createFileRoute("/events/")({
   loader: () => getEvents(),
   head: () => ({
     meta: [
-      { title: "Events — Vertex Technical Club" },
+      { title: "Events — Vertex — The Tech Club" },
       {
         name: "description",
         content:
           "Hackathons, workshops, launch nights, and mixers run by Vertex. Register and get a scannable entry pass.",
       },
-      { property: "og:title", content: "Events — Vertex Technical Club" },
+      { property: "og:title", content: "Events — Vertex — The Tech Club" },
       {
         property: "og:description",
         content: "Register for Vertex events and get a scannable entry pass.",

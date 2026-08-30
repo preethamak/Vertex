@@ -7,13 +7,13 @@ export const Route = createFileRoute("/announcements")({
   loader: () => getAnnouncements(),
   head: () => ({
     meta: [
-      { title: "Announcements — Vertex Technical Club" },
+      { title: "Announcements — Vertex — The Tech Club" },
       {
         name: "description",
         content:
           "Club-wide and per-team announcements from Vertex heads: deadlines, meets, calls for help.",
       },
-      { property: "og:title", content: "Announcements — Vertex Technical Club" },
+      { property: "og:title", content: "Announcements — Vertex — The Tech Club" },
       {
         property: "og:description",
         content: "The Vertex announcement feed, straight from the team heads.",

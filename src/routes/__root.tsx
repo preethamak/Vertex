@@ -73,11 +73,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Vertex — Technical Club" },
+      { title: "Vertex — The Tech Club" },
       {
         name: "description",
         content:
-          "Vertex is a college technical club. Meet the founders, leadership, and every team that runs it.",
+          "Vertex is the technical club of REVA University. Building projects, hosting hackathons, and shaping the next wave of builders.",
       },
       { name: "theme-color", content: "#faf7f0" },
     ],
@@ -87,7 +87,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.ico", type: "image/x-icon", sizes: "32x32" },
+      { rel: "icon", href: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+      { rel: "icon", href: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
+      { rel: "icon", href: "/android-chrome-192.png", type: "image/png", sizes: "192x192" },
+      { rel: "icon", href: "/android-chrome-512.png", type: "image/png", sizes: "512x512" },
     ],
   }),
   shellComponent: RootShell,

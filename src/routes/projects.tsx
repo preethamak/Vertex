@@ -7,12 +7,12 @@ export const Route = createFileRoute("/projects")({
   loader: () => getShowcase(),
   head: () => ({
     meta: [
-      { title: "Projects — Vertex Technical Club" },
+      { title: "Projects — Vertex — The Tech Club" },
       {
         name: "description",
         content: "Selected work and Vertex projects.",
       },
-      { property: "og:title", content: "Projects — Vertex Technical Club" },
+      { property: "og:title", content: "Projects — Vertex — The Tech Club" },
       {
         property: "og:description",
         content: "Selected work and Vertex projects.",

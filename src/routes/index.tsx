@@ -6,7 +6,6 @@ import { useRef } from "react";
 import { Atmosphere } from "@/components/Atmosphere";
 import { Reveal } from "@/components/Reveal";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
-import { VertexLogo } from "@/components/VertexLogo";
 import { CountUp, KineticHeading, Magnetic, Parallax, Ticker } from "@/components/motion-kit";
 import { getEvents } from "@/lib/club.functions";
 import { SIH_2026_THEME_NAMES } from "@/data/sih-2026";
@@ -15,10 +14,10 @@ export const Route = createFileRoute("/")({
   loader: () => getEvents(),
   head: () => ({
     meta: [
-      { title: "Vertex — Technical Club" },
+      { title: "Vertex — The Tech Club" },
       {
         name: "description",
-        content: "Vertex is a student technical club.",
+        content: "Vertex is the technical club of REVA University. Building projects, hosting hackathons, and shaping the next wave of builders.",
       },
     ],
   }),
@@ -54,16 +53,20 @@ function Home() {
                 transition={{ duration: 0.55 }}
                 className="flex items-center gap-4"
               >
-                <VertexLogo className="h-11 w-auto text-foreground sm:h-14" />
-                <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-                  Technical Club
-                </span>
+                <img
+                  src="/vertex-logo.png"
+                  alt="Vertex — The Tech Club"
+                  className="h-14 w-auto sm:h-16"
+                  width={180}
+                  height={60}
+                  decoding="async"
+                />
               </motion.div>
               <h1 className="mt-10 max-w-5xl font-display text-6xl font-semibold leading-[0.95] tracking-[-0.055em] sm:text-8xl lg:text-[8rem]">
                 <KineticHeading text="Vertex" delay={0.15} />
               </h1>
               <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.28em] text-silver">
-                Technical Club · REVA University
+                The Tech Club · REVA University
               </p>
               <KineticHeading
                 delay={0.5}
