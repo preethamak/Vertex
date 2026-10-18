@@ -113,9 +113,11 @@ const slugify = (s: string) =>
 function AdminPage() {
   const data = Route.useLoaderData();
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("Check-in");
   const isAdmin = data.viewer.isAdmin;
   const isEventDesk = data.eventDesk;
+  const isWorkshopManager =
+    isEventDesk && data.deskScope === "workshop" && data.eventDeskPermission === "manager";
+  const [tab, setTab] = useState<Tab>(isWorkshopManager ? "Neural Networks Workshop" : "Check-in");
   const isJudgeOnly = data.viewer.isJudge && !data.viewer.isAdmin && !data.viewer.isHead;
   const workshopApproved = data.workshopRegistrations.filter(
     (row) => row.status === "approved",
@@ -177,12 +179,14 @@ function AdminPage() {
         <div className="mt-8 flex flex-wrap gap-2">
           {TABS.filter(
             (t) =>
-              isEventDesk ? t === "Check-in" : isAdmin ||
-              t === "Check-in" ||
-              t === "SIH" ||
-              t === "Judging" ||
-              t === "Applications" ||
-              t === "Announcements",
+              isEventDesk
+                ? t === "Check-in" || (isWorkshopManager && t === "Neural Networks Workshop")
+                : isAdmin ||
+                  t === "Check-in" ||
+                  t === "SIH" ||
+                  t === "Judging" ||
+                  t === "Applications" ||
+                  t === "Announcements",
           ).map((t) => (
             <button
               key={t}
