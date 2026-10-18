@@ -51,6 +51,7 @@ export const adminOverview = createServerFn({ method: "GET" })
       return {
         viewer,
         eventDesk: true,
+        deskScope: workshopAccess.data ? "workshop" as const : "generic" as const,
         applications: [], members: [], teams: [], projects: [], announcements: [], registrations: [],
         events: (deskEvents ?? []).map((event) => ({ ...event, operations: null })),
         workshopRegistrations: [],
@@ -91,6 +92,7 @@ export const adminOverview = createServerFn({ method: "GET" })
     return {
       viewer,
       eventDesk: false,
+      deskScope: null,
       applications: apps.data ?? [],
       members: members.data ?? [],
       teams: teams.data ?? [],
