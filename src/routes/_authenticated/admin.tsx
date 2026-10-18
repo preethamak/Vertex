@@ -200,7 +200,11 @@ function AdminPage() {
 
         <div className="mt-8">
           {tab === "Check-in" && (
-            <CheckIn registrations={data.registrations} events={data.events} />
+            <CheckIn
+              registrations={data.registrations}
+              events={data.events}
+              workshopOnly={data.eventDesk && data.deskScope === "workshop"}
+            />
           )}
           {tab === "Neural Networks Workshop" && <NeuralNetworksWorkshopRegistrations />}
           {tab === "SIH" && <SihOperations isAdmin={isAdmin} />}
@@ -1271,6 +1275,7 @@ function DoorOutcome({ result, onScanNext }: { result: DoorResult; onScanNext: (
 function CheckIn({
   registrations,
   events,
+  workshopOnly = false,
 }: {
   registrations: {
     id: string;
@@ -1280,8 +1285,8 @@ function CheckIn({
     checked_in_at: string | null;
   }[];
   events: { id: string; title: string }[];
+  workshopOnly?: boolean;
 }) {
-  const router = useRouter();
   const scan = useServerFn(checkInByCode);
   const scanSih = useServerFn(checkInHackathonTeam);
   const scanWorkshop = useServerFn(checkInNeuralNetworkWorkshop);
@@ -1295,6 +1300,14 @@ function CheckIn({
     const code = rawCode.trim();
     if (!code || result) return;
     try {
+      if (workshopOnly && !code.toUpperCase().includes("VTX-NN:")) {
+        setResult({
+          tone: "bad",
+          title: "Workshop pass required",
+          detail: "This desk is only for approved Neural Networks Workshop passes.",
+        });
+        return;
+      }
       if (code.toUpperCase().includes("VTX-NN:")) {
         const res = await scanWorkshop({ data: { code } });
         if (res.status === "ok") {
@@ -1365,7 +1378,9 @@ function CheckIn({
         detail: "Confirm your event-desk permission and try again.",
       });
     }
-    await router.invalidate();
+    // Keep the result on screen until the volunteer explicitly starts the next scan.
+    // Invalidating the route here remounts this component and used to erase the
+    // attendee name immediately after a successful scan.
   };
 
   return (
@@ -1400,7 +1415,7 @@ function CheckIn({
         </div>
       </div>
 
-      <div>
+      {!workshopOnly && <div>
         <div className="flex flex-wrap items-center gap-3">
           <Label text="Event">
             <select value={eventId} onChange={(e) => setEventId(e.target.value)} className={field}>
@@ -1428,7 +1443,18 @@ function CheckIn({
             </div>
           ))}
         </div>
-      </div>
+      </div>}
+      {workshopOnly && (
+        <div className="border border-hairline bg-card/40 p-5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-silver">
+            Neural Networks Workshop desk
+          </p>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+            Scan an approved workshop QR pass. A clear result stays on screen until you choose
+            “Scan next attendee”, so the volunteer can verify the attendee name and SRN.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
