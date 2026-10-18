@@ -36,7 +36,7 @@ export const adminOverview = createServerFn({ method: "GET" })
           .eq("active", true),
         supabaseAdmin
           .from("neural_network_workshop_staff")
-          .select("id")
+          .select("permission")
           .eq("email", email)
           .eq("active", true)
           .maybeSingle(),
@@ -52,6 +52,7 @@ export const adminOverview = createServerFn({ method: "GET" })
         viewer,
         eventDesk: true,
         deskScope: workshopAccess.data ? "workshop" as const : "generic" as const,
+        eventDeskPermission: workshopAccess.data?.permission ?? "checkin",
         applications: [], members: [], teams: [], projects: [], announcements: [], registrations: [],
         events: (deskEvents ?? []).map((event) => ({ ...event, operations: null })),
         workshopRegistrations: [],
@@ -93,6 +94,7 @@ export const adminOverview = createServerFn({ method: "GET" })
       viewer,
       eventDesk: false,
       deskScope: null,
+      eventDeskPermission: null,
       applications: apps.data ?? [],
       members: members.data ?? [],
       teams: teams.data ?? [],
