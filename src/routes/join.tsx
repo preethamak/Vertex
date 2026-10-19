@@ -18,7 +18,8 @@ export const Route = createFileRoute("/join")({
       { property: "og:title", content: "Join Vertex — Apply to a team" },
       {
         property: "og:description",
-        content: "Apply to Technical, Media, Events, PR, or Sponsorship at Vertex.",
+        content:
+          "Apply to Technical, Media, Events, PR, Sponsorship, Core Editor, Creative and Design, or Social Media Handling at Vertex.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -39,6 +40,12 @@ function JoinPage() {
   const apply = useServerFn(submitApplication);
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const extraPreferences = [
+    { id: "core-editor", name: "Core Editor" },
+    { id: "creative-design", name: "Creative and Design" },
+    { id: "social-media-handling", name: "Social Media Handling" },
+  ];
 
   if (done) {
     return (
@@ -81,8 +88,8 @@ function JoinPage() {
             Apply to Vertex.
           </h1>
           <p className="mt-5 max-w-xl text-muted-foreground">
-            Five teams, one club. Tell us where you fit and what you want to work on. No prior
-            experience required — just show up and build.
+            Our club. Tell us where you fit and what you want to work on. No prior experience
+            required — just show up and build.
           </p>
 
           <form
@@ -91,6 +98,7 @@ function JoinPage() {
               e.preventDefault();
               const f = new FormData(e.currentTarget);
               setSending(true);
+              setSubmitError(null);
               try {
                 await apply({
                   data: {
@@ -103,26 +111,51 @@ function JoinPage() {
                     teamFirst: String(f.get("teamFirst") ?? ""),
                     teamSecond: String(f.get("teamSecond") ?? ""),
                     why: String(f.get("why") ?? ""),
-                    links: String(f.get("links") ?? ""),
+                    links: [
+                      ["GitHub", "github"],
+                      ["LinkedIn", "linkedin"],
+                      ["Portfolio", "portfolio"],
+                      ["Instagram", "instagram"],
+                      ["Others", "others"],
+                    ]
+                      .map(([label, name]) => {
+                        const value = String(f.get(name) ?? "").trim();
+                        return value ? `${label}: ${value}` : "";
+                      })
+                      .filter(Boolean)
+                      .join("\n"),
                   },
                 });
                 setDone(true);
-              } catch {
-                toast.error("Something went wrong. Check your details and try again.");
+              } catch (error) {
+                const message = error instanceof Error ? error.message : "Unable to submit your application.";
+                setSubmitError(message);
+                toast.error(message);
               } finally {
                 setSending(false);
               }
             }}
           >
             <Field name="name" label="Full name" required />
-            <Field name="usn" label="USN" />
-            <Field name="year" label="Year" placeholder="1st / 2nd / 3rd / 4th" />
-            <Field name="branch" label="Branch" />
             <Field name="email" label="Email" type="email" required />
-            <Field name="phone" label="Phone" />
+            <Field name="phone" label="Phone" required />
+            <Field name="usn" label="USN (optional)" />
+            <Field name="year" label="Year (optional)" placeholder="1st / 2nd / 3rd / 4th" />
+            <Field name="branch" label="Branch (optional)" />
 
-            <SelectField name="teamFirst" label="First preference" teams={teams} required />
-            <SelectField name="teamSecond" label="Second preference" teams={teams} />
+            <SelectField
+              name="teamFirst"
+              label="First preference"
+              teams={teams}
+              extraOptions={extraPreferences}
+              required
+            />
+            <SelectField
+              name="teamSecond"
+              label="Second preference"
+              teams={teams}
+              extraOptions={extraPreferences}
+            />
 
             <label className="flex flex-col gap-2 md:col-span-2">
               <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -137,17 +170,40 @@ function JoinPage() {
               />
             </label>
 
-            <label className="flex flex-col gap-2 md:col-span-2">
-              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                Links (portfolio, GitHub, Instagram — optional)
-              </span>
-              <input
-                name="links"
-                className="border border-hairline bg-background px-3 py-2 font-mono text-sm focus:border-silver focus:outline-none"
-              />
-            </label>
+            <div className="grid gap-4 border-t border-hairline pt-5 md:col-span-2">
+              <div>
+                <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Links
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Add any profiles or work samples you want the team to see.
+                </p>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field name="github" label="GitHub" type="url" placeholder="https://github.com/…" />
+                <Field
+                  name="linkedin"
+                  label="LinkedIn"
+                  type="url"
+                  placeholder="https://linkedin.com/in/…"
+                />
+                <Field name="portfolio" label="Portfolio" type="url" placeholder="https://…" />
+                <Field
+                  name="instagram"
+                  label="Instagram"
+                  type="url"
+                  placeholder="https://instagram.com/…"
+                />
+                <Field name="others" label="Others" type="url" placeholder="https://…" />
+              </div>
+            </div>
 
             <div className="md:col-span-2">
+              {submitError && (
+                <p className="mb-4 border border-destructive/40 bg-destructive/5 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-destructive">
+                  {submitError}
+                </p>
+              )}
               <button
                 type="submit"
                 disabled={sending}
@@ -197,11 +253,13 @@ function SelectField({
   name,
   label,
   teams,
+  extraOptions = [],
   required,
 }: {
   name: string;
   label: string;
   teams: { id: string; name: string }[];
+  extraOptions?: { id: string; name: string }[];
   required?: boolean;
 }) {
   return (
@@ -221,8 +279,11 @@ function SelectField({
             {t.name}
           </option>
         ))}
-        <option value="editor">Editor</option>
-        <option value="design">Design</option>
+        {extraOptions.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.name}
+          </option>
+        ))}
       </select>
     </label>
   );
