@@ -49,6 +49,8 @@ export type Database = {
           body: string;
           created_at: string;
           id: string;
+          media_type: string | null;
+          media_url: string | null;
           pinned: boolean;
           published: boolean;
           team_id: string | null;
@@ -60,6 +62,8 @@ export type Database = {
           body: string;
           created_at?: string;
           id?: string;
+          media_type?: string | null;
+          media_url?: string | null;
           pinned?: boolean;
           published?: boolean;
           team_id?: string | null;
@@ -71,6 +75,8 @@ export type Database = {
           body?: string;
           created_at?: string;
           id?: string;
+          media_type?: string | null;
+          media_url?: string | null;
           pinned?: boolean;
           published?: boolean;
           team_id?: string | null;
@@ -362,6 +368,7 @@ export type Database = {
       };
       event_registrations: {
         Row: {
+          workspace_registration: Json | null;
           checked_in_at: string | null;
           checked_in_by: string | null;
           code: string;
@@ -374,6 +381,7 @@ export type Database = {
           usn: string | null;
         };
         Insert: {
+          workspace_registration?: Json | null;
           checked_in_at?: string | null;
           checked_in_by?: string | null;
           code?: string;
@@ -386,6 +394,7 @@ export type Database = {
           usn?: string | null;
         };
         Update: {
+          workspace_registration?: Json | null;
           checked_in_at?: string | null;
           checked_in_by?: string | null;
           code?: string;
