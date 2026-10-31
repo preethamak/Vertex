@@ -76,6 +76,14 @@ function BuildWithSarvamPage() {
   const [submitted, setSubmitted] = useState<{ teamName: string; memberCount: number } | null>(
     null,
   );
+  const isTeamComplete =
+    members.length === 4 &&
+    members.every((member) =>
+      [member.name, member.email, member.phone, member.usn, member.branch, member.year].every(
+        (value) => value.trim().length > 0,
+      ),
+    );
+  const canSubmit = teamName.trim().length > 0 && isTeamComplete;
 
   const updateMember = (index: number, field: keyof Member, value: string) => {
     setMembers((current) =>
@@ -89,6 +97,10 @@ function BuildWithSarvamPage() {
     event.preventDefault();
     if (members.length !== 4) {
       toast.error("Add 3 more team members before submitting.");
+      return;
+    }
+    if (!isTeamComplete) {
+      toast.error("Complete every detail for all 4 team members before submitting.");
       return;
     }
     const emails = members.map((member) => member.email.trim().toLowerCase());
@@ -420,21 +432,25 @@ function BuildWithSarvamPage() {
                             label="Phone"
                             type="tel"
                             value={member.phone}
+                            required
                             onChange={(value) => updateMember(index, "phone", value)}
                           />
                           <MemberField
                             label="USN / SRN"
                             value={member.usn}
+                            required
                             onChange={(value) => updateMember(index, "usn", value)}
                           />
                           <MemberField
                             label="Branch"
                             value={member.branch}
+                            required
                             onChange={(value) => updateMember(index, "branch", value)}
                           />
                           <MemberField
                             label="Year"
                             value={member.year}
+                            required
                             onChange={(value) => updateMember(index, "year", value)}
                           />
                         </div>
@@ -458,7 +474,7 @@ function BuildWithSarvamPage() {
 
                   <button
                     type="submit"
-                    disabled={submitting || members.length !== 4}
+                    disabled={submitting || !canSubmit}
                     className="btn-primary mt-7 w-full rounded-lg px-5 py-3 font-mono text-[11px] uppercase tracking-widest disabled:opacity-50"
                   >
                     {submitting ? "Submitting team…" : "Submit team registration"}{" "}
