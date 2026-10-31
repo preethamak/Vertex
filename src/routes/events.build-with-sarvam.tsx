@@ -149,22 +149,44 @@ function BuildWithSarvamPage() {
                     href="https://www.sarvam.ai"
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-lg border border-hairline px-3 py-2 transition-transform hover:-translate-y-0.5"
+                    className="inline-flex items-center gap-3 rounded-lg border border-hairline bg-white px-3 py-2 text-black transition-transform hover:-translate-y-0.5"
                     aria-label="Sarvam AI website"
                   >
                     <img
-                      src="https://pbs.twimg.com/profile_images/2021450761734062080/XMvWk_lJ_x96.png"
-                      alt="Sarvam AI"
-                      className="h-8 w-8 rounded-full object-cover mix-blend-multiply"
-                      width={32}
-                      height={32}
+                      src="/partners/sarvam-wordmark.png"
+                      alt="Sarvam"
+                      className="h-7 w-[150px] object-contain"
+                      width={631}
+                      height={100}
                       loading="eager"
                       decoding="async"
                     />
-                    <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground">
-                      Sarvam AI
+                    <span className="border-l border-black/15 pl-3 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-black/60">
+                      AI partner
                     </span>
                   </a>
+                  <div
+                    className="inline-flex items-center gap-3 rounded-lg border border-hairline bg-white px-3 py-2 text-black transition-transform hover:-translate-y-0.5"
+                    aria-label="KrowdKraft community partner"
+                  >
+                    <img
+                      src="/partners/krowdkraft-logo.png"
+                      alt="KrowdKraft"
+                      className="h-8 w-8 rounded-md object-contain"
+                      width={1080}
+                      height={1350}
+                      loading="eager"
+                      decoding="async"
+                    />
+                    <span className="flex flex-col gap-0.5">
+                      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em]">
+                        KrowdKraft
+                      </span>
+                      <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-black/60">
+                        Community partner
+                      </span>
+                    </span>
+                  </div>
                 </div>
                 <p className="mt-8 font-mono text-xs uppercase tracking-[0.28em] text-muted-foreground">
                   Two-day AI innovation hackathon · REVA University
