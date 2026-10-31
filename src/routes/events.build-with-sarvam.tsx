@@ -140,15 +140,15 @@ function BuildWithSarvamPage() {
               <div>
                 <div className="flex flex-wrap items-center gap-3">
                   <div
-                    className="inline-flex items-center gap-3 rounded-lg border border-hairline bg-white px-3 py-2 text-black"
+                    className="inline-flex items-center gap-3 rounded-lg border border-hairline bg-transparent px-3 py-2 text-foreground"
                     aria-label="Vertex event host"
                   >
                     <img
-                      src="/vertex-logo-mark.webp"
+                      src="/vertex-logo-transparent.png"
                       alt="Vertex — The Tech Club"
                       className="h-9 w-14 object-contain"
-                      width={200}
-                      height={140}
+                      width={1536}
+                      height={1024}
                       loading="eager"
                       decoding="async"
                     />
@@ -163,7 +163,7 @@ function BuildWithSarvamPage() {
                     href="https://www.sarvam.ai"
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-3 rounded-lg border border-hairline bg-white px-3 py-2 text-black transition-transform hover:-translate-y-0.5"
+                    className="inline-flex items-center gap-3 rounded-lg border border-hairline bg-transparent px-3 py-2 text-foreground transition-transform hover:-translate-y-0.5"
                     aria-label="Sarvam AI website"
                   >
                     <img
@@ -180,7 +180,7 @@ function BuildWithSarvamPage() {
                     </span>
                   </a>
                   <div
-                    className="inline-flex items-center gap-3 rounded-lg border border-hairline bg-white px-3 py-2 text-black transition-transform hover:-translate-y-0.5"
+                    className="inline-flex items-center gap-3 rounded-lg border border-hairline bg-transparent px-3 py-2 text-foreground transition-transform hover:-translate-y-0.5"
                     aria-label="KrowdKraft community partner"
                   >
                     <img
