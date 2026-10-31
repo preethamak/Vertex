@@ -139,8 +139,22 @@ function BuildWithSarvamPage() {
             <div className="mt-12 grid gap-10 lg:grid-cols-[1.35fr_.65fr] lg:items-end">
               <div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="chip flex w-fit items-center gap-2 rounded-full px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-silver">
-                    <Sparkles size={12} /> VERTEX
+                  <div
+                    className="inline-flex items-center gap-3 rounded-lg border border-hairline bg-white px-3 py-2 text-black"
+                    aria-label="Vertex event host"
+                  >
+                    <img
+                      src="/vertex-logo-mark.webp"
+                      alt="Vertex — The Tech Club"
+                      className="h-9 w-14 object-contain"
+                      width={200}
+                      height={140}
+                      loading="eager"
+                      decoding="async"
+                    />
+                    <span className="border-l border-black/15 pl-3 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-black/60">
+                      Host
+                    </span>
                   </div>
                   <span className="font-mono text-xs text-muted-foreground" aria-hidden="true">
                     ×
