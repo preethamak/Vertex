@@ -54,38 +54,6 @@ export const registerForSarvamHackathon = createServerFn({ method: "POST" })
       throw new Error("Team registration is currently closed.");
     }
 
-    const { data: existingRegistrations, error: existingRegistrationsError } = await supabaseAdmin
-      .from("event_registrations")
-      .select("email, form_data")
-      .eq("event_id", event.id);
-    if (existingRegistrationsError) {
-      throw new Error("Could not verify existing team member registrations. Please try again.");
-    }
-
-    const registeredEmails = new Set<string>();
-    for (const registration of existingRegistrations ?? []) {
-      if (typeof registration.email === "string") {
-        registeredEmails.add(registration.email.trim().toLowerCase());
-      }
-
-      const formData = registration.form_data;
-      if (!formData || typeof formData !== "object" || Array.isArray(formData)) continue;
-      const registeredMembers = (formData as { members?: unknown }).members;
-      if (!Array.isArray(registeredMembers)) continue;
-
-      for (const member of registeredMembers) {
-        if (!member || typeof member !== "object" || Array.isArray(member)) continue;
-        const email = (member as { email?: unknown }).email;
-        if (typeof email === "string") registeredEmails.add(email.trim().toLowerCase());
-      }
-    }
-
-    if (emails.some((email) => registeredEmails.has(email))) {
-      throw new Error(
-        "One or more team member emails are already registered for Build with Sarvam.",
-      );
-    }
-
     const lead = data.members[0];
     const { data: row, error } = await supabaseAdmin
       .from("event_registrations")

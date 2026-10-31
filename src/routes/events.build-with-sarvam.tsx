@@ -7,11 +7,9 @@ import {
   CheckCircle2,
   Mail,
   MapPin,
-  Plus,
   Sparkles,
   Trophy,
   Users,
-  X,
 } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
@@ -71,7 +69,7 @@ const focusAreas = [
 function BuildWithSarvamPage() {
   const register = useServerFn(registerForSarvamHackathon);
   const [teamName, setTeamName] = useState("");
-  const [members, setMembers] = useState<Member[]>([createMember()]);
+  const [members, setMembers] = useState<Member[]>(Array.from({ length: 4 }, createMember));
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<{ teamName: string; memberCount: number } | null>(
     null,
@@ -87,10 +85,6 @@ function BuildWithSarvamPage() {
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (members.length !== 4) {
-      toast.error("Add 3 more team members before submitting.");
-      return;
-    }
     const emails = members.map((member) => member.email.trim().toLowerCase());
     if (new Set(emails).size !== emails.length) {
       toast.error("Each team member must use a different email address.");
@@ -335,7 +329,7 @@ function BuildWithSarvamPage() {
                     onClick={() => {
                       setSubmitted(null);
                       setTeamName("");
-                      setMembers([createMember()]);
+                      setMembers(Array.from({ length: 4 }, createMember));
                     }}
                     className="btn-ghost mt-8 rounded-lg px-4 py-2.5 font-mono text-[10px] uppercase tracking-widest"
                   >
@@ -390,17 +384,6 @@ function BuildWithSarvamPage() {
                               </p>
                             )}
                           </div>
-                          {members.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setMembers((current) => current.filter((_, i) => i !== index))
-                              }
-                              className="inline-flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
-                            >
-                              <X size={13} /> Remove
-                            </button>
-                          )}
                         </div>
                         <div className="grid gap-3 md:grid-cols-2">
                           <MemberField
@@ -442,15 +425,7 @@ function BuildWithSarvamPage() {
                     ))}
                   </div>
 
-                  <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
-                    <button
-                      type="button"
-                      disabled={members.length >= 4}
-                      onClick={() => setMembers((current) => [...current, createMember()])}
-                      className="btn-ghost rounded-lg px-4 py-2.5 font-mono text-[10px] uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      <Plus size={14} /> Add member
-                    </button>
+                  <div className="mt-5 flex items-center justify-end">
                     <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
                       4 members
                     </span>
@@ -458,7 +433,7 @@ function BuildWithSarvamPage() {
 
                   <button
                     type="submit"
-                    disabled={submitting || members.length !== 4}
+                    disabled={submitting}
                     className="btn-primary mt-7 w-full rounded-lg px-5 py-3 font-mono text-[11px] uppercase tracking-widest disabled:opacity-50"
                   >
                     {submitting ? "Submitting team…" : "Submit team registration"}{" "}
