@@ -427,7 +427,7 @@ function BuildWithSarvamPage() {
 
                   <div className="mt-5 flex items-center justify-end">
                     <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-                      Exactly 4 members required
+                      4 members
                     </span>
                   </div>
 
@@ -530,7 +530,6 @@ function MemberField({
     <label className="flex flex-col gap-1.5">
       <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
         {label}
-        {required ? " *" : ""}
       </span>
       <input
         required={required}
