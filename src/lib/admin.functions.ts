@@ -714,3 +714,75 @@ export const saveSarvamReview = createServerFn({ method: "POST" })
     if (error) throw new Error("Could not save the review. Check the database migration.");
     return { ok: true };
   });
+
+const creditStatus = z.enum([
+  "not_started",
+  "reported_registered",
+  "sent_to_sarvam",
+  "credit_confirmed",
+  "needs_help",
+]);
+export type SarvamProgressRow = {
+  registration_id: string;
+  member_index: number;
+  credit_status: z.infer<typeof creditStatus>;
+  group_reported: boolean;
+};
+
+export const listSarvamProgress = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertAdmin } = await import("@/lib/roles.server");
+    await assertAdmin(context.supabase, context.userId);
+    const { data, error } = await (context.supabase as any)
+      .from("sarvam_participant_progress")
+      .select("registration_id, member_index, credit_status, group_reported");
+    if (error) throw new Error("Progress storage is unavailable. Check the database migration.");
+    return data as SarvamProgressRow[];
+  });
+
+export const saveSarvamProgress = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        registrationId: z.string().uuid(),
+        memberIndex: z.number().int().min(0).max(3),
+        creditStatus,
+        groupReported: z.boolean(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("@/lib/roles.server");
+    await assertAdmin(context.supabase, context.userId);
+    const { data: registration, error: lookupError } = await context.supabase
+      .from("event_registrations")
+      .select("form_data, events!inner(slug)")
+      .eq("id", data.registrationId)
+      .eq("events.slug", "build-with-sarvam")
+      .maybeSingle();
+    const form = registration?.form_data as { members?: unknown[] } | null;
+    if (
+      lookupError ||
+      !registration ||
+      !Array.isArray(form?.members) ||
+      !form.members[data.memberIndex]
+    )
+      throw new Error("Participant not found.");
+    const { error } = await (context.supabase as any)
+      .from("sarvam_participant_progress")
+      .upsert(
+        {
+          registration_id: data.registrationId,
+          member_index: data.memberIndex,
+          credit_status: data.creditStatus,
+          group_reported: data.groupReported,
+          updated_by: context.userId,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "registration_id,member_index" },
+      );
+    if (error) throw new Error("Could not save participant progress.");
+    return { ok: true };
+  });

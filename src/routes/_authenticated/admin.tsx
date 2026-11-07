@@ -28,6 +28,9 @@ import {
   saveEventStaffAccess,
   revokeEventStaffAccess,
   setEventRegistrationStatus,
+  listSarvamProgress,
+  saveSarvamProgress,
+  type SarvamProgressRow,
   listSarvamReviews,
   saveSarvamReview,
   type SarvamReviewRow,
@@ -2952,6 +2955,7 @@ function SarvamRegistrationSection({
               )}
 
               <SarvamReviewPanel registrationId={registration.id} />
+              <SarvamProgressPanel registrationId={registration.id} members={details.members} />
               <div className="mt-4 flex flex-wrap gap-2">
                 {registration.status !== "approved" && (
                   <button
@@ -2995,6 +2999,120 @@ function SarvamRegistrationSection({
         )}
       </div>
     </section>
+  );
+}
+
+function SarvamProgressPanel({
+  registrationId,
+  members,
+}: {
+  registrationId: string;
+  members: SarvamMember[];
+}) {
+  const list = useServerFn(listSarvamProgress);
+  const save = useServerFn(saveSarvamProgress);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [rows, setRows] = useState<SarvamProgressRow[]>([]);
+  async function load() {
+    setLoading(true);
+    try {
+      const result = await list();
+      setRows(result.filter((row) => row.registration_id === registrationId));
+      setOpen(true);
+    } catch {
+      toast.error("Could not load participant progress. Check the database migration.");
+    } finally {
+      setLoading(false);
+    }
+  }
+  async function update(
+    index: number,
+    creditStatus: SarvamProgressRow["credit_status"],
+    groupReported: boolean,
+  ) {
+    setLoading(true);
+    try {
+      await save({ data: { registrationId, memberIndex: index, creditStatus, groupReported } });
+      setRows((previous) => [
+        ...previous.filter((row) => row.member_index !== index),
+        {
+          registration_id: registrationId,
+          member_index: index,
+          credit_status: creditStatus,
+          group_reported: groupReported,
+        },
+      ]);
+      toast.success("Participant progress saved.");
+    } catch {
+      toast.error("Could not save participant progress.");
+    } finally {
+      setLoading(false);
+    }
+  }
+  return (
+    <div className="mt-3 border border-hairline p-4">
+      <button
+        type="button"
+        className={ghost}
+        disabled={loading}
+        onClick={() => (open ? setOpen(false) : void load())}
+      >
+        {open ? "Close onboarding" : loading ? "Loading…" : "Manage participant onboarding"}
+      </button>
+      {open && (
+        <div className="mt-4 grid gap-3">
+          <p className="text-sm text-muted-foreground">
+            Record what participants report and what Sarvam confirms. Registration alone does not
+            confirm credits.
+          </p>
+          {members.map((member, index) => {
+            const row = rows.find((item) => item.member_index === index);
+            const status = row?.credit_status ?? "not_started";
+            const group = row?.group_reported ?? false;
+            return (
+              <div
+                key={member.email}
+                className="grid gap-3 border-t border-hairline pt-3 sm:grid-cols-[1fr_1fr_auto] sm:items-center"
+              >
+                <div>
+                  <div>{member.name}</div>
+                  <div className="break-all text-xs text-muted-foreground">{member.email}</div>
+                </div>
+                <select
+                  aria-label={`Credit status for ${member.name}`}
+                  className={field}
+                  disabled={loading}
+                  value={status}
+                  onChange={(event) =>
+                    void update(
+                      index,
+                      event.target.value as SarvamProgressRow["credit_status"],
+                      group,
+                    )
+                  }
+                >
+                  <option value="not_started">Not started</option>
+                  <option value="reported_registered">Participant reports registered</option>
+                  <option value="sent_to_sarvam">Shared with Sarvam</option>
+                  <option value="credit_confirmed">Credit confirmed</option>
+                  <option value="needs_help">Needs help</option>
+                </select>
+                <label className="text-sm">
+                  <input
+                    type="checkbox"
+                    disabled={loading}
+                    checked={group}
+                    onChange={(event) => void update(index, status, event.target.checked)}
+                  />{" "}
+                  Group joined (reported)
+                </label>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
