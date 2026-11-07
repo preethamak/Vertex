@@ -28,6 +28,9 @@ import {
   saveEventStaffAccess,
   revokeEventStaffAccess,
   setEventRegistrationStatus,
+  listSarvamReviews,
+  saveSarvamReview,
+  type SarvamReviewRow,
   setApplicationStatus,
 } from "@/lib/admin.functions";
 import { checkInHackathonTeam, reissueHackathonTeamKey } from "@/lib/hackathon.functions";
@@ -2948,6 +2951,7 @@ function SarvamRegistrationSection({
                 </div>
               )}
 
+              <SarvamReviewPanel registrationId={registration.id} />
               <div className="mt-4 flex flex-wrap gap-2">
                 {registration.status !== "approved" && (
                   <button
@@ -2991,6 +2995,147 @@ function SarvamRegistrationSection({
         )}
       </div>
     </section>
+  );
+}
+
+const reviewFields = [
+  ["innovation", "Innovation"],
+  ["relevance", "Problem relevance"],
+  ["feasibility", "Feasibility"],
+  ["technology", "AI and technology"],
+  ["impact", "Potential impact"],
+] as const;
+
+type ReviewValues = Pick<
+  SarvamReviewRow,
+  "innovation" | "relevance" | "feasibility" | "technology" | "impact" | "notes"
+>;
+
+function SarvamReviewPanel({ registrationId }: { registrationId: string }) {
+  const list = useServerFn(listSarvamReviews);
+  const save = useServerFn(saveSarvamReview);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [reviews, setReviews] = useState<SarvamReviewRow[]>([]);
+  const [viewerId, setViewerId] = useState("");
+  const [values, setValues] = useState<ReviewValues>({
+    innovation: 3,
+    relevance: 3,
+    feasibility: 3,
+    technology: 3,
+    impact: 3,
+    notes: "",
+  });
+  async function load() {
+    setLoading(true);
+    try {
+      const result = await list();
+      const own = result.reviews.find(
+        (item) => item.registration_id === registrationId && item.reviewer_id === result.viewerId,
+      );
+      setReviews(result.reviews.filter((item) => item.registration_id === registrationId));
+      setViewerId(result.viewerId);
+      if (own)
+        setValues({
+          innovation: own.innovation,
+          relevance: own.relevance,
+          feasibility: own.feasibility,
+          technology: own.technology,
+          impact: own.impact,
+          notes: own.notes,
+        });
+      setOpen(true);
+    } catch {
+      toast.error("Could not load reviews. Check the database migration.");
+    } finally {
+      setLoading(false);
+    }
+  }
+  return (
+    <div className="mt-5 border border-hairline p-4">
+      <button
+        type="button"
+        className={ghost}
+        disabled={loading}
+        onClick={() => (open ? setOpen(false) : void load())}
+      >
+        {open ? "Close review" : loading ? "Loading…" : "Review idea"}
+      </button>
+      {open && (
+        <div className="mt-4 grid gap-4">
+          <p className="text-sm text-muted-foreground">
+            Score each criterion from 1 to 5. Scores help organisers discuss ideas; they do not
+            select teams automatically.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {reviewFields.map(([key, label]) => (
+              <label key={key} className="grid gap-2 text-sm">
+                {label}
+                <select
+                  className={field}
+                  value={values[key]}
+                  onChange={(event) => setValues({ ...values, [key]: Number(event.target.value) })}
+                >
+                  {[1, 2, 3, 4, 5].map((score) => (
+                    <option key={score} value={score}>
+                      {score} / 5
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ))}
+          </div>
+          <label className="grid gap-2 text-sm">
+            Review notes
+            <textarea
+              className={field}
+              maxLength={2000}
+              value={values.notes}
+              onChange={(event) => setValues({ ...values, notes: event.target.value })}
+            />
+          </label>
+          <div>
+            <button
+              className={btn}
+              disabled={loading}
+              onClick={async () => {
+                setLoading(true);
+                try {
+                  await save({ data: { registrationId, ...values } });
+                  toast.success("Review saved.");
+                  await load();
+                } catch {
+                  toast.error("Could not save this review.");
+                } finally {
+                  setLoading(false);
+                }
+              }}
+            >
+              Save my review
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {reviews.length} saved {reviews.length === 1 ? "review" : "reviews"}.{" "}
+            {reviews.some((review) => review.reviewer_id === viewerId)
+              ? "Your review is saved."
+              : "You have not saved a review yet."}
+          </p>
+          {reviews.map((review) => (
+            <div key={review.reviewer_id} className="border-t border-hairline pt-3 text-sm">
+              <span className="font-medium">
+                {review.reviewer_id === viewerId ? "Your review" : "Another reviewer"}
+              </span>
+              <span className="ml-2 text-muted-foreground">
+                {reviewFields.map(([key]) => review[key]).join(" · ")} / 5
+              </span>
+              {review.notes && (
+                <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{review.notes}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

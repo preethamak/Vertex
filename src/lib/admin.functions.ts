@@ -453,18 +453,16 @@ export const saveEventStaffAccess = createServerFn({ method: "POST" })
     const { assertAdmin } = await import("@/lib/roles.server");
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
-      .from("event_staff_access")
-      .upsert(
-        {
-          event_id: data.eventId,
-          email: data.email.toLowerCase(),
-          permission: data.permission,
-          active: true,
-          created_by: context.userId,
-        },
-        { onConflict: "event_id,email" },
-      );
+    const { error } = await supabaseAdmin.from("event_staff_access").upsert(
+      {
+        event_id: data.eventId,
+        email: data.email.toLowerCase(),
+        permission: data.permission,
+        active: true,
+        created_by: context.userId,
+      },
+      { onConflict: "event_id,email" },
+    );
     if (error) throw new Error("Could not save event access.");
     return { ok: true };
   });
@@ -648,4 +646,71 @@ export const uploadAnnouncementMedia = createServerFn({ method: "POST" })
     });
     if (error) throw new Error("Could not store that media file.");
     return { url: `/api/public/media/${path}`, path };
+  });
+
+const sarvamReviewInput = z.object({
+  registrationId: z.string().uuid(),
+  innovation: z.number().int().min(1).max(5),
+  relevance: z.number().int().min(1).max(5),
+  feasibility: z.number().int().min(1).max(5),
+  technology: z.number().int().min(1).max(5),
+  impact: z.number().int().min(1).max(5),
+  notes: z.string().trim().max(2000),
+});
+
+export const listSarvamReviews = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertAdmin } = await import("@/lib/roles.server");
+    await assertAdmin(context.supabase, context.userId);
+    const { data, error } = await (context.supabase as any)
+      .from("sarvam_team_reviews")
+      .select(
+        "registration_id, reviewer_id, innovation, relevance, feasibility, technology, impact, notes, updated_at",
+      );
+    if (error) throw new Error("Review storage is unavailable. Check the database migration.");
+    return { reviews: data as SarvamReviewRow[], viewerId: context.userId };
+  });
+
+export type SarvamReviewRow = {
+  registration_id: string;
+  reviewer_id: string;
+  innovation: number;
+  relevance: number;
+  feasibility: number;
+  technology: number;
+  impact: number;
+  notes: string;
+  updated_at: string;
+};
+
+export const saveSarvamReview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => sarvamReviewInput.parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("@/lib/roles.server");
+    await assertAdmin(context.supabase, context.userId);
+    const { data: registration, error: registrationError } = await context.supabase
+      .from("event_registrations")
+      .select("id, events!inner(slug)")
+      .eq("id", data.registrationId)
+      .eq("events.slug", "build-with-sarvam")
+      .maybeSingle();
+    if (registrationError || !registration) throw new Error("Sarvam registration not found.");
+    const { error } = await (context.supabase as any).from("sarvam_team_reviews").upsert(
+      {
+        registration_id: data.registrationId,
+        reviewer_id: context.userId,
+        innovation: data.innovation,
+        relevance: data.relevance,
+        feasibility: data.feasibility,
+        technology: data.technology,
+        impact: data.impact,
+        notes: data.notes,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "registration_id,reviewer_id" },
+    );
+    if (error) throw new Error("Could not save the review. Check the database migration.");
+    return { ok: true };
   });
