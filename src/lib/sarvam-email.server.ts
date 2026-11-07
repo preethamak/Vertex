@@ -28,7 +28,12 @@ Event: 13–14 November 2026
 Venue: REVA University
 Team size: ${registration.memberCount} members
 
-Please keep this email for your team records. We’ll share any further event-desk updates with the team lead.
+Please share these resources with all team members. Participants who want to build using Sarvam should register individually for the 500 API credits:
+https://indus.sarvam.ai/?utm_source=devrel&utm_medium=hackathon&utm_campaign=build-with-sarvam
+Documentation: https://docs.sarvam.ai/
+Sarvam Discord: https://discord.com/invite/5rAsykttcs
+
+Credit allocation details and further event-desk updates will be shared by the organisers.
 
 Vertex Club · In collaboration with Sarvam AI`,
   };
@@ -104,7 +109,8 @@ function renderSarvamApprovalEmail(registration: SarvamApprovalEmail) {
             <tr><td style="padding:12px 14px;color:#647268;font-size:12px;text-transform:uppercase;letter-spacing:1px">Where</td><td style="padding:12px 14px;text-align:right;font-size:14px">REVA University</td></tr>
             <tr><td style="padding:12px 14px;color:#647268;font-size:12px;text-transform:uppercase;letter-spacing:1px">Team size</td><td style="padding:12px 14px;text-align:right;font-size:14px">${registration.memberCount} members</td></tr>
           </table>
-          <p style="margin:24px 0 0;color:#5f6b63;font-size:14px;line-height:1.6">Please keep this email for your team records. Further event-desk updates will be shared with the team lead.</p>
+          <p style="margin:24px 0 12px;color:#5f6b63;font-size:14px;line-height:1.6">Please share these resources with all team members. Each participant who wants to build using Sarvam should register individually for the 500 API credits. Credit allocation details will be shared by the organisers.</p>
+          <p style="font-size:14px;line-height:1.8"><a href="https://indus.sarvam.ai/?utm_source=devrel&amp;utm_medium=hackathon&amp;utm_campaign=build-with-sarvam">Register with Sarvam</a><br><a href="https://docs.sarvam.ai/">Sarvam documentation</a><br><a href="https://discord.com/invite/5rAsykttcs">Sarvam Discord</a></p>
         </div>
         <div style="padding:18px 28px;border-top:1px solid #e8e3d8;color:#718077;font-size:12px;line-height:1.5">Vertex Club · REVA University · In collaboration with Sarvam AI</div>
       </div>

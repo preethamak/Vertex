@@ -347,7 +347,7 @@ function EventCommandCentre({
                   value={pending}
                   tone={pending > 0 ? "attention" : undefined}
                 />
-                <CommandMetric label="Approved" value={approved} />
+                <CommandMetric label="Approved / 50 places" value={approved} />
                 <CommandMetric label="Waitlist" value={waitlisted} />
                 <CommandMetric
                   label="Checked in"
@@ -2788,6 +2788,30 @@ function SarvamRegistrationSection({
   }[];
   onStatusChange: (id: string, status: "approved" | "waitlisted" | "rejected") => Promise<void>;
 }) {
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const visibleRegistrations = registrations.filter((registration) => {
+    const details = readSarvamRegistrationDetails(registration.form_data);
+    const text = [
+      details.teamName,
+      details.projectTitle,
+      details.track,
+      registration.name,
+      registration.email,
+      ...details.members.flatMap((member) => [
+        member.name,
+        member.email,
+        member.college,
+        member.usn,
+      ]),
+    ]
+      .join(" ")
+      .toLowerCase();
+    return (
+      (statusFilter === "all" || registration.status === statusFilter) &&
+      text.includes(query.trim().toLowerCase())
+    );
+  });
   const participants = registrations.reduce((total, registration) => {
     return total + readSarvamRegistrationDetails(registration.form_data).members.length;
   }, 0);
@@ -2818,8 +2842,32 @@ function SarvamRegistrationSection({
         </div>
       </div>
 
+      <div className="mt-5 flex flex-wrap gap-3">
+        <input
+          aria-label="Search teams and participants"
+          className={field}
+          placeholder="Search team, idea, member or college"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+        <select
+          aria-label="Filter by status"
+          className={field}
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+        >
+          <option value="all">All statuses</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="waitlisted">Waitlisted</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <span className="self-center text-sm text-muted-foreground">
+          {visibleRegistrations.length} shown
+        </span>
+      </div>
       <div className="mt-5 grid gap-4">
-        {registrations.map((registration) => {
+        {visibleRegistrations.map((registration) => {
           const details = readSarvamRegistrationDetails(registration.form_data);
           const teamName = details.teamName || `Team led by ${registration.name}`;
           return (
@@ -2904,7 +2952,14 @@ function SarvamRegistrationSection({
                 {registration.status !== "approved" && (
                   <button
                     className={btn}
-                    onClick={() => void onStatusChange(registration.id, "approved")}
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          "Approve this team? The team lead will immediately receive an approval email.",
+                        )
+                      )
+                        void onStatusChange(registration.id, "approved");
+                    }}
                   >
                     Approve
                   </button>
@@ -2929,9 +2984,9 @@ function SarvamRegistrationSection({
             </article>
           );
         })}
-        {registrations.length === 0 && (
+        {visibleRegistrations.length === 0 && (
           <p className="font-mono text-xs text-muted-foreground">
-            No BUILD WITH SARVAM registrations yet.
+            No teams match the current filters.
           </p>
         )}
       </div>

@@ -179,7 +179,7 @@ const faqs = [
   ],
   [
     "Are API credits or prizes available?",
-    "The winner receives a 15K cash prize plus 25K API credits, and every participant receives 500 API credits. Terms and conditions apply.",
+    "Sarvam has committed a ₹25,000 prize pool for winners and 500 API credits for participants who want to build using Sarvam. Credit registration and event terms apply.",
   ],
   ["How can I contact the organisers?", "Email the Vertex event desk at vertexreva@gmail.com."],
 ] as const;
@@ -413,13 +413,13 @@ function BuildWithSarvamPage() {
                   <DeskRow icon={<Users size={15} />} label="Team size" value="Exactly 4 members" />
                   <DeskRow
                     icon={<Trophy size={15} />}
-                    label="Winner"
-                    value="15K cash prize + 25K API credits"
+                    label="Prize pool"
+                    value="₹25,000 for winners"
                   />
                   <DeskRow
                     icon={<Sparkles size={15} />}
-                    label="Every participant"
-                    value="500 API credits"
+                    label="Sarvam builders"
+                    value="500 API credits per participant"
                   />
                   <DeskRow
                     icon={<ShieldCheck size={15} />}
@@ -530,7 +530,7 @@ function BuildWithSarvamPage() {
             number="03"
             eyebrow="Hackathon tracks"
             title="Five ways to make AI matter."
-            detail="Integrate Sarvam AI with your idea submission. Choose one track in the idea-submission form. These examples are starting points, not limits."
+            detail="Choose one track in the idea-submission form. These examples are starting points, not limits. Final Sarvam AI usage requirements will be shared by the organisers."
           />
           <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {tracks.map((track, index) => (
@@ -927,6 +927,37 @@ function BuildWithSarvamPage() {
               explore AI-powered solutions grounded in Indian languages, voice, and context.
             </p>
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              <a
+                href="https://indus.sarvam.ai/?utm_source=devrel&utm_medium=hackathon&utm_campaign=build-with-sarvam"
+                target="_blank"
+                rel="noreferrer"
+                className="surface-card rounded-xl p-5"
+              >
+                <div className="flex items-center justify-between text-silver">
+                  <Sparkles size={19} />
+                  <ExternalLink size={15} />
+                </div>
+                <div className="mt-5 font-display text-xl">Register with Sarvam</div>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Each participant who wants to build using Sarvam should register here for the 500
+                  API credits. Credit allocation details will be shared by the organisers.
+                </p>
+              </a>
+              <a
+                href="https://discord.com/invite/5rAsykttcs"
+                target="_blank"
+                rel="noreferrer"
+                className="surface-card rounded-xl p-5"
+              >
+                <div className="flex items-center justify-between text-silver">
+                  <Users size={19} />
+                  <ExternalLink size={15} />
+                </div>
+                <div className="mt-5 font-display text-xl">Join Sarvam Discord</div>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Meet developers and find support in the Sarvam community.
+                </p>
+              </a>
               <a
                 href="https://docs.sarvam.ai/"
                 target="_blank"
