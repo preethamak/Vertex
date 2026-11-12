@@ -1,3 +1,4 @@
+import { SarvamGatewayAdmin } from "@/components/SarvamGatewayAdmin";
 import { NEURAL_NETWORK_WORKSHOP as workshopEvent } from "@/data/neural-network-workshop";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
@@ -2748,6 +2749,8 @@ function BuildWithSarvamWorkspace({
           <CommandMetric label="Approved" value={approved} />
         </div>
       </section>
+
+      <SarvamGatewayAdmin registrations={registrations} />
 
       <SarvamRegistrationSection
         event={event}

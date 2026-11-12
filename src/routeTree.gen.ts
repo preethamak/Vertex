@@ -29,6 +29,7 @@ import { Route as EventsHackathonWorkspaceRouteImport } from './routes/events.ha
 import { Route as EventsNeuralNetworksFromScratchRouteImport } from './routes/events.neural-networks-from-scratch'
 import { Route as EventsSihInternalHackathonRouteRouteImport } from './routes/events.sih-internal-hackathon.route'
 import { Route as MemberSlugRouteImport } from './routes/member.$slug'
+import { Route as ApiSarvamTranslateRouteImport } from './routes/api/sarvam/translate'
 import { Route as EventsSihInternalHackathonIndexRouteImport } from './routes/events.sih-internal-hackathon.index'
 import { Route as EventsSihInternalHackathonJoinRouteImport } from './routes/events.sih-internal-hackathon.join'
 import { Route as EventsSihInternalHackathonResultsRouteImport } from './routes/events.sih-internal-hackathon.results'
@@ -138,6 +139,11 @@ const MemberSlugRoute = MemberSlugRouteImport.update({
   path: '/member/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSarvamTranslateRoute = ApiSarvamTranslateRouteImport.update({
+  id: '/api/sarvam/translate',
+  path: '/api/sarvam/translate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EventsSihInternalHackathonIndexRoute =
   EventsSihInternalHackathonIndexRouteImport.update({
     id: '/',
@@ -194,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/events/neural-networks-from-scratch': typeof EventsNeuralNetworksFromScratchRoute
   '/member/$slug': typeof MemberSlugRoute
   '/events/': typeof EventsIndexRoute
+  '/api/sarvam/translate': typeof ApiSarvamTranslateRoute
   '/events/sih-internal-hackathon/join': typeof EventsSihInternalHackathonJoinRoute
   '/events/sih-internal-hackathon/results': typeof EventsSihInternalHackathonResultsRoute
   '/events/sih-internal-hackathon/team': typeof EventsSihInternalHackathonTeamRoute
@@ -219,6 +226,7 @@ export interface FileRoutesByTo {
   '/events/neural-networks-from-scratch': typeof EventsNeuralNetworksFromScratchRoute
   '/member/$slug': typeof MemberSlugRoute
   '/events': typeof EventsIndexRoute
+  '/api/sarvam/translate': typeof ApiSarvamTranslateRoute
   '/events/sih-internal-hackathon/join': typeof EventsSihInternalHackathonJoinRoute
   '/events/sih-internal-hackathon/results': typeof EventsSihInternalHackathonResultsRoute
   '/events/sih-internal-hackathon/team': typeof EventsSihInternalHackathonTeamRoute
@@ -248,6 +256,7 @@ export interface FileRoutesById {
   '/events/neural-networks-from-scratch': typeof EventsNeuralNetworksFromScratchRoute
   '/member/$slug': typeof MemberSlugRoute
   '/events/': typeof EventsIndexRoute
+  '/api/sarvam/translate': typeof ApiSarvamTranslateRoute
   '/events/sih-internal-hackathon/join': typeof EventsSihInternalHackathonJoinRoute
   '/events/sih-internal-hackathon/results': typeof EventsSihInternalHackathonResultsRoute
   '/events/sih-internal-hackathon/team': typeof EventsSihInternalHackathonTeamRoute
@@ -277,6 +286,7 @@ export interface FileRouteTypes {
     | '/events/neural-networks-from-scratch'
     | '/member/$slug'
     | '/events/'
+    | '/api/sarvam/translate'
     | '/events/sih-internal-hackathon/join'
     | '/events/sih-internal-hackathon/results'
     | '/events/sih-internal-hackathon/team'
@@ -302,6 +312,7 @@ export interface FileRouteTypes {
     | '/events/neural-networks-from-scratch'
     | '/member/$slug'
     | '/events'
+    | '/api/sarvam/translate'
     | '/events/sih-internal-hackathon/join'
     | '/events/sih-internal-hackathon/results'
     | '/events/sih-internal-hackathon/team'
@@ -330,6 +341,7 @@ export interface FileRouteTypes {
     | '/events/neural-networks-from-scratch'
     | '/member/$slug'
     | '/events/'
+    | '/api/sarvam/translate'
     | '/events/sih-internal-hackathon/join'
     | '/events/sih-internal-hackathon/results'
     | '/events/sih-internal-hackathon/team'
@@ -352,6 +364,7 @@ export interface RootRouteChildren {
   PassesRoute: typeof PassesRouteWithChildren
   ProjectsRoute: typeof ProjectsRoute
   MemberSlugRoute: typeof MemberSlugRoute
+  ApiSarvamTranslateRoute: typeof ApiSarvamTranslateRoute
   ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
 }
 
@@ -497,6 +510,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MemberSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/sarvam/translate': {
+      id: '/api/sarvam/translate'
+      path: '/api/sarvam/translate'
+      fullPath: '/api/sarvam/translate'
+      preLoaderRoute: typeof ApiSarvamTranslateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/events/sih-internal-hackathon/': {
       id: '/events/sih-internal-hackathon/'
       path: '/'
@@ -622,6 +642,7 @@ const rootRouteChildren: RootRouteChildren = {
   PassesRoute: PassesRouteWithChildren,
   ProjectsRoute: ProjectsRoute,
   MemberSlugRoute: MemberSlugRoute,
+  ApiSarvamTranslateRoute: ApiSarvamTranslateRoute,
   ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
 }
 export const routeTree = rootRouteImport
